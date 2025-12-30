@@ -48,3 +48,4 @@ void Fireball::Render(SDL_Renderer* renderer, float cameraX) {
     SDL_RenderFillRectF(renderer, &center);
 }
 
+

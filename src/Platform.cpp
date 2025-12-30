@@ -20,3 +20,4 @@ void Platform::Render(SDL_Renderer* renderer, float cameraX) {
     SDL_RenderDrawRectF(renderer, &renderRect);
 }
 
+

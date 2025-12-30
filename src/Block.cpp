@@ -9,6 +9,7 @@ Block::Block(float x, float y, BlockType type) {
     mDestroyed = false;
     mHit = false;
     mHitAnimationTime = 0.0f;
+    mHasSpawnedItem = false;
 }
 
 void Block::Hit() {

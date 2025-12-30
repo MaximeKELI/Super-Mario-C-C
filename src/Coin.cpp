@@ -41,3 +41,4 @@ void Coin::Render(SDL_Renderer* renderer, float cameraX) {
     SDL_RenderDrawRectF(renderer, &symbol);
 }
 
+

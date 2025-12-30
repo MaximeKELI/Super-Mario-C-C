@@ -23,6 +23,8 @@ void PowerUp::Update(float deltaTime) {
     // Appliquer la gravité
     if (!mOnGround) {
         mVelocityY += GRAVITY * deltaTime;
+    } else {
+        mVelocityY = 0;
     }
     
     // Mettre à jour la position
@@ -30,6 +32,11 @@ void PowerUp::Update(float deltaTime) {
     mRect.y += mVelocityY * deltaTime;
     
     mAnimationTime += deltaTime * 5.0f;
+}
+
+void PowerUp::SetPosition(float x, float y) {
+    mRect.x = x;
+    mRect.y = y;
 }
 
 void PowerUp::Render(SDL_Renderer* renderer, float cameraX) {

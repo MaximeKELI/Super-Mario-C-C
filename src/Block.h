@@ -19,6 +19,8 @@ public:
     
     bool IsDestroyed() const { return mDestroyed; }
     bool IsHit() const { return mHit; }
+    bool HasSpawnedItem() const { return mHasSpawnedItem; }
+    void SetSpawnedItem() { mHasSpawnedItem = true; }
     BlockType GetType() const { return mType; }
     
 private:
@@ -26,6 +28,7 @@ private:
     BlockType mType;
     bool mDestroyed;
     bool mHit;
+    bool mHasSpawnedItem;
     float mHitAnimationTime;
 };
 

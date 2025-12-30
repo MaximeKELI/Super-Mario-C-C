@@ -15,6 +15,8 @@ public:
     void Update(float deltaTime);
     void Render(SDL_Renderer* renderer, float cameraX);
     SDL_FRect GetRect() const { return mRect; }
+    void SetPosition(float x, float y);
+    void SetOnGround(bool onGround) { mOnGround = onGround; }
     
     bool IsCollected() const { return mCollected; }
     void Collect() { mCollected = true; }
