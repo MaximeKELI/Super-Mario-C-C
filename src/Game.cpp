@@ -151,20 +151,20 @@ void Game::CheckCollisions() {
             if (minOverlap == overlapTop) {
                 // Collision par le haut (joueur atterrit sur la plateforme)
                 mPlayer->SetPosition(mPlayer->GetX(), platformRect.y - playerRect.h);
-                mPlayer->SetVelocity(0, 0);
+                mPlayer->SetVelocity(mPlayer->GetVelocityX(), 0);
                 onGround = true;
             } else if (minOverlap == overlapBottom) {
                 // Collision par le bas (joueur heurte le plafond)
                 mPlayer->SetPosition(mPlayer->GetX(), platformRect.y + platformRect.h);
-                mPlayer->SetVelocity(0, 0);
+                mPlayer->SetVelocity(mPlayer->GetVelocityX(), 0);
             } else if (minOverlap == overlapLeft) {
                 // Collision par la gauche
                 mPlayer->SetPosition(platformRect.x - playerRect.w, mPlayer->GetY());
-                mPlayer->SetVelocity(0, 0);
+                mPlayer->SetVelocity(0, mPlayer->GetVelocityY());
             } else if (minOverlap == overlapRight) {
                 // Collision par la droite
                 mPlayer->SetPosition(platformRect.x + platformRect.w, mPlayer->GetY());
-                mPlayer->SetVelocity(0, 0);
+                mPlayer->SetVelocity(0, mPlayer->GetVelocityY());
             }
         }
     }

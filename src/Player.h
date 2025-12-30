@@ -19,6 +19,8 @@ public:
     
     void SetPosition(float x, float y);
     void SetVelocity(float vx, float vy);
+    float GetVelocityX() const { return mVelocityX; }
+    float GetVelocityY() const { return mVelocityY; }
     bool IsOnGround() const { return mOnGround; }
     void SetOnGround(bool onGround) { mOnGround = onGround; }
     
