@@ -146,11 +146,19 @@ void Game::Run() {
             deltaTime = 0.05f;
         }
         
+        // Éviter deltaTime = 0 au premier frame
+        if (deltaTime == 0.0f) {
+            deltaTime = 0.016f; // ~60 FPS
+        }
+        
         if (mGameState == GameState::PLAYING && !mPaused) {
             Update(deltaTime);
         }
         
         Render();
+        
+        // Limiter le framerate pour éviter de surcharger le CPU
+        SDL_Delay(16); // ~60 FPS
     }
 }
 
@@ -528,17 +536,45 @@ void Game::Render() {
             SDL_RenderFillRect(mRenderer, &pauseRect);
         }
     } else if (mGameState == GameState::GAME_OVER) {
-        RenderUI();
+        // Fond
+        SDL_SetRenderDrawColor(mRenderer, 50, 0, 0, 255);
+        SDL_RenderClear(mRenderer);
+        
         // Afficher "GAME OVER"
-        SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 200);
-        SDL_Rect gameOverRect = {250, 200, 300, 200};
+        SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 255);
+        SDL_Rect gameOverRect = {200, 200, 400, 200};
         SDL_RenderFillRect(mRenderer, &gameOverRect);
+        
+        SDL_SetRenderDrawColor(mRenderer, 255, 0, 0, 255);
+        SDL_RenderDrawRect(mRenderer, &gameOverRect);
+        
+        // Message
+        SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
+        SDL_Rect msgRect = {220, 250, 360, 30};
+        SDL_RenderFillRect(mRenderer, &msgRect);
+        
+        SDL_Rect restartRect = {220, 300, 360, 30};
+        SDL_RenderFillRect(mRenderer, &restartRect);
     } else if (mGameState == GameState::LEVEL_COMPLETE) {
-        RenderUI();
+        // Fond
+        SDL_SetRenderDrawColor(mRenderer, 0, 50, 0, 255);
+        SDL_RenderClear(mRenderer);
+        
         // Afficher "LEVEL COMPLETE"
-        SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 200);
-        SDL_Rect completeRect = {200, 200, 400, 200};
+        SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 255);
+        SDL_Rect completeRect = {150, 200, 500, 200};
         SDL_RenderFillRect(mRenderer, &completeRect);
+        
+        SDL_SetRenderDrawColor(mRenderer, 0, 255, 0, 255);
+        SDL_RenderDrawRect(mRenderer, &completeRect);
+        
+        // Message
+        SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
+        SDL_Rect msgRect = {170, 250, 460, 30};
+        SDL_RenderFillRect(mRenderer, &msgRect);
+        
+        SDL_Rect nextRect = {170, 300, 460, 30};
+        SDL_RenderFillRect(mRenderer, &nextRect);
     }
     
     SDL_RenderPresent(mRenderer);
@@ -546,12 +582,37 @@ void Game::Render() {
 
 void Game::RenderUI() {
     // Barre d'information en haut
-    SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 180);
-    SDL_Rect uiRect = {0, 0, 800, 40};
+    SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 200);
+    SDL_Rect uiRect = {0, 0, 800, 50};
     SDL_RenderFillRect(mRenderer, &uiRect);
     
-    // Afficher le score, vies, pièces (simplifié avec des rectangles)
-    // Dans une vraie implémentation, on utiliserait SDL_ttf pour le texte
+    // Bordure
+    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
+    SDL_RenderDrawLine(mRenderer, 0, 50, 800, 50);
+    
+    // Indicateurs visuels pour le score (rectangles colorés)
+    SDL_SetRenderDrawColor(mRenderer, 255, 255, 0, 255);
+    SDL_Rect scoreIndicator = {10, 10, std::min(mScore / 10, 200), 10};
+    SDL_RenderFillRect(mRenderer, &scoreIndicator);
+    
+    // Indicateurs pour les vies (cœurs rouges)
+    SDL_SetRenderDrawColor(mRenderer, 255, 0, 0, 255);
+    for (int i = 0; i < mLives && i < 5; i++) {
+        SDL_Rect lifeRect = {220 + i * 25, 15, 15, 15};
+        SDL_RenderFillRect(mRenderer, &lifeRect);
+    }
+    
+    // Indicateur pour les pièces
+    SDL_SetRenderDrawColor(mRenderer, 255, 215, 0, 255);
+    SDL_Rect coinIndicator = {350, 15, 15, 15};
+    SDL_RenderFillRect(mRenderer, &coinIndicator);
+    SDL_Rect coinCount = {370, 15, std::min(mCoinsCollected * 2, 50), 15};
+    SDL_RenderFillRect(mRenderer, &coinCount);
+    
+    // Indicateur de niveau
+    SDL_SetRenderDrawColor(mRenderer, 0, 255, 0, 255);
+    SDL_Rect levelRect = {450, 15, 20, 20};
+    SDL_RenderFillRect(mRenderer, &levelRect);
 }
 
 void Game::RenderMenu() {
