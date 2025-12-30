@@ -43,6 +43,9 @@ bool Game::Initialize() {
     LoadLevel();
     mLastFrameTime = SDL_GetTicks();
     
+    std::cout << "Jeu initialisé avec succès!" << std::endl;
+    std::cout << "Appuyez sur Entrée ou Espace pour commencer" << std::endl;
+    
     return true;
 }
 
@@ -166,6 +169,7 @@ void Game::ProcessInput() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
+            std::cout << "Fermeture du jeu..." << std::endl;
             mIsRunning = false;
         } else if (e.type == SDL_KEYDOWN) {
             if (mGameState == GameState::MENU) {
