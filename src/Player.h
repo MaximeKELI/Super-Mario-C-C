@@ -28,17 +28,32 @@ public:
     void Kill() { mDead = true; }
     void Respawn(float x, float y);
     
+    bool IsBig() const { return mIsBig; }
+    bool HasFirePower() const { return mHasFirePower; }
+    void CollectMushroom();
+    void CollectFireFlower();
+    void Shrink();
+    
+    bool CanShoot() const { return mHasFirePower && mShootCooldown <= 0; }
+    void Shoot();
+    void UpdateShootCooldown(float deltaTime);
+    
 private:
     SDL_FRect mRect;
     float mVelocityX;
     float mVelocityY;
     bool mOnGround;
     bool mDead;
+    bool mIsBig;
+    bool mHasFirePower;
+    float mShootCooldown;
+    float mBaseHeight;
     
     static const float GRAVITY;
     static const float JUMP_FORCE;
     static const float MOVE_SPEED;
     static const float MAX_FALL_SPEED;
+    static const float SHOOT_COOLDOWN;
 };
 
 #endif
