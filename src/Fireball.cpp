@@ -49,3 +49,6 @@ void Fireball::Render(SDL_Renderer* renderer, float cameraX) {
 }
 
 
+
+
+
