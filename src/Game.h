@@ -14,6 +14,12 @@
 #include "PowerUp.h"
 #include "Block.h"
 #include "Fireball.h"
+#include "Spike.h"
+#include "Cloud.h"
+#include "Checkpoint.h"
+#include "Pipe.h"
+#include "Particle.h"
+#include <vector>
 
 enum class GameState {
     MENU,

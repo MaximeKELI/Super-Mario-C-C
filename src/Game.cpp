@@ -130,7 +130,29 @@ void Game::LoadLevel() {
     mEnemies.push_back(new Enemy(1100, 270, EnemyType::KOOPA));
     mEnemies.push_back(new Enemy(1300, 220, EnemyType::GOOMBA));
     
+    // Boss de fin de niveau
+    mEnemies.push_back(new Enemy(1800, 150, EnemyType::BOSS));
+    
+    // Créer quelques piques
+    mSpikes.push_back(new Spike(500, 530, 100, 20));
+    mSpikes.push_back(new Spike(1100, 280, 80, 20));
+    
+    // Créer des nuages décoratifs
+    mClouds.push_back(new Cloud(200, 50, 80, 40));
+    mClouds.push_back(new Cloud(600, 80, 100, 50));
+    mClouds.push_back(new Cloud(1000, 60, 90, 45));
+    mClouds.push_back(new Cloud(1400, 70, 85, 42));
+    
+    // Créer des checkpoints
+    mCheckpoints.push_back(new Checkpoint(400, 400));
+    mCheckpoints.push_back(new Checkpoint(1000, 250));
+    
+    // Créer des tuyaux de téléportation
+    mPipes.push_back(new Pipe(750, 350, 40, 100, 1300, 200));
+    
     mLevelEndX = 2000.0f;
+    mLevelTimer = 300.0f;  // 5 minutes
+    mHasCheckpoint = false;
 }
 
 void Game::ResetLevel() {
@@ -256,9 +278,34 @@ void Game::ProcessInput() {
 void Game::Update(float deltaTime) {
     if (!mPlayer || mPlayer->IsDead()) return;
     
+    // Mettre à jour le timer
+    if (mLevelTimer > 0.0f) {
+        mLevelTimer -= deltaTime;
+        if (mLevelTimer <= 0.0f) {
+            // Time's up!
+            mLives--;
+            if (mLives > 0) {
+                if (mHasCheckpoint) {
+                    mPlayer->Respawn(mCheckpointX, mCheckpointY);
+                } else {
+                    mPlayer->Respawn(100.0f, 100.0f);
+                }
+                mLevelTimer = 300.0f;  // Réinitialiser le timer
+            } else {
+                mPlayer->Kill();
+                mGameState = GameState::GAME_OVER;
+            }
+        }
+    }
+    
     // Mettre à jour le joueur
     mPlayer->Update(deltaTime);
     mPlayer->UpdateShootCooldown(deltaTime);
+    
+    // Mettre à jour les plateformes (pour les mobiles)
+    for (auto* platform : mPlatforms) {
+        platform->Update(deltaTime);
+    }
     
     // Mettre à jour les ennemis
     for (auto* enemy : mEnemies) {
@@ -288,6 +335,24 @@ void Game::Update(float deltaTime) {
         }
     }
     
+    // Mettre à jour les nuages
+    for (auto* cloud : mClouds) {
+        cloud->Update(deltaTime);
+    }
+    
+    // Mettre à jour les particules
+    for (auto it = mParticles.begin(); it != mParticles.end();) {
+        it->x += it->vx * deltaTime;
+        it->y += it->vy * deltaTime;
+        it->life -= deltaTime;
+        
+        if (it->life <= 0.0f) {
+            it = mParticles.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    
     // Vérifier les collisions
     CheckCollisions();
     
@@ -304,7 +369,11 @@ void Game::Update(float deltaTime) {
     if (mPlayer->GetY() > 600) {
         mLives--;
         if (mLives > 0) {
-            mPlayer->Respawn(100.0f, 100.0f);
+            if (mHasCheckpoint) {
+                mPlayer->Respawn(mCheckpointX, mCheckpointY);
+            } else {
+                mPlayer->Respawn(100.0f, 100.0f);
+            }
         } else {
             mPlayer->Kill();
             mGameState = GameState::GAME_OVER;

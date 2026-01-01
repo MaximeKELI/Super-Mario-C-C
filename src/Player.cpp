@@ -244,14 +244,31 @@ void Player::Render(SDL_Renderer* renderer, float cameraX) {
     SDL_FRect renderRect = mRect;
     renderRect.x -= cameraX;
     
-    if (!mGifFrames.empty() && mCurrentFrame < static_cast<int>(mGifFrames.size())) {
-        // Dessiner la frame actuelle du GIF
-        SDL_RendererFlip flip = mFacingRight ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
-        SDL_RenderCopyExF(renderer, mGifFrames[mCurrentFrame].texture, nullptr, &renderRect, 0.0, nullptr, flip);
-    } else {
-        // Fallback: dessiner un rectangle rouge si aucune texture n'est chargée
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderFillRectF(renderer, &renderRect);
+    // Effet clignotant si invincible (afficher seulement tous les 0.1 secondes)
+    bool shouldRender = true;
+    if (mIsInvincible) {
+        shouldRender = (static_cast<int>(mInvincibilityTime * 10.0f) % 2) == 0;
+    }
+    
+    if (shouldRender) {
+        if (!mGifFrames.empty() && mCurrentFrame < static_cast<int>(mGifFrames.size())) {
+            // Dessiner la frame actuelle du GIF
+            SDL_RendererFlip flip = mFacingRight ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+            
+            // Teinter en jaune/orange si invincible
+            if (mIsInvincible) {
+                SDL_SetTextureColorMod(mGifFrames[mCurrentFrame].texture, 255, 255, 100);
+            } else {
+                SDL_SetTextureColorMod(mGifFrames[mCurrentFrame].texture, 255, 255, 255);
+            }
+            
+            SDL_RenderCopyExF(renderer, mGifFrames[mCurrentFrame].texture, nullptr, &renderRect, 0.0, nullptr, flip);
+        } else {
+            // Fallback: dessiner un rectangle rouge si aucune texture n'est chargée
+            SDL_Color color = mIsInvincible ? SDL_Color{255, 255, 100, 255} : SDL_Color{255, 0, 0, 255};
+            SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+            SDL_RenderFillRectF(renderer, &renderRect);
+        }
     }
 }
 
@@ -344,6 +361,9 @@ void Player::Shrink() {
         mHasFirePower = false;
         mHasFlyPower = false;  // Perdre aussi le pouvoir de vol
         mFlyPowerRemaining = 0.0f;
+        mHasCometPower = false;  // Perdre aussi le pouvoir de comète
+        mCometPowerRemaining = 0.0f;
+        // Note: on garde l'invincibilité si elle était active
         mRect.h = mBaseHeight;
         mRect.y += mBaseHeight * 0.5f; // Ajuster la position
     }

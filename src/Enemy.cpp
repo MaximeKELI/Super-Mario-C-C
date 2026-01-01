@@ -17,6 +17,9 @@ Enemy::Enemy(float x, float y, EnemyType type) {
         mRect.h = 24.0f;
         mOriginalY = y;
         mFlyingTime = 0.0f;
+    } else if (mType == EnemyType::BOSS) {
+        mRect.w = 64.0f;  // Boss plus grand
+        mRect.h = 64.0f;
     } else {
         mRect.w = 28.0f;
         mRect.h = 28.0f;
@@ -25,6 +28,7 @@ Enemy::Enemy(float x, float y, EnemyType type) {
     mVelocityX = -SPEED;
     mVelocityY = 0.0f;
     mDead = false;
+    mHealth = (type == EnemyType::BOSS) ? 5 : 1;  // Le boss a 5 vies
     mStartX = x;
     mPatrolDistance = 0.0f;
 }
@@ -36,6 +40,9 @@ void Enemy::Update(float deltaTime) {
         // Ennemi volant - mouvement sinusoïdal
         mFlyingTime += deltaTime * FLYING_SPEED;
         mRect.y = mOriginalY + sin(mFlyingTime) * FLYING_HEIGHT;
+    } else if (mType == EnemyType::BOSS) {
+        // Boss - mouvement plus lent et plus grand
+        mVelocityX = -SPEED * 0.5f;  // Plus lent que les autres
     }
     
     // Mouvement de patrouille
@@ -43,7 +50,8 @@ void Enemy::Update(float deltaTime) {
     mPatrolDistance += abs(mVelocityX * deltaTime);
     
     // Inverser la direction si on dépasse la portée
-    if (mPatrolDistance >= PATROL_RANGE) {
+    float range = (mType == EnemyType::BOSS) ? PATROL_RANGE * 2.0f : PATROL_RANGE;
+    if (mPatrolDistance >= range) {
         mVelocityX = -mVelocityX;
         mPatrolDistance = 0.0f;
     }
@@ -100,6 +108,26 @@ void Enemy::Render(SDL_Renderer* renderer, float cameraX) {
         SDL_FRect eye2 = {renderRect.x + 16, renderRect.y + 6, 4, 4};
         SDL_RenderFillRectF(renderer, &eye1);
         SDL_RenderFillRectF(renderer, &eye2);
+    } else if (mType == EnemyType::BOSS) {
+        // Boss - grand et rouge/orange
+        SDL_SetRenderDrawColor(renderer, 200, 50, 50, 255);
+        SDL_RenderFillRectF(renderer, &renderRect);
+        
+        // Yeux rouges brillants
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_FRect eye1 = {renderRect.x + 12, renderRect.y + 12, 12, 12};
+        SDL_FRect eye2 = {renderRect.x + 40, renderRect.y + 12, 12, 12};
+        SDL_RenderFillRectF(renderer, &eye1);
+        SDL_RenderFillRectF(renderer, &eye2);
+        
+        // Bordure sombre
+        SDL_SetRenderDrawColor(renderer, 150, 0, 0, 255);
+        SDL_RenderDrawRectF(renderer, &renderRect);
+        
+        // Couronne/casque
+        SDL_SetRenderDrawColor(renderer, 255, 215, 0, 255);
+        SDL_FRect crown = {renderRect.x + 8, renderRect.y - 8, renderRect.w - 16, 8};
+        SDL_RenderFillRectF(renderer, &crown);
     }
 }
 

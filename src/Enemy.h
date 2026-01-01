@@ -6,7 +6,8 @@
 enum class EnemyType {
     GOOMBA,    // Goomba simple
     KOOPA,     // Koopa (tortue)
-    FLYING     // Ennemi volant
+    FLYING,    // Ennemi volant
+    BOSS       // Boss de fin de niveau
 };
 
 class Enemy {
@@ -18,14 +19,17 @@ public:
     SDL_FRect GetRect() const { return mRect; }
     
     bool IsDead() const { return mDead; }
-    void Kill() { mDead = true; }
+    void Kill() { mHealth--; if (mHealth <= 0) mDead = true; }
+    void Damage() { Kill(); }  // Alias pour compatibilité
     EnemyType GetType() const { return mType; }
+    int GetHealth() const { return mHealth; }
     
 private:
     SDL_FRect mRect;
     float mVelocityX;
     float mVelocityY;
     bool mDead;
+    int mHealth;
     float mStartX;
     float mPatrolDistance;
     EnemyType mType;
