@@ -58,10 +58,12 @@ bool Player::LoadTexture(SDL_Renderer* renderer, const char* path) {
     mTextureWidth = loadedSurface->w;
     mTextureHeight = loadedSurface->h;
     
-    // Ajuster la taille du rectangle selon la texture
-    mRect.w = static_cast<float>(mTextureWidth);
-    mRect.h = static_cast<float>(mTextureHeight);
-    mBaseHeight = static_cast<float>(mTextureHeight);
+    // Utiliser une taille fixe pour le rendu (48x48 pour un Mario de taille normale)
+    // On garde les dimensions originales de la texture pour la qualité, mais on affiche à taille fixe
+    float targetSize = 48.0f;  // Taille cible pour Mario petit
+    mRect.w = targetSize;
+    mRect.h = targetSize;
+    mBaseHeight = targetSize;
     
     SDL_FreeSurface(loadedSurface);
     return true;
