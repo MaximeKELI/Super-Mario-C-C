@@ -30,8 +30,12 @@ Player::Player(float x, float y, SDL_Renderer* renderer) {
     mIsBig = false;
     mHasFirePower = false;
     mHasFlyPower = false;
+    mIsInvincible = false;
+    mHasCometPower = false;
     mShootCooldown = 0.0f;
     mFlyPowerRemaining = 0.0f;
+    mInvincibilityTime = 0.0f;
+    mCometPowerRemaining = 0.0f;
     mIsFlying = false;
     mFacingRight = true;
     
@@ -184,6 +188,24 @@ void Player::Update(float deltaTime) {
         }
     }
     
+    // Réduire l'invincibilité au fil du temps
+    if (mInvincibilityTime > 0.0f) {
+        mInvincibilityTime -= deltaTime;
+        if (mInvincibilityTime <= 0.0f) {
+            mInvincibilityTime = 0.0f;
+            mIsInvincible = false;
+        }
+    }
+    
+    // Réduire le pouvoir de comète au fil du temps
+    if (mCometPowerRemaining > 0.0f) {
+        mCometPowerRemaining -= deltaTime;
+        if (mCometPowerRemaining <= 0.0f) {
+            mCometPowerRemaining = 0.0f;
+            mHasCometPower = false;
+        }
+    }
+    
     // Appliquer la gravité (réduite si on vole)
     if (!mOnGround) {
         // Si on vole activement, appliquer une force vers le haut
@@ -236,12 +258,13 @@ void Player::Render(SDL_Renderer* renderer, float cameraX) {
 void Player::HandleInput(const Uint8* keystate) {
     if (mDead) return;
     
-    // Mouvement horizontal
+    // Mouvement horizontal (double vitesse avec comète)
+    float currentSpeed = mHasCometPower ? MOVE_SPEED * 2.0f : MOVE_SPEED;
     if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_A]) {
-        mVelocityX = -MOVE_SPEED;
+        mVelocityX = -currentSpeed;
         mFacingRight = false;
     } else if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
-        mVelocityX = MOVE_SPEED;
+        mVelocityX = currentSpeed;
         mFacingRight = true;
     }
     

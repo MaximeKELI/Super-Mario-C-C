@@ -370,13 +370,19 @@ void Game::CheckCollisions() {
             if (block->GetType() == BlockType::QUESTION && block->IsHit() && !block->HasSpawnedItem()) {
                 // Générer un power-up ou une pièce (une seule fois par bloc)
                 block->SetSpawnedItem();
-                int randVal = rand() % 4;
+                int randVal = rand() % 7;
                 if (randVal == 0) {
                     mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::MUSHROOM));
                 } else if (randVal == 1 && mPlayer->IsBig()) {
                     mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::FIRE_FLOWER));
                 } else if (randVal == 2) {
                     mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::FEATHER));
+                } else if (randVal == 3) {
+                    mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::STAR));
+                } else if (randVal == 4) {
+                    mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::ONE_UP));
+                } else if (randVal == 5) {
+                    mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::COMET));
                 } else {
                     mCoins.push_back(new Coin(blockRect.x + 6, blockRect.y - 30));
                 }
@@ -440,6 +446,16 @@ void Game::CheckCollisions() {
             } else if (powerUp->GetType() == PowerUpType::FEATHER) {
                 mPlayer->CollectFeather();
                 mScore += 800;
+            } else if (powerUp->GetType() == PowerUpType::STAR) {
+                mPlayer->CollectStar();
+                mScore += 1500;
+            } else if (powerUp->GetType() == PowerUpType::ONE_UP) {
+                mPlayer->CollectOneUp();
+                mLives++;
+                mScore += 2000;
+            } else if (powerUp->GetType() == PowerUpType::COMET) {
+                mPlayer->CollectComet();
+                mScore += 1200;
             }
         }
     }
