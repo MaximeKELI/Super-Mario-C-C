@@ -6,6 +6,12 @@ extern "C" {
 #include <gif_lib.h>
 }
 
+// Fonction de callback pour giflib (non utilisée mais requise)
+static int InputFunc(GifFileType* gif, GifByteType* bytes, int size) {
+    FILE* file = (FILE*)gif->UserData;
+    return fread(bytes, 1, size, file);
+}
+
 const float Player::GRAVITY = 800.0f;
 const float Player::JUMP_FORCE = -400.0f;
 const float Player::MOVE_SPEED = 200.0f;
