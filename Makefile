@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra
-LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image)
+LDFLAGS = $(shell pkg-config --libs sdl2 SDL2_image) -lgif
 CPPFLAGS = $(shell pkg-config --cflags sdl2 SDL2_image)
 
 SRCDIR = src

@@ -1,6 +1,10 @@
 #include "Player.h"
 #include <algorithm>
 #include <iostream>
+#include <cstring>
+extern "C" {
+#include <gif_lib.h>
+}
 
 const float Player::GRAVITY = 800.0f;
 const float Player::JUMP_FORCE = -400.0f;
@@ -9,7 +13,8 @@ const float Player::MAX_FALL_SPEED = 500.0f;
 const float Player::SHOOT_COOLDOWN = 0.5f;
 
 Player::Player(float x, float y, SDL_Renderer* renderer) {
-    mTexture = nullptr;
+    mCurrentFrame = 0;
+    mAnimationTime = 0.0f;
     mTextureWidth = 32;
     mTextureHeight = 32;
     mRect.x = x;
@@ -26,20 +31,132 @@ Player::Player(float x, float y, SDL_Renderer* renderer) {
     mShootCooldown = 0.0f;
     mFacingRight = true;
     
-    // Charger la texture du GIF
-    if (!LoadTexture(renderer, "src/Mario.gif")) {
-        std::cerr << "Erreur: Impossible de charger Mario.gif" << std::endl;
+    // Charger le GIF animé
+    if (!LoadAnimatedGif(renderer, "src/Mario.gif")) {
+        std::cerr << "Erreur: Impossible de charger Mario.gif, fallback sur texture simple" << std::endl;
+        // Fallback: charger comme texture simple
+        LoadTexture(renderer, "src/Mario.gif");
     }
 }
 
 Player::~Player() {
-    if (mTexture) {
-        SDL_DestroyTexture(mTexture);
-        mTexture = nullptr;
+    // Libérer toutes les textures du GIF
+    for (auto& frame : mGifFrames) {
+        if (frame.texture) {
+            SDL_DestroyTexture(frame.texture);
+        }
     }
+    mGifFrames.clear();
+}
+
+bool Player::LoadAnimatedGif(SDL_Renderer* renderer, const char* path) {
+    int error = 0;
+    GifFileType* gif = DGifOpenFileName(path, &error);
+    if (!gif) {
+        std::cerr << "Impossible d'ouvrir le GIF: " << path << std::endl;
+        return false;
+    }
+    
+    if (DGifSlurp(gif) != GIF_OK) {
+        std::cerr << "Impossible de lire le GIF" << std::endl;
+        DGifCloseFile(gif, &error);
+        return false;
+    }
+    
+    mTextureWidth = gif->SWidth;
+    mTextureHeight = gif->SHeight;
+    
+    // Utiliser une taille fixe pour le rendu
+    float targetSize = 48.0f;
+    mRect.w = targetSize;
+    mRect.h = targetSize;
+    mBaseHeight = targetSize;
+    
+    // Créer une palette de couleurs globale si disponible
+    ColorMapObject* colorMap = gif->SColorMap ? gif->SColorMap : (gif->Image.ColorMap ? gif->Image.ColorMap : nullptr);
+    
+    // Parcourir toutes les images (frames)
+    for (int i = 0; i < gif->ImageCount; i++) {
+        SavedImage* savedImage = &gif->SavedImages[i];
+        
+        // Créer une surface SDL pour cette frame
+        SDL_Surface* surface = SDL_CreateRGBSurface(0, mTextureWidth, mTextureHeight, 32, 
+                                                     0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+        if (!surface) {
+            continue;
+        }
+        
+        // Remplir avec la couleur de fond (par défaut transparente/noire)
+        SDL_FillRect(surface, nullptr, SDL_MapRGBA(surface->format, 0, 0, 0, 0));
+        
+        GraphicsControlBlock gcb;
+        DGifSavedExtensionToGCB(gif, i, &gcb);
+        
+        // Obtenir la palette pour cette frame
+        ColorMapObject* frameColorMap = savedImage->Image.ColorMap ? savedImage->Image.ColorMap : colorMap;
+        if (!frameColorMap) {
+            SDL_FreeSurface(surface);
+            continue;
+        }
+        
+        // Dessiner l'image
+        int imageLeft = savedImage->Image.Left;
+        int imageTop = savedImage->Image.Top;
+        int imageWidth = savedImage->Image.Width;
+        int imageHeight = savedImage->Image.Height;
+        
+        for (int y = 0; y < imageHeight; y++) {
+            for (int x = 0; x < imageWidth; x++) {
+                int pixelIndex = y * imageWidth + x;
+                if (pixelIndex >= 0 && pixelIndex < imageWidth * imageHeight) {
+                    unsigned char colorIndex = savedImage->Image.RasterBits[pixelIndex];
+                    
+                    // Vérifier si c'est un pixel transparent
+                    if (gcb.TransparentColor != NO_TRANSPARENT_COLOR && colorIndex == gcb.TransparentColor) {
+                        continue; // Pixel transparent
+                    }
+                    
+                    if (colorIndex < frameColorMap->ColorCount) {
+                        GifColorType color = frameColorMap->Colors[colorIndex];
+                        Uint32 pixel = SDL_MapRGBA(surface->format, color.Red, color.Green, color.Blue, 255);
+                        
+                        int targetX = imageLeft + x;
+                        int targetY = imageTop + y;
+                        if (targetX >= 0 && targetX < mTextureWidth && targetY >= 0 && targetY < mTextureHeight) {
+                            Uint32* pixels = (Uint32*)surface->pixels;
+                            pixels[targetY * mTextureWidth + targetX] = pixel;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Créer la texture SDL
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+        
+        if (texture) {
+            GifFrame frame;
+            frame.texture = texture;
+            // Le délai est en 1/100èmes de seconde, convertir en secondes
+            frame.delay = (gcb.DelayTime > 0 ? gcb.DelayTime : 10) / 100.0f;
+            mGifFrames.push_back(frame);
+        }
+    }
+    
+    DGifCloseFile(gif, &error);
+    
+    if (mGifFrames.empty()) {
+        std::cerr << "Aucune frame chargée du GIF" << std::endl;
+        return false;
+    }
+    
+    std::cout << "GIF chargé avec " << mGifFrames.size() << " frames" << std::endl;
+    return true;
 }
 
 bool Player::LoadTexture(SDL_Renderer* renderer, const char* path) {
+    // Fallback: charger seulement la première frame avec SDL_image
     SDL_Surface* loadedSurface = IMG_Load(path);
     if (loadedSurface == nullptr) {
         std::cerr << "Impossible de charger l'image " << path << "! IMG_Error: " << IMG_GetError() << std::endl;
@@ -47,8 +164,8 @@ bool Player::LoadTexture(SDL_Renderer* renderer, const char* path) {
     }
     
     // Créer la texture à partir de la surface
-    mTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
-    if (mTexture == nullptr) {
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+    if (texture == nullptr) {
         std::cerr << "Impossible de créer la texture depuis " << path << "! SDL_Error: " << SDL_GetError() << std::endl;
         SDL_FreeSurface(loadedSurface);
         return false;
@@ -58,12 +175,17 @@ bool Player::LoadTexture(SDL_Renderer* renderer, const char* path) {
     mTextureWidth = loadedSurface->w;
     mTextureHeight = loadedSurface->h;
     
-    // Utiliser une taille fixe pour le rendu (48x48 pour un Mario de taille normale)
-    // On garde les dimensions originales de la texture pour la qualité, mais on affiche à taille fixe
-    float targetSize = 48.0f;  // Taille cible pour Mario petit
+    // Utiliser une taille fixe pour le rendu
+    float targetSize = 48.0f;
     mRect.w = targetSize;
     mRect.h = targetSize;
     mBaseHeight = targetSize;
+    
+    // Ajouter comme seule frame
+    GifFrame frame;
+    frame.texture = texture;
+    frame.delay = 0.1f; // 100ms par défaut
+    mGifFrames.push_back(frame);
     
     SDL_FreeSurface(loadedSurface);
     return true;
@@ -71,6 +193,15 @@ bool Player::LoadTexture(SDL_Renderer* renderer, const char* path) {
 
 void Player::Update(float deltaTime) {
     if (mDead) return;
+    
+    // Mettre à jour l'animation du GIF
+    if (!mGifFrames.empty()) {
+        mAnimationTime += deltaTime;
+        if (mAnimationTime >= mGifFrames[mCurrentFrame].delay) {
+            mAnimationTime = 0.0f;
+            mCurrentFrame = (mCurrentFrame + 1) % mGifFrames.size();
+        }
+    }
     
     // Appliquer la gravité
     if (!mOnGround) {
@@ -98,13 +229,12 @@ void Player::Render(SDL_Renderer* renderer, float cameraX) {
     SDL_FRect renderRect = mRect;
     renderRect.x -= cameraX;
     
-    if (mTexture) {
-        // Dessiner la texture du GIF
-        // Si le joueur va vers la gauche, retourner la texture
+    if (!mGifFrames.empty() && mCurrentFrame < mGifFrames.size()) {
+        // Dessiner la frame actuelle du GIF
         SDL_RendererFlip flip = mFacingRight ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
-        SDL_RenderCopyExF(renderer, mTexture, nullptr, &renderRect, 0.0, nullptr, flip);
+        SDL_RenderCopyExF(renderer, mGifFrames[mCurrentFrame].texture, nullptr, &renderRect, 0.0, nullptr, flip);
     } else {
-        // Fallback: dessiner un rectangle rouge si la texture n'est pas chargée
+        // Fallback: dessiner un rectangle rouge si aucune texture n'est chargée
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         SDL_RenderFillRectF(renderer, &renderRect);
     }
@@ -185,4 +315,3 @@ void Player::UpdateShootCooldown(float deltaTime) {
         mShootCooldown -= deltaTime;
     }
 }
-
