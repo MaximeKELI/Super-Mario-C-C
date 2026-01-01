@@ -255,7 +255,7 @@ void Game::ProcessInput() {
         }
     }
     
-    if (mGameState == GameState::PLAYING && !mPaused && mPlayer) {
+    if (mGameState == GameState::PLAYING && !mPaused && mPlayer && mGameState != GameState::PAUSE_MENU) {
         const Uint8* keystate = SDL_GetKeyboardState(nullptr);
         mPlayer->HandleInput(keystate);
         
