@@ -103,4 +103,3 @@ void Enemy::Render(SDL_Renderer* renderer, float cameraX) {
     }
 }
 
-//Maxime
