@@ -117,6 +117,11 @@ void Game::LoadLevel() {
     // Créer les power-ups
     // Ils seront générés depuis les blocs question
     
+    // Créer quelques power-ups de vol (plumes) placés dans le niveau
+    mPowerUps.push_back(new PowerUp(350, 400, PowerUpType::FEATHER));
+    mPowerUps.push_back(new PowerUp(750, 300, PowerUpType::FEATHER));
+    mPowerUps.push_back(new PowerUp(1300, 150, PowerUpType::FEATHER));
+    
     // Créer les ennemis avec différents types
     mEnemies.push_back(new Enemy(300, 470, EnemyType::GOOMBA));
     mEnemies.push_back(new Enemy(500, 420, EnemyType::KOOPA));
@@ -365,11 +370,13 @@ void Game::CheckCollisions() {
             if (block->GetType() == BlockType::QUESTION && block->IsHit() && !block->HasSpawnedItem()) {
                 // Générer un power-up ou une pièce (une seule fois par bloc)
                 block->SetSpawnedItem();
-                int randVal = rand() % 3;
+                int randVal = rand() % 4;
                 if (randVal == 0) {
                     mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::MUSHROOM));
                 } else if (randVal == 1 && mPlayer->IsBig()) {
                     mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::FIRE_FLOWER));
+                } else if (randVal == 2) {
+                    mPowerUps.push_back(new PowerUp(blockRect.x, blockRect.y - 30, PowerUpType::FEATHER));
                 } else {
                     mCoins.push_back(new Coin(blockRect.x + 6, blockRect.y - 30));
                 }
@@ -430,6 +437,9 @@ void Game::CheckCollisions() {
             } else if (powerUp->GetType() == PowerUpType::FIRE_FLOWER) {
                 mPlayer->CollectFireFlower();
                 mScore += 1000;
+            } else if (powerUp->GetType() == PowerUpType::FEATHER) {
+                mPlayer->CollectFeather();
+                mScore += 800;
             }
         }
     }

@@ -30,6 +30,7 @@ Player::Player(float x, float y, SDL_Renderer* renderer) {
     mHasFlyPower = false;
     mShootCooldown = 0.0f;
     mFlyPowerRemaining = 0.0f;
+    mIsFlying = false;
     mFacingRight = true;
     
     // Charger le GIF animé
@@ -183,8 +184,19 @@ void Player::Update(float deltaTime) {
     
     // Appliquer la gravité (réduite si on vole)
     if (!mOnGround) {
-        float currentGravity = mHasFlyPower ? GRAVITY * 0.3f : GRAVITY;  // Gravité réduite quand on vole
-        mVelocityY += currentGravity * deltaTime;
+        // Si on vole activement, appliquer une force vers le haut
+        if (mIsFlying && mHasFlyPower && mFlyPowerRemaining > 0.0f) {
+            mVelocityY += FLY_FORCE * deltaTime;
+            // Limiter la vitesse de montée
+            if (mVelocityY < -500.0f) {
+                mVelocityY = -500.0f;
+            }
+            // Gravité réduite pendant le vol
+            mVelocityY += GRAVITY * 0.2f * deltaTime;
+        } else {
+            // Gravité normale
+            mVelocityY += GRAVITY * deltaTime;
+        }
         mVelocityY = std::min(mVelocityY, MAX_FALL_SPEED);
     }
     
@@ -231,22 +243,19 @@ void Player::HandleInput(const Uint8* keystate) {
         mFacingRight = true;
     }
     
-    // Saut normal
-    if ((keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W]) && mOnGround) {
+    // Saut normal (seulement si au sol)
+    bool jumpPressed = keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W];
+    if (jumpPressed && mOnGround) {
         mVelocityY = JUMP_FORCE;
         mOnGround = false;
+        mIsFlying = false;  // Ne pas voler immédiatement après un saut
     }
     
     // Vol : maintenir espace en l'air si on a le pouvoir de vol
-    if (mHasFlyPower && mFlyPowerRemaining > 0.0f) {
-        if (keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W]) {
-            // Appliquer une force vers le haut pour voler
-            mVelocityY += FLY_FORCE * deltaTime;
-            // Limiter la vitesse de montée
-            if (mVelocityY < -500.0f) {
-                mVelocityY = -500.0f;
-            }
-        }
+    if (mHasFlyPower && mFlyPowerRemaining > 0.0f && !mOnGround) {
+        mIsFlying = jumpPressed;  // Voler si la touche est maintenue et qu'on est en l'air
+    } else {
+        mIsFlying = false;
     }
 }
 
