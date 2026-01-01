@@ -23,6 +23,13 @@ bool Game::Initialize() {
         return false;
     }
     
+    // Initialiser SDL_image
+    int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
+    if (!(IMG_Init(imgFlags) & imgFlags)) {
+        std::cerr << "SDL_image could not initialize! IMG_Error: " << IMG_GetError() << std::endl;
+        // On continue quand même, le jeu peut fonctionner sans images
+    }
+    
     mWindow = SDL_CreateWindow("Super Mario",
                                SDL_WINDOWPOS_UNDEFINED,
                                SDL_WINDOWPOS_UNDEFINED,
@@ -54,7 +61,7 @@ void Game::LoadLevel() {
     ResetLevel();
     
     // Créer le joueur
-    mPlayer = new Player(100.0f, 100.0f);
+    mPlayer = new Player(100.0f, 100.0f, mRenderer);
     
     // Créer les plateformes
     mPlatforms.push_back(new Platform(0, 550, 200, 50));      // Sol gauche
@@ -666,5 +673,6 @@ void Game::Shutdown() {
         mWindow = nullptr;
     }
     
+    IMG_Quit();
     SDL_Quit();
 }

@@ -2,10 +2,12 @@
 #define PLAYER_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 class Player {
 public:
-    Player(float x, float y);
+    Player(float x, float y, SDL_Renderer* renderer);
+    ~Player();
     
     void Update(float deltaTime);
     void Render(SDL_Renderer* renderer, float cameraX);
@@ -39,7 +41,12 @@ public:
     void UpdateShootCooldown(float deltaTime);
     
 private:
+    bool LoadTexture(SDL_Renderer* renderer, const char* path);
+    
     SDL_FRect mRect;
+    SDL_Texture* mTexture;
+    int mTextureWidth;
+    int mTextureHeight;
     float mVelocityX;
     float mVelocityY;
     bool mOnGround;
@@ -48,6 +55,7 @@ private:
     bool mHasFirePower;
     float mShootCooldown;
     float mBaseHeight;
+    bool mFacingRight;
     
     static const float GRAVITY;
     static const float JUMP_FORCE;

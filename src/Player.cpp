@@ -1,5 +1,6 @@
 #include "Player.h"
 #include <algorithm>
+#include <iostream>
 
 const float Player::GRAVITY = 800.0f;
 const float Player::JUMP_FORCE = -400.0f;
@@ -7,7 +8,10 @@ const float Player::MOVE_SPEED = 200.0f;
 const float Player::MAX_FALL_SPEED = 500.0f;
 const float Player::SHOOT_COOLDOWN = 0.5f;
 
-Player::Player(float x, float y) {
+Player::Player(float x, float y, SDL_Renderer* renderer) {
+    mTexture = nullptr;
+    mTextureWidth = 32;
+    mTextureHeight = 32;
     mRect.x = x;
     mRect.y = y;
     mRect.w = 32.0f;
@@ -20,6 +24,47 @@ Player::Player(float x, float y) {
     mIsBig = false;
     mHasFirePower = false;
     mShootCooldown = 0.0f;
+    mFacingRight = true;
+    
+    // Charger la texture du GIF
+    if (!LoadTexture(renderer, "src/Mario.gif")) {
+        std::cerr << "Erreur: Impossible de charger Mario.gif" << std::endl;
+    }
+}
+
+Player::~Player() {
+    if (mTexture) {
+        SDL_DestroyTexture(mTexture);
+        mTexture = nullptr;
+    }
+}
+
+bool Player::LoadTexture(SDL_Renderer* renderer, const char* path) {
+    SDL_Surface* loadedSurface = IMG_Load(path);
+    if (loadedSurface == nullptr) {
+        std::cerr << "Impossible de charger l'image " << path << "! IMG_Error: " << IMG_GetError() << std::endl;
+        return false;
+    }
+    
+    // Créer la texture à partir de la surface
+    mTexture = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+    if (mTexture == nullptr) {
+        std::cerr << "Impossible de créer la texture depuis " << path << "! SDL_Error: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(loadedSurface);
+        return false;
+    }
+    
+    // Obtenir les dimensions de la texture
+    mTextureWidth = loadedSurface->w;
+    mTextureHeight = loadedSurface->h;
+    
+    // Ajuster la taille du rectangle selon la texture
+    mRect.w = static_cast<float>(mTextureWidth);
+    mRect.h = static_cast<float>(mTextureHeight);
+    mBaseHeight = static_cast<float>(mTextureHeight);
+    
+    SDL_FreeSurface(loadedSurface);
+    return true;
 }
 
 void Player::Update(float deltaTime) {
@@ -46,37 +91,21 @@ void Player::Update(float deltaTime) {
 }
 
 void Player::Render(SDL_Renderer* renderer, float cameraX) {
+    if (mDead) return;
+    
     SDL_FRect renderRect = mRect;
     renderRect.x -= cameraX;
     
-    // Couleur selon le power-up
-    if (mHasFirePower) {
-        // Mario avec pouvoir de feu - rouge et blanc
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderFillRectF(renderer, &renderRect);
-        
-        // Chapeau blanc
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_FRect hat = {renderRect.x, renderRect.y, renderRect.w, 8};
-        SDL_RenderFillRectF(renderer, &hat);
-    } else if (mIsBig) {
-        // Mario grand - rouge
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderFillRectF(renderer, &renderRect);
+    if (mTexture) {
+        // Dessiner la texture du GIF
+        // Si le joueur va vers la gauche, retourner la texture
+        SDL_RendererFlip flip = mFacingRight ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+        SDL_RenderCopyExF(renderer, mTexture, nullptr, &renderRect, 0.0, nullptr, flip);
     } else {
-        // Mario petit - rouge
+        // Fallback: dessiner un rectangle rouge si la texture n'est pas chargée
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         SDL_RenderFillRectF(renderer, &renderRect);
     }
-    
-    // Dessiner les yeux
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    float eyeSize = mIsBig ? 6.0f : 4.0f;
-    float eyeY = mIsBig ? renderRect.y + 10 : renderRect.y + 8;
-    SDL_FRect eye1 = {renderRect.x + 8, eyeY, eyeSize, eyeSize};
-    SDL_FRect eye2 = {renderRect.x + (mIsBig ? 22 : 20), eyeY, eyeSize, eyeSize};
-    SDL_RenderFillRectF(renderer, &eye1);
-    SDL_RenderFillRectF(renderer, &eye2);
 }
 
 void Player::HandleInput(const Uint8* keystate) {
@@ -85,8 +114,10 @@ void Player::HandleInput(const Uint8* keystate) {
     // Mouvement horizontal
     if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_A]) {
         mVelocityX = -MOVE_SPEED;
+        mFacingRight = false;
     } else if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) {
         mVelocityX = MOVE_SPEED;
+        mFacingRight = true;
     }
     
     // Saut
