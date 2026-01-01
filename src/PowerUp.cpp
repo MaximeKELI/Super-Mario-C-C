@@ -65,6 +65,24 @@ void PowerUp::Render(SDL_Renderer* renderer, float cameraX) {
         SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
         SDL_FRect center = {renderRect.x + 6, renderRect.y + 6, 12, 12};
         SDL_RenderFillRectF(renderer, &center);
+    } else if (mType == PowerUpType::FEATHER) {
+        // Plume - blanc/bleu clair pour représenter une plume
+        SDL_SetRenderDrawColor(renderer, 240, 240, 255, 255);
+        SDL_RenderFillRectF(renderer, &renderRect);
+        
+        // Tige de la plume (bleu)
+        SDL_SetRenderDrawColor(renderer, 100, 150, 255, 255);
+        SDL_FRect stem = {renderRect.x + 10, renderRect.y + 4, 4, renderRect.h - 8};
+        SDL_RenderFillRectF(renderer, &stem);
+        
+        // Poils de la plume (lignes blanches)
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_FRect feather1 = {renderRect.x + 2, renderRect.y + 6, 8, 2};
+        SDL_FRect feather2 = {renderRect.x + 4, renderRect.y + 10, 10, 2};
+        SDL_FRect feather3 = {renderRect.x + 2, renderRect.y + 14, 8, 2};
+        SDL_RenderFillRectF(renderer, &feather1);
+        SDL_RenderFillRectF(renderer, &feather2);
+        SDL_RenderFillRectF(renderer, &feather3);
     }
 }
 

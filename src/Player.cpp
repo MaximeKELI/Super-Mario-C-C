@@ -8,6 +8,8 @@ const float Player::JUMP_FORCE = -400.0f;
 const float Player::MOVE_SPEED = 200.0f;
 const float Player::MAX_FALL_SPEED = 500.0f;
 const float Player::SHOOT_COOLDOWN = 0.5f;
+const float Player::FLY_POWER_DURATION = 8.0f;  // 8 secondes de vol
+const float Player::FLY_FORCE = -300.0f;  // Force vers le haut pendant le vol
 
 Player::Player(float x, float y, SDL_Renderer* renderer) {
     mCurrentFrame = 0;
@@ -25,7 +27,9 @@ Player::Player(float x, float y, SDL_Renderer* renderer) {
     mDead = false;
     mIsBig = false;
     mHasFirePower = false;
+    mHasFlyPower = false;
     mShootCooldown = 0.0f;
+    mFlyPowerRemaining = 0.0f;
     mFacingRight = true;
     
     // Charger le GIF animé
@@ -168,9 +172,19 @@ void Player::Update(float deltaTime) {
         }
     }
     
-    // Appliquer la gravité
+    // Réduire le pouvoir de vol au fil du temps
+    if (mFlyPowerRemaining > 0.0f) {
+        mFlyPowerRemaining -= deltaTime;
+        if (mFlyPowerRemaining <= 0.0f) {
+            mFlyPowerRemaining = 0.0f;
+            mHasFlyPower = false;
+        }
+    }
+    
+    // Appliquer la gravité (réduite si on vole)
     if (!mOnGround) {
-        mVelocityY += GRAVITY * deltaTime;
+        float currentGravity = mHasFlyPower ? GRAVITY * 0.3f : GRAVITY;  // Gravité réduite quand on vole
+        mVelocityY += currentGravity * deltaTime;
         mVelocityY = std::min(mVelocityY, MAX_FALL_SPEED);
     }
     
@@ -217,10 +231,22 @@ void Player::HandleInput(const Uint8* keystate) {
         mFacingRight = true;
     }
     
-    // Saut
+    // Saut normal
     if ((keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W]) && mOnGround) {
         mVelocityY = JUMP_FORCE;
         mOnGround = false;
+    }
+    
+    // Vol : maintenir espace en l'air si on a le pouvoir de vol
+    if (mHasFlyPower && mFlyPowerRemaining > 0.0f) {
+        if (keystate[SDL_SCANCODE_SPACE] || keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W]) {
+            // Appliquer une force vers le haut pour voler
+            mVelocityY += FLY_FORCE * deltaTime;
+            // Limiter la vitesse de montée
+            if (mVelocityY < -500.0f) {
+                mVelocityY = -500.0f;
+            }
+        }
     }
 }
 
@@ -259,10 +285,17 @@ void Player::CollectFireFlower() {
     }
 }
 
+void Player::CollectFeather() {
+    mHasFlyPower = true;
+    mFlyPowerRemaining = FLY_POWER_DURATION;  // Réinitialiser la durée de vol
+}
+
 void Player::Shrink() {
     if (mIsBig) {
         mIsBig = false;
         mHasFirePower = false;
+        mHasFlyPower = false;  // Perdre aussi le pouvoir de vol
+        mFlyPowerRemaining = 0.0f;
         mRect.h = mBaseHeight;
         mRect.y += mBaseHeight * 0.5f; // Ajuster la position
     }

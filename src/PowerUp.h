@@ -5,7 +5,8 @@
 
 enum class PowerUpType {
     MUSHROOM,  // Champignon - grandit Mario
-    FIRE_FLOWER  // Fleur de feu - permet de lancer des boules de feu
+    FIRE_FLOWER,  // Fleur de feu - permet de lancer des boules de feu
+    FEATHER  // Plume - permet à Mario de voler
 };
 
 class PowerUp {

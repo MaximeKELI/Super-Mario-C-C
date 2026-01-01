@@ -38,8 +38,10 @@ public:
     
     bool IsBig() const { return mIsBig; }
     bool HasFirePower() const { return mHasFirePower; }
+    bool HasFlyPower() const { return mHasFlyPower; }
     void CollectMushroom();
     void CollectFireFlower();
+    void CollectFeather();
     void Shrink();
     
     bool CanShoot() const { return mHasFirePower && mShootCooldown <= 0; }
@@ -62,7 +64,9 @@ private:
     bool mDead;
     bool mIsBig;
     bool mHasFirePower;
+    bool mHasFlyPower;
     float mShootCooldown;
+    float mFlyPowerRemaining;  // Durée restante du pouvoir de vol
     float mBaseHeight;
     bool mFacingRight;
     
@@ -71,6 +75,8 @@ private:
     static const float MOVE_SPEED;
     static const float MAX_FALL_SPEED;
     static const float SHOOT_COOLDOWN;
+    static const float FLY_POWER_DURATION;  // Durée du pouvoir de vol en secondes
+    static const float FLY_FORCE;  // Force vers le haut pendant le vol
 };
 
 #endif
