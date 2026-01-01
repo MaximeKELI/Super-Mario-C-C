@@ -4,8 +4,9 @@
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
+#include <sstream>
 
-Game::Game() : mWindow(nullptr), mRenderer(nullptr), mIsRunning(true),
+Game::Game() : mWindow(nullptr), mRenderer(nullptr), mFont(nullptr), mIsRunning(true),
                mGameState(GameState::MENU), mPaused(false), mPlayer(nullptr),
                mScore(0), mLives(3), mCoinsCollected(0), mCameraX(0.0f),
                mLevelEndX(2000.0f), mCurrentLevel(1), mLastFrameTime(0) {
@@ -28,6 +29,27 @@ bool Game::Initialize() {
     if (!(IMG_Init(imgFlags) & imgFlags)) {
         std::cerr << "SDL_image could not initialize! IMG_Error: " << IMG_GetError() << std::endl;
         // On continue quand même, le jeu peut fonctionner sans images
+    }
+    
+    // Initialiser SDL_ttf
+    if (TTF_Init() == -1) {
+        std::cerr << "SDL_ttf could not initialize! TTF_Error: " << TTF_GetError() << std::endl;
+        // On continue sans texte, on utilisera des rectangles
+    } else {
+        // Charger une police par défaut (ou utiliser une police système)
+        // On essaie d'abord avec une police monospace système
+        mFont = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", 20);
+        if (!mFont) {
+            // Essayer une autre police commune
+            mFont = TTF_OpenFont("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf", 20);
+        }
+        if (!mFont) {
+            // Essayer une police encore plus commune
+            mFont = TTF_OpenFont("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", 20);
+        }
+        if (!mFont) {
+            std::cerr << "Impossible de charger une police! Le texte ne sera pas affiché. TTF_Error: " << TTF_GetError() << std::endl;
+        }
     }
     
     mWindow = SDL_CreateWindow("Super Mario",
@@ -673,6 +695,11 @@ void Game::Shutdown() {
         mWindow = nullptr;
     }
     
+    if (mFont) {
+        TTF_CloseFont(mFont);
+        mFont = nullptr;
+    }
+    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }

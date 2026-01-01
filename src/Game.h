@@ -3,8 +3,10 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <vector>
 #include <string>
+#include <sstream>
 #include "Player.h"
 #include "Platform.h"
 #include "Enemy.h"
@@ -39,9 +41,11 @@ private:
     void RenderMenu();
     void LoadLevel();
     void ResetLevel();
+    void RenderText(const char* text, int x, int y, SDL_Color color, int fontSize = 20);
     
     SDL_Window* mWindow;
     SDL_Renderer* mRenderer;
+    TTF_Font* mFont;
     bool mIsRunning;
     GameState mGameState;
     bool mPaused;
