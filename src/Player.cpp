@@ -10,6 +10,8 @@ const float Player::MAX_FALL_SPEED = 500.0f;
 const float Player::SHOOT_COOLDOWN = 0.5f;
 const float Player::FLY_POWER_DURATION = 8.0f;  // 8 secondes de vol
 const float Player::FLY_FORCE = -300.0f;  // Force vers le haut pendant le vol
+const float Player::INVINCIBILITY_DURATION = 12.0f;  // 12 secondes d'invincibilité
+const float Player::COMET_POWER_DURATION = 10.0f;  // 10 secondes de comète
 
 Player::Player(float x, float y, SDL_Renderer* renderer) {
     mCurrentFrame = 0;
@@ -297,6 +299,20 @@ void Player::CollectFireFlower() {
 void Player::CollectFeather() {
     mHasFlyPower = true;
     mFlyPowerRemaining = FLY_POWER_DURATION;  // Réinitialiser la durée de vol
+}
+
+void Player::CollectStar() {
+    mIsInvincible = true;
+    mInvincibilityTime = INVINCIBILITY_DURATION;
+}
+
+void Player::CollectOneUp() {
+    // Cette fonction sera appelée depuis Game pour ajouter une vie
+}
+
+void Player::CollectComet() {
+    mHasCometPower = true;
+    mCometPowerRemaining = COMET_POWER_DURATION;
 }
 
 void Player::Shrink() {

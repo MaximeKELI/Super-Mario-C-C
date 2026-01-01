@@ -70,8 +70,12 @@ private:
     bool mIsBig;
     bool mHasFirePower;
     bool mHasFlyPower;
+    bool mIsInvincible;
+    bool mHasCometPower;
     float mShootCooldown;
     float mFlyPowerRemaining;  // Durée restante du pouvoir de vol
+    float mInvincibilityTime;  // Durée restante de l'invincibilité
+    float mCometPowerRemaining;  // Durée restante du pouvoir de comète
     bool mIsFlying;  // Indique si le joueur est en train de voler (touche espace maintenue)
     float mBaseHeight;
     bool mFacingRight;
@@ -83,6 +87,8 @@ private:
     static const float SHOOT_COOLDOWN;
     static const float FLY_POWER_DURATION;  // Durée du pouvoir de vol en secondes
     static const float FLY_FORCE;  // Force vers le haut pendant le vol
+    static const float INVINCIBILITY_DURATION;  // Durée de l'invincibilité en secondes
+    static const float COMET_POWER_DURATION;  // Durée du pouvoir de comète en secondes
 };
 
 #endif
