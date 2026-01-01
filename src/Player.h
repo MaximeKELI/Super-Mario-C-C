@@ -39,9 +39,14 @@ public:
     bool IsBig() const { return mIsBig; }
     bool HasFirePower() const { return mHasFirePower; }
     bool HasFlyPower() const { return mHasFlyPower; }
+    bool IsInvincible() const { return mIsInvincible; }
+    bool HasCometPower() const { return mHasCometPower; }
     void CollectMushroom();
     void CollectFireFlower();
     void CollectFeather();
+    void CollectStar();
+    void CollectOneUp();
+    void CollectComet();
     void Shrink();
     
     bool CanShoot() const { return mHasFirePower && mShootCooldown <= 0; }

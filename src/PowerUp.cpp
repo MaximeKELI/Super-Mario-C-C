@@ -83,6 +83,40 @@ void PowerUp::Render(SDL_Renderer* renderer, float cameraX) {
         SDL_RenderFillRectF(renderer, &feather1);
         SDL_RenderFillRectF(renderer, &feather2);
         SDL_RenderFillRectF(renderer, &feather3);
+    } else if (mType == PowerUpType::STAR) {
+        // Étoile invincible - jaune avec points
+        SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+        SDL_RenderFillRectF(renderer, &renderRect);
+        
+        // Points de l'étoile (croix)
+        SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255);
+        SDL_FRect star1 = {renderRect.x + 10, renderRect.y + 2, 4, renderRect.h - 4};
+        SDL_FRect star2 = {renderRect.x + 2, renderRect.y + 10, renderRect.w - 4, 4};
+        SDL_RenderFillRectF(renderer, &star1);
+        SDL_RenderFillRectF(renderer, &star2);
+    } else if (mType == PowerUpType::ONE_UP) {
+        // 1-UP - vert avec "1"
+        SDL_SetRenderDrawColor(renderer, 0, 200, 0, 255);
+        SDL_RenderFillRectF(renderer, &renderRect);
+        
+        // Chiffre "1" blanc
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_FRect one1 = {renderRect.x + 10, renderRect.y + 4, 4, renderRect.h - 8};
+        SDL_RenderFillRectF(renderer, &one1);
+    } else if (mType == PowerUpType::COMET) {
+        // Étoile filante - bleu/cyan avec traînée
+        SDL_SetRenderDrawColor(renderer, 100, 200, 255, 255);
+        SDL_RenderFillRectF(renderer, &renderRect);
+        
+        // Centre blanc
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_FRect center = {renderRect.x + 8, renderRect.y + 8, 8, 8};
+        SDL_RenderFillRectF(renderer, &center);
+        
+        // Traînée (ligne)
+        SDL_SetRenderDrawColor(renderer, 200, 240, 255, 255);
+        SDL_FRect trail = {renderRect.x - 4, renderRect.y + 10, 4, 4};
+        SDL_RenderFillRectF(renderer, &trail);
     }
 }
 
