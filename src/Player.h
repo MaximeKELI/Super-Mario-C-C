@@ -3,6 +3,12 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <vector>
+
+struct GifFrame {
+    SDL_Texture* texture;
+    float delay;  // Délai en secondes
+};
 
 class Player {
 public:
@@ -41,10 +47,13 @@ public:
     void UpdateShootCooldown(float deltaTime);
     
 private:
+    bool LoadAnimatedGif(SDL_Renderer* renderer, const char* path);
     bool LoadTexture(SDL_Renderer* renderer, const char* path);
     
     SDL_FRect mRect;
-    SDL_Texture* mTexture;
+    std::vector<GifFrame> mGifFrames;
+    int mCurrentFrame;
+    float mAnimationTime;
     int mTextureWidth;
     int mTextureHeight;
     float mVelocityX;
