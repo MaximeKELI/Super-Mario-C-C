@@ -2,15 +2,6 @@
 #include <algorithm>
 #include <iostream>
 #include <cstring>
-extern "C" {
-#include <gif_lib.h>
-}
-
-// Fonction de callback pour giflib (non utilisée mais requise)
-static int InputFunc(GifFileType* gif, GifByteType* bytes, int size) {
-    FILE* file = (FILE*)gif->UserData;
-    return fread(bytes, 1, size, file);
-}
 
 const float Player::GRAVITY = 800.0f;
 const float Player::JUMP_FORCE = -400.0f;
@@ -56,21 +47,30 @@ Player::~Player() {
 }
 
 bool Player::LoadAnimatedGif(SDL_Renderer* renderer, const char* path) {
-    int error = 0;
-    GifFileType* gif = DGifOpenFileName(path, &error);
-    if (!gif) {
-        std::cerr << "Impossible d'ouvrir le GIF: " << path << std::endl;
+    // Utiliser IMG_LoadGIFAnimation_RW de SDL_image 2.6.0+
+    SDL_RWops* rwop = SDL_RWFromFile(path, "rb");
+    if (!rwop) {
+        std::cerr << "Impossible d'ouvrir le fichier GIF: " << path << std::endl;
         return false;
     }
     
-    if (DGifSlurp(gif) != GIF_OK) {
-        std::cerr << "Impossible de lire le GIF" << std::endl;
-        DGifCloseFile(gif, &error);
+    IMG_Animation* anim = IMG_LoadGIFAnimation_RW(rwop);
+    SDL_RWclose(rwop);
+    
+    if (!anim) {
+        std::cerr << "Impossible de charger l'animation GIF: " << IMG_GetError() << std::endl;
         return false;
     }
     
-    mTextureWidth = gif->SWidth;
-    mTextureHeight = gif->SHeight;
+    if (anim->count == 0) {
+        std::cerr << "L'animation GIF ne contient aucune frame" << std::endl;
+        IMG_FreeAnimation(anim);
+        return false;
+    }
+    
+    // Obtenir les dimensions de la première frame
+    mTextureWidth = anim->w;
+    mTextureHeight = anim->h;
     
     // Utiliser une taille fixe pour le rendu
     float targetSize = 48.0f;
@@ -78,79 +78,38 @@ bool Player::LoadAnimatedGif(SDL_Renderer* renderer, const char* path) {
     mRect.h = targetSize;
     mBaseHeight = targetSize;
     
-    // Créer une palette de couleurs globale si disponible
-    ColorMapObject* colorMap = gif->SColorMap ? gif->SColorMap : (gif->Image.ColorMap ? gif->Image.ColorMap : nullptr);
-    
-    // Parcourir toutes les images (frames)
-    for (int i = 0; i < gif->ImageCount; i++) {
-        SavedImage* savedImage = &gif->SavedImages[i];
-        
-        // Créer une surface SDL pour cette frame
-        SDL_Surface* surface = SDL_CreateRGBSurface(0, mTextureWidth, mTextureHeight, 32, 
-                                                     0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-        if (!surface) {
+    // Charger toutes les frames dans des textures
+    for (int i = 0; i < anim->count; i++) {
+        SDL_Surface* frameSurface = anim->frames[i];
+        if (!frameSurface) {
             continue;
         }
         
-        // Remplir avec la couleur de fond (par défaut transparente/noire)
-        SDL_FillRect(surface, nullptr, SDL_MapRGBA(surface->format, 0, 0, 0, 0));
-        
-        GraphicsControlBlock gcb;
-        DGifSavedExtensionToGCB(gif, i, &gcb);
-        
-        // Obtenir la palette pour cette frame
-        ColorMapObject* frameColorMap = savedImage->Image.ColorMap ? savedImage->Image.ColorMap : colorMap;
-        if (!frameColorMap) {
-            SDL_FreeSurface(surface);
+        // Copier la surface pour pouvoir libérer l'animation ensuite
+        SDL_Surface* surfaceCopy = SDL_ConvertSurface(frameSurface, frameSurface->format, 0);
+        if (!surfaceCopy) {
             continue;
         }
         
-        // Dessiner l'image
-        int imageLeft = savedImage->Image.Left;
-        int imageTop = savedImage->Image.Top;
-        int imageWidth = savedImage->Image.Width;
-        int imageHeight = savedImage->Image.Height;
-        
-        for (int y = 0; y < imageHeight; y++) {
-            for (int x = 0; x < imageWidth; x++) {
-                int pixelIndex = y * imageWidth + x;
-                if (pixelIndex >= 0 && pixelIndex < imageWidth * imageHeight) {
-                    unsigned char colorIndex = savedImage->Image.RasterBits[pixelIndex];
-                    
-                    // Vérifier si c'est un pixel transparent
-                    if (gcb.TransparentColor != NO_TRANSPARENT_COLOR && colorIndex == gcb.TransparentColor) {
-                        continue; // Pixel transparent
-                    }
-                    
-                    if (colorIndex < frameColorMap->ColorCount) {
-                        GifColorType color = frameColorMap->Colors[colorIndex];
-                        Uint32 pixel = SDL_MapRGBA(surface->format, color.Red, color.Green, color.Blue, 255);
-                        
-                        int targetX = imageLeft + x;
-                        int targetY = imageTop + y;
-                        if (targetX >= 0 && targetX < mTextureWidth && targetY >= 0 && targetY < mTextureHeight) {
-                            Uint32* pixels = (Uint32*)surface->pixels;
-                            pixels[targetY * mTextureWidth + targetX] = pixel;
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Créer la texture SDL
-        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-        SDL_FreeSurface(surface);
+        // Créer la texture à partir de la copie
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surfaceCopy);
+        SDL_FreeSurface(surfaceCopy);
         
         if (texture) {
             GifFrame frame;
             frame.texture = texture;
-            // Le délai est en 1/100èmes de seconde, convertir en secondes
-            frame.delay = (gcb.DelayTime > 0 ? gcb.DelayTime : 10) / 100.0f;
+            // Le délai est en millisecondes, convertir en secondes
+            frame.delay = anim->delays[i] / 1000.0f;
+            // Si le délai est 0, utiliser une valeur par défaut (100ms = 0.1s)
+            if (frame.delay <= 0.0f) {
+                frame.delay = 0.1f;
+            }
             mGifFrames.push_back(frame);
         }
     }
     
-    DGifCloseFile(gif, &error);
+    // Libérer l'animation maintenant qu'on a copié toutes les surfaces
+    IMG_FreeAnimation(anim);
     
     if (mGifFrames.empty()) {
         std::cerr << "Aucune frame chargée du GIF" << std::endl;
@@ -235,7 +194,7 @@ void Player::Render(SDL_Renderer* renderer, float cameraX) {
     SDL_FRect renderRect = mRect;
     renderRect.x -= cameraX;
     
-    if (!mGifFrames.empty() && mCurrentFrame < mGifFrames.size()) {
+    if (!mGifFrames.empty() && mCurrentFrame < static_cast<int>(mGifFrames.size())) {
         // Dessiner la frame actuelle du GIF
         SDL_RendererFlip flip = mFacingRight ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
         SDL_RenderCopyExF(renderer, mGifFrames[mCurrentFrame].texture, nullptr, &renderRect, 0.0, nullptr, flip);
