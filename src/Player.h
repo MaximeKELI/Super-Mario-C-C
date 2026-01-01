@@ -67,6 +67,7 @@ private:
     bool mHasFlyPower;
     float mShootCooldown;
     float mFlyPowerRemaining;  // Durée restante du pouvoir de vol
+    bool mIsFlying;  // Indique si le joueur est en train de voler (touche espace maintenue)
     float mBaseHeight;
     bool mFacingRight;
     
