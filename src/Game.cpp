@@ -613,6 +613,40 @@ void Game::Render() {
     SDL_RenderPresent(mRenderer);
 }
 
+void Game::RenderText(const char* text, int x, int y, SDL_Color color, int fontSize) {
+    if (!mFont) {
+        // Fallback: ne rien afficher si la police n'est pas chargée
+        return;
+    }
+    
+    // Créer une surface avec le texte
+    SDL_Surface* textSurface = TTF_RenderText_Solid(mFont, text, color);
+    if (!textSurface) {
+        return;
+    }
+    
+    // Créer une texture à partir de la surface
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(mRenderer, textSurface);
+    if (!textTexture) {
+        SDL_FreeSurface(textSurface);
+        return;
+    }
+    
+    // Obtenir les dimensions du texte
+    int textWidth = textSurface->w;
+    int textHeight = textSurface->h;
+    
+    // Créer le rectangle de destination
+    SDL_Rect destRect = {x, y, textWidth, textHeight};
+    
+    // Rendre le texte
+    SDL_RenderCopy(mRenderer, textTexture, nullptr, &destRect);
+    
+    // Nettoyer
+    SDL_DestroyTexture(textTexture);
+    SDL_FreeSurface(textSurface);
+}
+
 void Game::RenderUI() {
     // Barre d'information en haut
     SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 200);
@@ -623,29 +657,29 @@ void Game::RenderUI() {
     SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
     SDL_RenderDrawLine(mRenderer, 0, 50, 800, 50);
     
-    // Indicateurs visuels pour le score (rectangles colorés)
-    SDL_SetRenderDrawColor(mRenderer, 255, 255, 0, 255);
-    SDL_Rect scoreIndicator = {10, 10, std::min(mScore / 10, 200), 10};
-    SDL_RenderFillRect(mRenderer, &scoreIndicator);
+    // Afficher le score en texte
+    std::ostringstream scoreStream;
+    scoreStream << "Score: " << mScore;
+    SDL_Color scoreColor = {255, 255, 0, 255}; // Jaune
+    RenderText(scoreStream.str().c_str(), 10, 15, scoreColor);
     
-    // Indicateurs pour les vies (cœurs rouges)
-    SDL_SetRenderDrawColor(mRenderer, 255, 0, 0, 255);
-    for (int i = 0; i < mLives && i < 5; i++) {
-        SDL_Rect lifeRect = {220 + i * 25, 15, 15, 15};
-        SDL_RenderFillRect(mRenderer, &lifeRect);
-    }
+    // Afficher les vies en texte
+    std::ostringstream livesStream;
+    livesStream << "Vies: " << mLives;
+    SDL_Color livesColor = {255, 0, 0, 255}; // Rouge
+    RenderText(livesStream.str().c_str(), 200, 15, livesColor);
     
-    // Indicateur pour les pièces
-    SDL_SetRenderDrawColor(mRenderer, 255, 215, 0, 255);
-    SDL_Rect coinIndicator = {350, 15, 15, 15};
-    SDL_RenderFillRect(mRenderer, &coinIndicator);
-    SDL_Rect coinCount = {370, 15, std::min(mCoinsCollected * 2, 50), 15};
-    SDL_RenderFillRect(mRenderer, &coinCount);
+    // Afficher les pièces en texte
+    std::ostringstream coinsStream;
+    coinsStream << "Pieces: " << mCoinsCollected;
+    SDL_Color coinsColor = {255, 215, 0, 255}; // Or
+    RenderText(coinsStream.str().c_str(), 320, 15, coinsColor);
     
-    // Indicateur de niveau
-    SDL_SetRenderDrawColor(mRenderer, 0, 255, 0, 255);
-    SDL_Rect levelRect = {450, 15, 20, 20};
-    SDL_RenderFillRect(mRenderer, &levelRect);
+    // Afficher le niveau en texte
+    std::ostringstream levelStream;
+    levelStream << "Niveau: " << mCurrentLevel;
+    SDL_Color levelColor = {0, 255, 0, 255}; // Vert
+    RenderText(levelStream.str().c_str(), 500, 15, levelColor);
 }
 
 void Game::RenderMenu() {
