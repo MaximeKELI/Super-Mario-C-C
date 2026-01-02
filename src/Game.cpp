@@ -737,10 +737,8 @@ void Game::ProcessInput() {
                             }
                         }
                     } else {
-                        mCurrentLevel = 1;
-                        mScore = 0;
+                        // Reprendre au niveau actuel (ne pas revenir au niveau 1)
                         mLives = 3;
-                        mCoinsCollected = 0;
                         LoadLevel();
                         mGameState = GameState::PLAYING;
                         // Reprendre la musique de fond après le redémarrage
