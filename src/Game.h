@@ -100,6 +100,7 @@ private:
     void RenderStatistics();
     void RenderPauseMenu();
     void RenderMiniMap();
+    void RenderEnterName();
     void LoadLevel();
     void LoadHighScores();
     void SaveHighScores();

@@ -1417,6 +1417,262 @@ bool Game::CheckAndAddHighScore(int score) {
     return false;
 }
 
+void Game::RenderHighScores() {
+    // Fond
+    SDL_SetRenderDrawColor(mRenderer, 20, 20, 60, 255);
+    SDL_RenderClear(mRenderer);
+    
+    // Titre
+    SDL_Color titleColor = {255, 255, 0, 255};
+    RenderText("HIGH SCORES", 280, 50, titleColor, 48);
+    
+    // Afficher les scores
+    SDL_Color textColor = {255, 255, 255, 255};
+    SDL_Color headerColor = {200, 200, 255, 255};
+    int y = 150;
+    
+    RenderText("Rang", 50, y, headerColor, 24);
+    RenderText("Nom", 150, y, headerColor, 24);
+    RenderText("Score", 350, y, headerColor, 24);
+    RenderText("Niveau", 500, y, headerColor, 24);
+    RenderText("Difficulte", 600, y, headerColor, 24);
+    
+    y += 40;
+    for (size_t i = 0; i < mHighScores.size() && i < MAX_HIGH_SCORES; i++) {
+        std::ostringstream rankStream;
+        rankStream << (i + 1) << ".";
+        RenderText(rankStream.str().c_str(), 50, y, textColor, 20);
+        RenderText(mHighScores[i].name.c_str(), 150, y, textColor, 20);
+        
+        std::ostringstream scoreStream;
+        scoreStream << mHighScores[i].score;
+        RenderText(scoreStream.str().c_str(), 350, y, textColor, 20);
+        
+        std::ostringstream levelStream;
+        levelStream << mHighScores[i].level;
+        RenderText(levelStream.str().c_str(), 500, y, textColor, 20);
+        
+        std::string diffStr = (mHighScores[i].difficulty == Difficulty::EASY) ? "Facile" :
+                              (mHighScores[i].difficulty == Difficulty::HARD) ? "Difficile" : "Normal";
+        RenderText(diffStr.c_str(), 600, y, textColor, 20);
+        
+        y += 35;
+    }
+    
+    // Instructions
+    SDL_Color instructionColor = {150, 150, 150, 255};
+    RenderText("Appuyez sur ESC pour retourner au menu", 180, 550, instructionColor, 20);
+}
+
+void Game::RenderStatistics() {
+    // Fond
+    SDL_SetRenderDrawColor(mRenderer, 20, 60, 20, 255);
+    SDL_RenderClear(mRenderer);
+    
+    // Titre
+    SDL_Color titleColor = {255, 255, 0, 255};
+    RenderText("STATISTIQUES", 250, 50, titleColor, 48);
+    
+    SDL_Color textColor = {255, 255, 255, 255};
+    SDL_Color labelColor = {200, 255, 200, 255};
+    int y = 150;
+    
+    std::ostringstream timeStream;
+    timeStream << "Temps de jeu total: " << static_cast<int>(mStats.totalPlayTime) << " s";
+    RenderText(timeStream.str().c_str(), 100, y, labelColor, 28);
+    y += 50;
+    
+    std::ostringstream enemiesStream;
+    enemiesStream << "Ennemis elimines: " << mStats.enemiesKilled;
+    RenderText(enemiesStream.str().c_str(), 100, y, labelColor, 28);
+    y += 50;
+    
+    std::ostringstream powerUpsStream;
+    powerUpsStream << "Power-ups collectes: " << mStats.powerUpsCollected;
+    RenderText(powerUpsStream.str().c_str(), 100, y, labelColor, 28);
+    y += 50;
+    
+    std::ostringstream distanceStream;
+    distanceStream << "Distance parcourue: " << static_cast<int>(mStats.distanceTraveled) << " px";
+    RenderText(distanceStream.str().c_str(), 100, y, labelColor, 28);
+    y += 50;
+    
+    std::ostringstream coinsStream;
+    coinsStream << "Pieces totales collectees: " << mStats.totalCoinsCollected;
+    RenderText(coinsStream.str().c_str(), 100, y, labelColor, 28);
+    y += 50;
+    
+    std::ostringstream levelsStream;
+    levelsStream << "Niveaux completes: " << mStats.levelsCompleted;
+    RenderText(levelsStream.str().c_str(), 100, y, labelColor, 28);
+    
+    // Instructions
+    SDL_Color instructionColor = {150, 150, 150, 255};
+    RenderText("Appuyez sur ESC pour retourner au menu", 180, 550, instructionColor, 20);
+}
+
+void Game::RenderPauseMenu() {
+    // Fond semi-transparent
+    SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 200);
+    SDL_Rect overlayRect = {200, 150, 400, 350};
+    SDL_RenderFillRect(mRenderer, &overlayRect);
+    
+    SDL_SetRenderDrawColor(mRenderer, 50, 50, 100, 255);
+    SDL_RenderDrawRect(mRenderer, &overlayRect);
+    
+    // Titre
+    SDL_Color titleColor = {255, 255, 0, 255};
+    RenderText("PAUSE", 340, 180, titleColor, 36);
+    
+    SDL_Color textColor = {255, 255, 255, 255};
+    SDL_Color selectedColor = {255, 255, 0, 255};
+    
+    int y = 250;
+    const char* items[] = {"Reprendre", "Options", "Sauvegarder", "Menu Principal"};
+    
+    for (int i = 0; i < mPauseMenuMaxItems; i++) {
+        SDL_Color color = (i == mPauseMenuSelection) ? selectedColor : textColor;
+        int x = 280;
+        if (i == mPauseMenuSelection) {
+            RenderText(">", x - 30, y, selectedColor, 24);
+        }
+        RenderText(items[i], x, y, color, 24);
+        y += 50;
+    }
+}
+
+void Game::RenderMiniMap() {
+    if (!mPlayer) return;
+    
+    // Carte miniature en haut à droite
+    int mapX = 650;
+    int mapY = 60;
+    int mapWidth = 140;
+    int mapHeight = 100;
+    
+    // Fond de la mini-map
+    SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 180);
+    SDL_Rect mapRect = {mapX, mapY, mapWidth, mapHeight};
+    SDL_RenderFillRect(mRenderer, &mapRect);
+    
+    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
+    SDL_RenderDrawRect(mRenderer, &mapRect);
+    
+    if (mLevelEndX > 0) {
+        // Position du joueur sur la mini-map
+        float progress = mPlayer->GetX() / mLevelEndX;
+        if (progress > 1.0f) progress = 1.0f;
+        int playerMapX = mapX + static_cast<int>(progress * mapWidth);
+        int playerMapY = mapY + mapHeight / 2;
+        
+        // Checkpoints
+        for (auto* checkpoint : mCheckpoints) {
+            float cpProgress = checkpoint->GetX() / mLevelEndX;
+            if (cpProgress <= 1.0f) {
+                int cpMapX = mapX + static_cast<int>(cpProgress * mapWidth);
+                SDL_SetRenderDrawColor(mRenderer, 0, 255, 0, 255);
+                SDL_Rect cpRect = {cpMapX - 2, mapY + 5, 4, 8};
+                SDL_RenderFillRect(mRenderer, &cpRect);
+            }
+        }
+        
+        // Fin du niveau
+        SDL_SetRenderDrawColor(mRenderer, 255, 0, 0, 255);
+        SDL_Rect endRect = {mapX + mapWidth - 4, mapY + 5, 4, 8};
+        SDL_RenderFillRect(mRenderer, &endRect);
+        
+        // Joueur
+        SDL_SetRenderDrawColor(mRenderer, 255, 255, 0, 255);
+        SDL_Rect playerRect = {playerMapX - 3, playerMapY - 3, 6, 6};
+        SDL_RenderFillRect(mRenderer, &playerRect);
+    }
+}
+
+void Game::RenderEnterName() {
+    // Fond
+    SDL_SetRenderDrawColor(mRenderer, 50, 50, 100, 255);
+    SDL_RenderClear(mRenderer);
+    
+    SDL_Color titleColor = {255, 255, 0, 255};
+    RenderText("NOUVEAU HIGH SCORE!", 180, 200, titleColor, 36);
+    
+    SDL_Color textColor = {255, 255, 255, 255};
+    RenderText("Entrez votre nom:", 250, 280, textColor, 24);
+    
+    std::string displayName = mPlayerName;
+    if (displayName.empty()) {
+        displayName = "_";
+    } else {
+        displayName += "_";
+    }
+    RenderText(displayName.c_str(), 300, 330, textColor, 32);
+    
+    SDL_Color instructionColor = {150, 150, 150, 255};
+    RenderText("Appuyez sur ENTREE pour confirmer", 150, 400, instructionColor, 20);
+}
+
+void Game::SaveGame() {
+    SaveData save;
+    save.currentLevel = mCurrentLevel;
+    save.score = mScore;
+    save.lives = mLives;
+    save.coinsCollected = mCoinsCollected;
+    save.checkpointX = mCheckpointX;
+    save.checkpointY = mCheckpointY;
+    save.hasCheckpoint = mHasCheckpoint;
+    save.difficulty = mDifficulty;
+    save.stats = mStats;
+    
+    std::ofstream file("savegame.dat", std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Impossible de sauvegarder la partie" << std::endl;
+        return;
+    }
+    
+    file.write(reinterpret_cast<const char*>(&save), sizeof(SaveData));
+    file.close();
+}
+
+bool Game::LoadGame() {
+    std::ifstream file("savegame.dat", std::ios::binary);
+    if (!file.is_open()) {
+        return false;
+    }
+    
+    SaveData save;
+    file.read(reinterpret_cast<char*>(&save), sizeof(SaveData));
+    file.close();
+    
+    mCurrentLevel = save.currentLevel;
+    mScore = save.score;
+    mLives = save.lives;
+    mCoinsCollected = save.coinsCollected;
+    mCheckpointX = save.checkpointX;
+    mCheckpointY = save.checkpointY;
+    mHasCheckpoint = save.hasCheckpoint;
+    mDifficulty = save.difficulty;
+    mStats = save.stats;
+    
+    ApplyDifficulty();
+    LoadLevel();
+    
+    return true;
+}
+
+void Game::ApplyDifficulty() {
+    switch (mDifficulty) {
+        case Difficulty::EASY:
+            if (mLives < 5) mLives = 5;
+            break;
+        case Difficulty::NORMAL:
+            if (mLives < 3) mLives = 3;
+            break;
+        case Difficulty::HARD:
+            if (mLives > 2) mLives = 2;
+            break;
+    }
+}
+
 void Game::Shutdown() {
     SaveHighScores();
     ResetLevel();
