@@ -1473,7 +1473,6 @@ void Game::RenderStatistics() {
     SDL_Color titleColor = {255, 255, 0, 255};
     RenderText("STATISTIQUES", 250, 50, titleColor, 48);
     
-    SDL_Color textColor = {255, 255, 255, 255};
     SDL_Color labelColor = {200, 255, 200, 255};
     int y = 150;
     
@@ -1567,7 +1566,8 @@ void Game::RenderMiniMap() {
         
         // Checkpoints
         for (auto* checkpoint : mCheckpoints) {
-            float cpProgress = checkpoint->GetX() / mLevelEndX;
+            SDL_FRect cpRect = checkpoint->GetRect();
+            float cpProgress = cpRect.x / mLevelEndX;
             if (cpProgress <= 1.0f) {
                 int cpMapX = mapX + static_cast<int>(cpProgress * mapWidth);
                 SDL_SetRenderDrawColor(mRenderer, 0, 255, 0, 255);
