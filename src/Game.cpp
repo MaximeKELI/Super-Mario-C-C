@@ -938,6 +938,8 @@ void Game::Update(float deltaTime) {
         } else {
             mPlayer->Kill();
             mGameState = GameState::GAME_OVER;
+            // Vérifier si c'est un high score
+            CheckAndAddHighScore(mScore);
         }
     }
     
@@ -1110,6 +1112,7 @@ void Game::CheckCollisions() {
                 // Le joueur a sauté sur l'ennemi
                 enemy->Kill();
                 mScore += 100;
+                mStats.enemiesKilled++;
                 mPlayer->SetVelocity(0, -200.0f);
             } else {
                 // Le joueur a été touché
@@ -1165,6 +1168,7 @@ void Game::CheckCollisions() {
                     enemy->Kill();
                     fireball->Kill();
                     mScore += 100;
+                    mStats.enemiesKilled++;
                     hitEnemy = true;
                     break;
                 }
