@@ -1176,54 +1176,74 @@ void Game::Render() {
         SDL_RenderClear(mRenderer);
         
         // Afficher "GAME OVER"
-        SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 255);
-        SDL_Rect gameOverRect = {200, 200, 400, 200};
-        SDL_RenderFillRect(mRenderer, &gameOverRect);
+        SDL_Color gameOverColor = {255, 0, 0, 255}; // Rouge
+        RenderText("GAME OVER", 280, 200, gameOverColor, 48);
         
-        SDL_SetRenderDrawColor(mRenderer, 255, 0, 0, 255);
-        SDL_RenderDrawRect(mRenderer, &gameOverRect);
+        // Afficher le score
+        std::ostringstream scoreStream;
+        scoreStream << "Score: " << mScore;
+        SDL_Color scoreColor = {255, 255, 255, 255}; // Blanc
+        RenderText(scoreStream.str().c_str(), 300, 280, scoreColor, 32);
         
-        // Message
-        SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
-        SDL_Rect msgRect = {220, 250, 360, 30};
-        SDL_RenderFillRect(mRenderer, &msgRect);
-        
-        SDL_Rect restartRect = {220, 300, 360, 30};
-        SDL_RenderFillRect(mRenderer, &restartRect);
+        // Afficher "Appuyez sur Entree pour recommencer"
+        SDL_Color instructionColor = {200, 200, 200, 255}; // Gris clair
+        RenderText("Appuyez sur Entree pour recommencer", 180, 350, instructionColor, 24);
     } else if (mGameState == GameState::LEVEL_COMPLETE) {
         // Fond
         SDL_SetRenderDrawColor(mRenderer, 0, 50, 0, 255);
         SDL_RenderClear(mRenderer);
         
         // Afficher "LEVEL COMPLETE"
-        SDL_SetRenderDrawColor(mRenderer, 0, 0, 0, 255);
-        SDL_Rect completeRect = {150, 200, 500, 200};
-        SDL_RenderFillRect(mRenderer, &completeRect);
+        SDL_Color completeColor = {0, 255, 0, 255}; // Vert
+        RenderText("LEVEL COMPLETE!", 240, 180, completeColor, 48);
         
-        SDL_SetRenderDrawColor(mRenderer, 0, 255, 0, 255);
-        SDL_RenderDrawRect(mRenderer, &completeRect);
+        // Afficher le score
+        std::ostringstream scoreStream;
+        scoreStream << "Score: " << mScore;
+        SDL_Color scoreColor = {255, 255, 255, 255}; // Blanc
+        RenderText(scoreStream.str().c_str(), 300, 250, scoreColor, 32);
         
-        // Message
-        SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
-        SDL_Rect msgRect = {170, 250, 460, 30};
-        SDL_RenderFillRect(mRenderer, &msgRect);
+        // Afficher le prochain niveau
+        std::ostringstream nextLevelStream;
+        nextLevelStream << "Prochain niveau: " << (mCurrentLevel + 1);
+        SDL_Color nextLevelColor = {255, 255, 0, 255}; // Jaune
+        RenderText(nextLevelStream.str().c_str(), 240, 300, nextLevelColor, 32);
         
-        SDL_Rect nextRect = {170, 300, 460, 30};
-        SDL_RenderFillRect(mRenderer, &nextRect);
+        // Afficher "Appuyez sur Entree pour continuer"
+        SDL_Color instructionColor = {200, 200, 200, 255}; // Gris clair
+        RenderText("Appuyez sur Entree pour continuer", 180, 370, instructionColor, 24);
     }
     
     SDL_RenderPresent(mRenderer);
 }
 
 void Game::RenderText(const char* text, int x, int y, SDL_Color color, int fontSize) {
-    if (!mFont) {
-        // Fallback: ne rien afficher si la police n'est pas chargée
-        return;
+    // Charger la police avec la taille spécifiée
+    TTF_Font* font = nullptr;
+    
+    // Essayer de charger une police avec la taille demandée
+    font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf", fontSize);
+    if (!font) {
+        font = TTF_OpenFont("/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf", fontSize);
+    }
+    if (!font) {
+        font = TTF_OpenFont("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", fontSize);
+    }
+    
+    // Si aucune police n'a pu être chargée, utiliser mFont comme fallback
+    if (!font) {
+        if (!mFont) {
+            return; // Pas de police disponible
+        }
+        font = mFont;
     }
     
     // Créer une surface avec le texte
-    SDL_Surface* textSurface = TTF_RenderText_Solid(mFont, text, color);
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text, color);
     if (!textSurface) {
+        if (font != mFont) {
+            TTF_CloseFont(font);
+        }
         return;
     }
     
@@ -1231,6 +1251,9 @@ void Game::RenderText(const char* text, int x, int y, SDL_Color color, int fontS
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(mRenderer, textSurface);
     if (!textTexture) {
         SDL_FreeSurface(textSurface);
+        if (font != mFont) {
+            TTF_CloseFont(font);
+        }
         return;
     }
     
@@ -1247,6 +1270,9 @@ void Game::RenderText(const char* text, int x, int y, SDL_Color color, int fontS
     // Nettoyer
     SDL_DestroyTexture(textTexture);
     SDL_FreeSurface(textSurface);
+    if (font != mFont) {
+        TTF_CloseFont(font);
+    }
 }
 
 void Game::RenderUI() {
