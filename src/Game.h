@@ -154,6 +154,33 @@ private:
     float mCheckpointY;
     bool mHasCheckpoint;
     
+    // High Scores
+    std::vector<HighScore> mHighScores;
+    static const int MAX_HIGH_SCORES = 10;
+    
+    // Statistics
+    GameStats mStats;
+    float mLevelStartTime;
+    float mLastPlayerX; // Pour calculer la distance
+    
+    // Difficulty
+    Difficulty mDifficulty;
+    
+    // Pause menu
+    int mPauseMenuSelection;
+    int mPauseMenuMaxItems;
+    bool mInOptionsMenu;
+    int mOptionsMenuSelection;
+    
+    // Options
+    int mMusicVolume;
+    int mSoundVolume;
+    
+    // Enter name for high score
+    std::string mPlayerName;
+    int mPlayerNameCursorPos;
+    bool mWaitingForName;
+    
     Uint32 mLastFrameTime;
 };
 

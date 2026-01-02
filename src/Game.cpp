@@ -11,7 +11,12 @@ Game::Game() : mWindow(nullptr), mRenderer(nullptr), mFont(nullptr), mBackground
                mScore(0), mLives(3), mCoinsCollected(0), mCameraX(0.0f),
                mLevelEndX(2000.0f), mCurrentLevel(1), mLevelTimer(300.0f),
                mCheckpointX(100.0f), mCheckpointY(100.0f), mHasCheckpoint(false),
+               mLevelStartTime(0.0f), mLastPlayerX(0.0f), mDifficulty(Difficulty::NORMAL),
+               mPauseMenuSelection(0), mPauseMenuMaxItems(4), mInOptionsMenu(false),
+               mOptionsMenuSelection(0), mMusicVolume(128), mSoundVolume(128),
+               mPlayerName(""), mPlayerNameCursorPos(0), mWaitingForName(false),
                mLastFrameTime(0) {
+    LoadHighScores();
 }
 
 Game::~Game() {
