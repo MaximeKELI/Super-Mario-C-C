@@ -686,6 +686,17 @@ void Game::Run() {
             deltaTime = 0.016f; // ~60 FPS
         }
         
+        // Vérifier si la musique Level Clear est terminée et reprendre la musique de fond
+        // Cette vérification doit se faire dans Run() pour fonctionner même quand on n'est pas en PLAYING
+        if (mGameState == GameState::LEVEL_COMPLETE && mLevelClearMusic && mBackgroundMusic) {
+            if (!Mix_PlayingMusic()) {
+                // La musique Level Clear est terminée, reprendre la musique de fond
+                if (Mix_PlayMusic(mBackgroundMusic, -1) == -1) {
+                    std::cerr << "Impossible de reprendre la musique de fond: " << Mix_GetError() << std::endl;
+                }
+            }
+        }
+        
         if (mGameState == GameState::PLAYING && !mPaused) {
             Update(deltaTime);
         }
@@ -718,6 +729,13 @@ void Game::ProcessInput() {
                         mCurrentLevel++;
                         LoadLevel();
                         mGameState = GameState::PLAYING;
+                        // Reprendre la musique de fond après le changement de niveau
+                        if (mBackgroundMusic) {
+                            Mix_HaltMusic();
+                            if (Mix_PlayMusic(mBackgroundMusic, -1) == -1) {
+                                std::cerr << "Impossible de reprendre la musique de fond: " << Mix_GetError() << std::endl;
+                            }
+                        }
                     } else {
                         mCurrentLevel = 1;
                         mScore = 0;
@@ -725,6 +743,13 @@ void Game::ProcessInput() {
                         mCoinsCollected = 0;
                         LoadLevel();
                         mGameState = GameState::PLAYING;
+                        // Reprendre la musique de fond après le redémarrage
+                        if (mBackgroundMusic) {
+                            Mix_HaltMusic();
+                            if (Mix_PlayMusic(mBackgroundMusic, -1) == -1) {
+                                std::cerr << "Impossible de reprendre la musique de fond: " << Mix_GetError() << std::endl;
+                            }
+                        }
                     }
                 }
             }
@@ -753,16 +778,6 @@ void Game::ProcessInput() {
 
 void Game::Update(float deltaTime) {
     if (!mPlayer || mPlayer->IsDead()) return;
-    
-    // Vérifier si la musique Level Clear est terminée et reprendre la musique de fond
-    if (mGameState == GameState::LEVEL_COMPLETE && mLevelClearMusic && mBackgroundMusic) {
-        if (!Mix_PlayingMusic()) {
-            // La musique Level Clear est terminée, reprendre la musique de fond
-            if (Mix_PlayMusic(mBackgroundMusic, -1) == -1) {
-                std::cerr << "Impossible de reprendre la musique de fond: " << Mix_GetError() << std::endl;
-            }
-        }
-    }
     
     // Mettre à jour le timer
     if (mLevelTimer > 0.0f) {
