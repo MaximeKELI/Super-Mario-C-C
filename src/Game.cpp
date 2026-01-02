@@ -6,10 +6,12 @@
 #include <ctime>
 #include <sstream>
 
-Game::Game() : mWindow(nullptr), mRenderer(nullptr), mFont(nullptr), mIsRunning(true),
+Game::Game() : mWindow(nullptr), mRenderer(nullptr), mFont(nullptr), mBackgroundMusic(nullptr), mIsRunning(true),
                mGameState(GameState::MENU), mPaused(false), mPlayer(nullptr),
                mScore(0), mLives(3), mCoinsCollected(0), mCameraX(0.0f),
-               mLevelEndX(2000.0f), mCurrentLevel(1), mLastFrameTime(0) {
+               mLevelEndX(2000.0f), mCurrentLevel(1), mLevelTimer(300.0f),
+               mCheckpointX(100.0f), mCheckpointY(100.0f), mHasCheckpoint(false),
+               mLastFrameTime(0) {
 }
 
 Game::~Game() {
@@ -49,6 +51,23 @@ bool Game::Initialize() {
         }
         if (!mFont) {
             std::cerr << "Impossible de charger une police! Le texte ne sera pas affiché. TTF_Error: " << TTF_GetError() << std::endl;
+        }
+    }
+    
+    // Initialiser SDL_mixer
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cerr << "Erreur d'initialisation de SDL_mixer: " << Mix_GetError() << std::endl;
+        // Ne pas retourner false, on continue sans audio
+    } else {
+        // Charger la musique de fond
+        mBackgroundMusic = Mix_LoadMUS("src/06. Ragtime in the Skies.mp3");
+        if (!mBackgroundMusic) {
+            std::cerr << "Impossible de charger la musique: " << Mix_GetError() << std::endl;
+        } else {
+            // Jouer la musique en boucle
+            if (Mix_PlayMusic(mBackgroundMusic, -1) == -1) {
+                std::cerr << "Impossible de jouer la musique: " << Mix_GetError() << std::endl;
+            }
         }
     }
     
@@ -828,6 +847,14 @@ void Game::Shutdown() {
         TTF_CloseFont(mFont);
         mFont = nullptr;
     }
+        // Arrêter et libérer la musique
+    if (mBackgroundMusic) {
+        Mix_HaltMusic();
+        Mix_FreeMusic(mBackgroundMusic);
+        mBackgroundMusic = nullptr;
+    }
+    
+    Mix_CloseAudio();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();

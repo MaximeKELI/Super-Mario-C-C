@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -25,6 +26,7 @@ enum class GameState {
     MENU,
     PLAYING,
     PAUSED,
+    PAUSE_MENU,
     GAME_OVER,
     LEVEL_COMPLETE
 };
@@ -52,6 +54,7 @@ private:
     SDL_Window* mWindow;
     SDL_Renderer* mRenderer;
     TTF_Font* mFont;
+    Mix_Music* mBackgroundMusic;
     bool mIsRunning;
     GameState mGameState;
     bool mPaused;
