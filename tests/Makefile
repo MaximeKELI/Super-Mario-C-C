@@ -14,7 +14,7 @@ test_game_structures: test_game_structures.cpp test_framework.h
 	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
 
 test_player: test_player.cpp test_framework.h
-	$(CXX) $(CXXFLAGS) -o $@ $< $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $< ../obj/Player.o $(LDFLAGS)
 
 # Exécuter tous les tests
 test: all
