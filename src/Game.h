@@ -48,6 +48,17 @@ private:
     void RenderUI();
     void RenderMenu();
     void LoadLevel();
+    void LoadLevel1();
+    void LoadLevel2();
+    void LoadLevel3();
+    void LoadLevel4();
+    void LoadLevel5();
+    void LoadLevel6();
+    void LoadLevel7();
+    void LoadLevel8();
+    void LoadLevel9();
+    void LoadLevel10();
+    void LoadLevelExtra(int level);
     void ResetLevel();
     void RenderText(const char* text, int x, int y, SDL_Color color, int fontSize = 20);
     
@@ -55,6 +66,7 @@ private:
     SDL_Renderer* mRenderer;
     TTF_Font* mFont;
     Mix_Music* mBackgroundMusic;
+    Mix_Music* mLevelClearMusic;
     bool mIsRunning;
     GameState mGameState;
     bool mPaused;

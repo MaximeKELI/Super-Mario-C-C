@@ -6,7 +6,7 @@
 #include <ctime>
 #include <sstream>
 
-Game::Game() : mWindow(nullptr), mRenderer(nullptr), mFont(nullptr), mBackgroundMusic(nullptr), mIsRunning(true),
+Game::Game() : mWindow(nullptr), mRenderer(nullptr), mFont(nullptr), mBackgroundMusic(nullptr), mLevelClearMusic(nullptr), mIsRunning(true),
                mGameState(GameState::MENU), mPaused(false), mPlayer(nullptr),
                mScore(0), mLives(3), mCoinsCollected(0), mCameraX(0.0f),
                mLevelEndX(2000.0f), mCurrentLevel(1), mLevelTimer(300.0f),
@@ -62,12 +62,18 @@ bool Game::Initialize() {
         // Charger la musique de fond
         mBackgroundMusic = Mix_LoadMUS("src/06. Ragtime in the Skies.mp3");
         if (!mBackgroundMusic) {
-            std::cerr << "Impossible de charger la musique: " << Mix_GetError() << std::endl;
+            std::cerr << "Impossible de charger la musique de fond: " << Mix_GetError() << std::endl;
         } else {
             // Jouer la musique en boucle
             if (Mix_PlayMusic(mBackgroundMusic, -1) == -1) {
-                std::cerr << "Impossible de jouer la musique: " << Mix_GetError() << std::endl;
+                std::cerr << "Impossible de jouer la musique de fond: " << Mix_GetError() << std::endl;
             }
+        }
+        
+        // Charger la musique "Level Clear"
+        mLevelClearMusic = Mix_LoadMUS("src/20. Level Clear!.mp3");
+        if (!mLevelClearMusic) {
+            std::cerr << "Impossible de charger la musique Level Clear: " << Mix_GetError() << std::endl;
         }
     }
     
@@ -104,73 +110,59 @@ void Game::LoadLevel() {
     // Créer le joueur
     mPlayer = new Player(100.0f, 100.0f, mRenderer);
     
-    // Créer les plateformes
-    mPlatforms.push_back(new Platform(0, 550, 200, 50));      // Sol gauche
-    mPlatforms.push_back(new Platform(200, 500, 150, 50));    // Plateforme 1
-    mPlatforms.push_back(new Platform(400, 450, 150, 50));    // Plateforme 2
-    mPlatforms.push_back(new Platform(600, 400, 150, 50));    // Plateforme 3
-    mPlatforms.push_back(new Platform(800, 350, 150, 50));    // Plateforme 4
-    mPlatforms.push_back(new Platform(1000, 300, 150, 50));   // Plateforme 5
-    mPlatforms.push_back(new Platform(1200, 250, 150, 50));   // Plateforme 6
-    mPlatforms.push_back(new Platform(1400, 200, 200, 50));    // Plateforme finale
-    mPlatforms.push_back(new Platform(1600, 550, 400, 50));   // Sol droit
+    float levelLength = 0.0f;
     
-    // Créer les blocs
-    mBlocks.push_back(new Block(250, 450, BlockType::QUESTION));
-    mBlocks.push_back(new Block(450, 400, BlockType::QUESTION));
-    mBlocks.push_back(new Block(650, 350, BlockType::BRICK));
-    mBlocks.push_back(new Block(850, 300, BlockType::QUESTION));
-    mBlocks.push_back(new Block(1050, 250, BlockType::BRICK));
-    mBlocks.push_back(new Block(1250, 200, BlockType::QUESTION));
-    mBlocks.push_back(new Block(1450, 150, BlockType::HARD));
+    // Générer le niveau en fonction de mCurrentLevel
+    switch (mCurrentLevel) {
+        case 1:
+            LoadLevel1();
+            levelLength = 1800.0f;
+            break;
+        case 2:
+            LoadLevel2();
+            levelLength = 2200.0f;
+            break;
+        case 3:
+            LoadLevel3();
+            levelLength = 2400.0f;
+            break;
+        case 4:
+            LoadLevel4();
+            levelLength = 2600.0f;
+            break;
+        case 5:
+            LoadLevel5();
+            levelLength = 2800.0f;
+            break;
+        case 6:
+            LoadLevel6();
+            levelLength = 3000.0f;
+            break;
+        case 7:
+            LoadLevel7();
+            levelLength = 3200.0f;
+            break;
+        case 8:
+            LoadLevel8();
+            levelLength = 3400.0f;
+            break;
+        case 9:
+            LoadLevel9();
+            levelLength = 3600.0f;
+            break;
+        case 10:
+            LoadLevel10();
+            levelLength = 4000.0f;
+            break;
+        default:
+            // Niveaux supplémentaires au-delà de 10
+            LoadLevelExtra(mCurrentLevel);
+            levelLength = 2000.0f + (mCurrentLevel * 200.0f);
+            break;
+    }
     
-    // Créer les pièces
-    mCoins.push_back(new Coin(300, 400));
-    mCoins.push_back(new Coin(500, 350));
-    mCoins.push_back(new Coin(700, 300));
-    mCoins.push_back(new Coin(900, 250));
-    mCoins.push_back(new Coin(1100, 200));
-    mCoins.push_back(new Coin(1300, 150));
-    mCoins.push_back(new Coin(1500, 100));
-    
-    // Créer les power-ups
-    // Ils seront générés depuis les blocs question
-    
-    // Créer quelques power-ups de vol (plumes) placés dans le niveau
-    mPowerUps.push_back(new PowerUp(350, 400, PowerUpType::FEATHER));
-    mPowerUps.push_back(new PowerUp(750, 300, PowerUpType::FEATHER));
-    mPowerUps.push_back(new PowerUp(1300, 150, PowerUpType::FEATHER));
-    
-    // Créer les ennemis avec différents types
-    mEnemies.push_back(new Enemy(300, 470, EnemyType::GOOMBA));
-    mEnemies.push_back(new Enemy(500, 420, EnemyType::KOOPA));
-    mEnemies.push_back(new Enemy(700, 370, EnemyType::GOOMBA));
-    mEnemies.push_back(new Enemy(900, 320, EnemyType::FLYING));
-    mEnemies.push_back(new Enemy(1100, 270, EnemyType::KOOPA));
-    mEnemies.push_back(new Enemy(1300, 220, EnemyType::GOOMBA));
-    
-    // Boss de fin de niveau
-    mEnemies.push_back(new Enemy(1800, 150, EnemyType::BOSS));
-    
-    // Créer quelques piques
-    mSpikes.push_back(new Spike(500, 530, 100, 20));
-    mSpikes.push_back(new Spike(1100, 280, 80, 20));
-    
-    // Créer des nuages décoratifs
-    mClouds.push_back(new Cloud(200, 50, 80, 40));
-    mClouds.push_back(new Cloud(600, 80, 100, 50));
-    mClouds.push_back(new Cloud(1000, 60, 90, 45));
-    mClouds.push_back(new Cloud(1400, 70, 85, 42));
-    
-    // Créer des checkpoints
-    mCheckpoints.push_back(new Checkpoint(400, 400));
-    mCheckpoints.push_back(new Checkpoint(1000, 250));
-    
-    // Créer des tuyaux de téléportation
-    mPipes.push_back(new Pipe(750, 350, 40, 100, 1300, 200));
-    
-    mLevelEndX = 2000.0f;
-    mLevelTimer = 300.0f;  // 5 minutes
+    mLevelEndX = levelLength;
+    mLevelTimer = 300.0f;  // 5 minutes par niveau
     mHasCheckpoint = false;
 }
 
@@ -297,6 +289,16 @@ void Game::ProcessInput() {
 void Game::Update(float deltaTime) {
     if (!mPlayer || mPlayer->IsDead()) return;
     
+    // Vérifier si la musique Level Clear est terminée et reprendre la musique de fond
+    if (mGameState == GameState::LEVEL_COMPLETE && mLevelClearMusic && mBackgroundMusic) {
+        if (!Mix_PlayingMusic()) {
+            // La musique Level Clear est terminée, reprendre la musique de fond
+            if (Mix_PlayMusic(mBackgroundMusic, -1) == -1) {
+                std::cerr << "Impossible de reprendre la musique de fond: " << Mix_GetError() << std::endl;
+            }
+        }
+    }
+    
     // Mettre à jour le timer
     if (mLevelTimer > 0.0f) {
         mLevelTimer -= deltaTime;
@@ -400,9 +402,17 @@ void Game::Update(float deltaTime) {
     }
     
     // Vérifier si le niveau est complété
-    if (mPlayer->GetX() >= mLevelEndX) {
+    if (mPlayer->GetX() >= mLevelEndX && mGameState != GameState::LEVEL_COMPLETE) {
         mGameState = GameState::LEVEL_COMPLETE;
         mScore += 1000 * mCurrentLevel; // Bonus pour compléter le niveau
+        
+        // Arrêter la musique de fond et jouer Level Clear
+        if (mLevelClearMusic && mBackgroundMusic) {
+            Mix_HaltMusic();
+            if (Mix_PlayMusic(mLevelClearMusic, 0) == -1) {  // 0 = jouer une seule fois
+                std::cerr << "Impossible de jouer la musique Level Clear: " << Mix_GetError() << std::endl;
+            }
+        }
     }
 }
 
@@ -854,6 +864,11 @@ void Game::Shutdown() {
         mBackgroundMusic = nullptr;
     }
     
+    if (mLevelClearMusic) {
+        Mix_FreeMusic(mLevelClearMusic);
+        mLevelClearMusic = nullptr;
+    }
+
     Mix_CloseAudio();
     TTF_Quit();
     IMG_Quit();
