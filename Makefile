@@ -8,7 +8,8 @@ OBJDIR = obj
 TARGET = super_mario
 
 SOURCES = $(wildcard $(SRCDIR)/*.cpp)
-OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
+# Exclure les fichiers qui pourraient ne pas exister
+OBJECTS = $(filter-out $(OBJDIR)/Particle.o, $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o))
 
 all: $(TARGET)
 

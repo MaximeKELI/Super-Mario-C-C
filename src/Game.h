@@ -63,6 +63,11 @@ private:
     std::vector<PowerUp*> mPowerUps;
     std::vector<Block*> mBlocks;
     std::vector<Fireball*> mFireballs;
+    std::vector<Spike*> mSpikes;
+    std::vector<Cloud*> mClouds;
+    std::vector<Checkpoint*> mCheckpoints;
+    std::vector<Pipe*> mPipes;
+    std::vector<Particle> mParticles;
     
     int mScore;
     int mLives;
@@ -70,6 +75,10 @@ private:
     float mCameraX;
     float mLevelEndX;
     int mCurrentLevel;
+    float mLevelTimer;
+    float mCheckpointX;
+    float mCheckpointY;
+    bool mHasCheckpoint;
     
     Uint32 mLastFrameTime;
 };
