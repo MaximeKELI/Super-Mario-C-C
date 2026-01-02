@@ -194,16 +194,49 @@ make clean  # Supprime les fichiers compilés
 
 ### 🎵 Fichiers Audio (MP3)
 
-| Fichier | Taille | Description | Utilisation |
-|---------|--------|-------------|-------------|
-| `src/06. Ragtime in the Skies.mp3` | ~16308 lignes | Musique de fond principale | 🔁 En boucle pendant le jeu |
-| `src/20. Level Clear!.mp3` | ~3371 lignes | Musique de fin de niveau | ▶️ Une fois par niveau complété |
+| Fichier | Taille | Format | Description | Utilisation |
+|---------|--------|--------|-------------|-------------|
+| `src/06. Ragtime in the Skies.mp3` | **2.9 MB** | MP3 | Musique de fond principale - Style ragtime joyeux | 🔁 En boucle pendant le jeu |
+| `src/20. Level Clear!.mp3` | **471 KB** | MP3 | Fanfare de victoire - Musique de fin de niveau | ▶️ Une fois par niveau complété |
 
-**Système Audio :**
-- 🔊 **Volume réglable** (0-128)
-- 🔄 **Boucle automatique** pour la musique de fond
-- ⏹️ **Transition** automatique entre musiques
-- 🎚️ **Mixage** avec SDL2_mixer
+**🎵 Caractéristiques audio :**
+
+**Musique de Fond (06. Ragtime in the Skies.mp3) :**
+- 🎼 **Style** : Ragtime/Jazz
+- ⏱️ **Durée** : Variable (boucle infinie)
+- 🔊 **Volume** : 128 (réglable 0-128)
+- 🔄 **Mode** : Boucle infinie (`Mix_PlayMusic(music, -1)`)
+- 🎚️ **Format** : MP3 stéréo
+
+**Musique Level Clear (20. Level Clear!.mp3) :**
+- 🎺 **Style** : Fanfare de victoire
+- ⏱️ **Durée** : ~5-10 secondes
+- 🔊 **Volume** : 128 (réglable 0-128)
+- 🔄 **Mode** : Lecture unique (`Mix_PlayMusic(music, 0)`)
+- 🎚️ **Format** : MP3 stéréo
+
+**📊 Système Audio :**
+```
+┌─────────────────────────────────────────────┐
+│          SYSTÈME AUDIO SDL2_MIXER          │
+├─────────────────────────────────────────────┤
+│  Fréquence: 44100 Hz                        │
+│  Format: MIX_DEFAULT_FORMAT (16-bit)        │
+│  Canaux: 2 (Stéréo)                         │
+│  Buffer: 2048 bytes                         │
+│                                             │
+│  Musique de fond: En boucle                │
+│  Musique Level Clear: Lecture unique       │
+│  Transition: Automatique                    │
+└─────────────────────────────────────────────┘
+```
+
+**🔧 Fonctionnalités :**
+- 🔊 **Volume réglable** (0-128) - Via options
+- 🔄 **Boucle automatique** - Pour musique de fond
+- ⏹️ **Transition automatique** - Entre musiques
+- 🎚️ **Mixage SDL2_mixer** - Gestion audio avancée
+- 🎵 **Chargement dynamique** - Au démarrage du jeu
 
 ### 📊 Schéma du Système Audio
 
