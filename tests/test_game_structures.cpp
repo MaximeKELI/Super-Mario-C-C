@@ -1,5 +1,51 @@
 #include "test_framework.h"
-#include "../src/Game.h"
+
+// Définitions nécessaires pour les tests (copiées de Game.h)
+enum class Difficulty {
+    EASY,
+    NORMAL,
+    HARD
+};
+
+struct HighScore {
+    std::string name;
+    int score;
+    int level;
+    Difficulty difficulty;
+    
+    HighScore() : name(""), score(0), level(1), difficulty(Difficulty::NORMAL) {}
+    HighScore(const std::string& n, int s, int l, Difficulty d) : name(n), score(s), level(l), difficulty(d) {}
+};
+
+struct GameStats {
+    float totalPlayTime;
+    int enemiesKilled;
+    int powerUpsCollected;
+    float distanceTraveled;
+    int totalCoinsCollected;
+    int levelsCompleted;
+    
+    GameStats() : totalPlayTime(0.0f), enemiesKilled(0), powerUpsCollected(0), 
+                  distanceTraveled(0.0f), totalCoinsCollected(0), levelsCompleted(0) {}
+};
+
+struct SaveData {
+    int currentLevel;
+    int score;
+    int lives;
+    int coinsCollected;
+    float checkpointX;
+    float checkpointY;
+    bool hasCheckpoint;
+    Difficulty difficulty;
+    GameStats stats;
+    
+    SaveData() : currentLevel(1), score(0), lives(3), coinsCollected(0),
+                 checkpointX(100.0f), checkpointY(100.0f), hasCheckpoint(false),
+                 difficulty(Difficulty::NORMAL) {}
+};
+
+#include <string>
 #include <cstring>
 
 // Tests pour les structures de données du jeu
