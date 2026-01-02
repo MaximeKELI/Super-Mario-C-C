@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
+#include <algorithm>
 #include "Player.h"
 #include "Platform.h"
 #include "Enemy.h"
@@ -28,7 +30,54 @@ enum class GameState {
     PAUSED,
     PAUSE_MENU,
     GAME_OVER,
-    LEVEL_COMPLETE
+    LEVEL_COMPLETE,
+    HIGH_SCORES,
+    STATISTICS,
+    ENTER_NAME
+};
+
+enum class Difficulty {
+    EASY,
+    NORMAL,
+    HARD
+};
+
+struct HighScore {
+    std::string name;
+    int score;
+    int level;
+    Difficulty difficulty;
+    
+    HighScore() : name(""), score(0), level(1), difficulty(Difficulty::NORMAL) {}
+    HighScore(const std::string& n, int s, int l, Difficulty d) : name(n), score(s), level(l), difficulty(d) {}
+};
+
+struct GameStats {
+    float totalPlayTime;
+    int enemiesKilled;
+    int powerUpsCollected;
+    float distanceTraveled;
+    int totalCoinsCollected;
+    int levelsCompleted;
+    
+    GameStats() : totalPlayTime(0.0f), enemiesKilled(0), powerUpsCollected(0), 
+                  distanceTraveled(0.0f), totalCoinsCollected(0), levelsCompleted(0) {}
+};
+
+struct SaveData {
+    int currentLevel;
+    int score;
+    int lives;
+    int coinsCollected;
+    float checkpointX;
+    float checkpointY;
+    bool hasCheckpoint;
+    Difficulty difficulty;
+    GameStats stats;
+    
+    SaveData() : currentLevel(1), score(0), lives(3), coinsCollected(0),
+                 checkpointX(100.0f), checkpointY(100.0f), hasCheckpoint(false),
+                 difficulty(Difficulty::NORMAL) {}
 };
 
 class Game {
@@ -47,7 +96,17 @@ private:
     void CheckCollisions();
     void RenderUI();
     void RenderMenu();
+    void RenderHighScores();
+    void RenderStatistics();
+    void RenderPauseMenu();
+    void RenderMiniMap();
     void LoadLevel();
+    void LoadHighScores();
+    void SaveHighScores();
+    bool CheckAndAddHighScore(int score);
+    void SaveGame();
+    bool LoadGame();
+    void ApplyDifficulty();
     void LoadLevel1();
     void LoadLevel2();
     void LoadLevel3();
