@@ -166,6 +166,471 @@ void Game::LoadLevel() {
     mHasCheckpoint = false;
 }
 
+void Game::LoadLevel1() {
+    // Niveau 1 - Introduction (facile)
+    mPlatforms.push_back(new Platform(0, 550, 200, 50));      // Sol gauche
+    mPlatforms.push_back(new Platform(200, 500, 150, 50));
+    mPlatforms.push_back(new Platform(400, 450, 150, 50));
+    mPlatforms.push_back(new Platform(600, 400, 150, 50));
+    mPlatforms.push_back(new Platform(800, 350, 150, 50));
+    mPlatforms.push_back(new Platform(1000, 300, 150, 50));
+    mPlatforms.push_back(new Platform(1200, 250, 150, 50));
+    mPlatforms.push_back(new Platform(1400, 200, 200, 50));
+    mPlatforms.push_back(new Platform(1600, 550, 200, 50));   // Sol droit
+    
+    mBlocks.push_back(new Block(250, 450, BlockType::QUESTION));
+    mBlocks.push_back(new Block(450, 400, BlockType::QUESTION));
+    mBlocks.push_back(new Block(850, 300, BlockType::QUESTION));
+    
+    mCoins.push_back(new Coin(300, 400));
+    mCoins.push_back(new Coin(500, 350));
+    mCoins.push_back(new Coin(900, 250));
+    
+    mEnemies.push_back(new Enemy(300, 470, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(500, 420, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(700, 370, EnemyType::GOOMBA));
+    
+    mCheckpoints.push_back(new Checkpoint(800, 300));
+    mClouds.push_back(new Cloud(200, 50, 80, 40));
+    mClouds.push_back(new Cloud(800, 60, 90, 45));
+}
+
+void Game::LoadLevel2() {
+    // Niveau 2 - Koopa arrive
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 480, 120, 50));
+    mPlatforms.push_back(new Platform(380, 520, 100, 50));
+    mPlatforms.push_back(new Platform(530, 450, 120, 50));
+    mPlatforms.push_back(new Platform(700, 500, 100, 50));
+    mPlatforms.push_back(new Platform(850, 400, 150, 50));
+    mPlatforms.push_back(new Platform(1050, 350, 120, 50));
+    mPlatforms.push_back(new Platform(1220, 450, 100, 50));
+    mPlatforms.push_back(new Platform(1370, 300, 150, 50));
+    mPlatforms.push_back(new Platform(1550, 400, 150, 50));
+    mPlatforms.push_back(new Platform(1730, 250, 120, 50));
+    mPlatforms.push_back(new Platform(1900, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(230, 430, BlockType::QUESTION));
+    mBlocks.push_back(new Block(560, 400, BlockType::BRICK));
+    mBlocks.push_back(new Block(890, 350, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1090, 300, BlockType::BRICK));
+    mBlocks.push_back(new Block(1410, 250, BlockType::QUESTION));
+    
+    mCoins.push_back(new Coin(250, 430));
+    mCoins.push_back(new Coin(570, 400));
+    mCoins.push_back(new Coin(600, 350));
+    mCoins.push_back(new Coin(1100, 300));
+    
+    mEnemies.push_back(new Enemy(350, 430, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(550, 400, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(750, 450, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(1080, 300, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1600, 350, EnemyType::KOOPA));
+    
+    mCheckpoints.push_back(new Checkpoint(1000, 300));
+    mSpikes.push_back(new Spike(380, 530, 100, 20));
+    mClouds.push_back(new Cloud(300, 50, 80, 40));
+    mClouds.push_back(new Cloud(900, 70, 90, 45));
+}
+
+void Game::LoadLevel3() {
+    // Niveau 3 - Plateformes mobiles
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 480, 120, 50));
+    mPlatforms.push_back(new Platform(380, 520, 100, 50, PlatformType::MOVING_H));
+    mPlatforms.push_back(new Platform(530, 450, 120, 50));
+    mPlatforms.push_back(new Platform(700, 400, 100, 50, PlatformType::MOVING_V));
+    mPlatforms.push_back(new Platform(850, 450, 150, 50));
+    mPlatforms.push_back(new Platform(1050, 350, 120, 50));
+    mPlatforms.push_back(new Platform(1220, 400, 100, 50, PlatformType::MOVING_H));
+    mPlatforms.push_back(new Platform(1370, 300, 150, 50));
+    mPlatforms.push_back(new Platform(1550, 250, 120, 50));
+    mPlatforms.push_back(new Platform(1730, 350, 100, 50, PlatformType::MOVING_V));
+    mPlatforms.push_back(new Platform(1900, 300, 150, 50));
+    mPlatforms.push_back(new Platform(2100, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(560, 400, BlockType::QUESTION));
+    mBlocks.push_back(new Block(890, 400, BlockType::BRICK));
+    mBlocks.push_back(new Block(1410, 250, BlockType::QUESTION));
+    
+    mCoins.push_back(new Coin(600, 400));
+    mCoins.push_back(new Coin(680, 350));
+    mCoins.push_back(new Coin(900, 400));
+    mCoins.push_back(new Coin(1100, 300));
+    
+    mEnemies.push_back(new Enemy(350, 430, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(750, 350, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1080, 300, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1600, 200, EnemyType::FLYING));
+    
+    mCheckpoints.push_back(new Checkpoint(1200, 350));
+    mPowerUps.push_back(new PowerUp(600, 400, PowerUpType::MUSHROOM));
+    mClouds.push_back(new Cloud(400, 50, 80, 40));
+    mClouds.push_back(new Cloud(1200, 60, 90, 45));
+}
+
+void Game::LoadLevel4() {
+    // Niveau 4 - Plus de défis
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 500, 100, 50));
+    mPlatforms.push_back(new Platform(350, 450, 120, 50));
+    mPlatforms.push_back(new Platform(520, 520, 80, 50));
+    mPlatforms.push_back(new Platform(650, 400, 100, 50));
+    mPlatforms.push_back(new Platform(800, 480, 120, 50));
+    mPlatforms.push_back(new Platform(970, 350, 100, 50));
+    mPlatforms.push_back(new Platform(1120, 450, 120, 50));
+    mPlatforms.push_back(new Platform(1290, 300, 100, 50));
+    mPlatforms.push_back(new Platform(1440, 400, 120, 50));
+    mPlatforms.push_back(new Platform(1610, 250, 150, 50));
+    mPlatforms.push_back(new Platform(1810, 350, 100, 50));
+    mPlatforms.push_back(new Platform(1960, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(370, 400, BlockType::QUESTION));
+    mBlocks.push_back(new Block(660, 350, BlockType::BRICK));
+    mBlocks.push_back(new Block(990, 300, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1140, 400, BlockType::HARD));
+    mBlocks.push_back(new Block(1310, 250, BlockType::QUESTION));
+    
+    mCoins.push_back(new Coin(380, 400));
+    mCoins.push_back(new Coin(670, 350));
+    mCoins.push_back(new Coin(690, 300));
+    mCoins.push_back(new Coin(1000, 300));
+    mCoins.push_back(new Coin(1320, 250));
+    
+    mEnemies.push_back(new Enemy(360, 400, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(520, 470, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(760, 430, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(1000, 300, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1450, 350, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1650, 200, EnemyType::KOOPA));
+    
+    mCheckpoints.push_back(new Checkpoint(1100, 400));
+    mSpikes.push_back(new Spike(520, 530, 80, 20));
+    mSpikes.push_back(new Spike(1120, 460, 80, 20));
+    mClouds.push_back(new Cloud(500, 50, 80, 40));
+    mClouds.push_back(new Cloud(1300, 70, 90, 45));
+}
+
+void Game::LoadLevel5() {
+    // Niveau 5 - Boss intermédiaire
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 480, 120, 50));
+    mPlatforms.push_back(new Platform(380, 420, 100, 50));
+    mPlatforms.push_back(new Platform(530, 480, 120, 50));
+    mPlatforms.push_back(new Platform(700, 380, 150, 50));
+    mPlatforms.push_back(new Platform(900, 450, 120, 50));
+    mPlatforms.push_back(new Platform(1070, 320, 150, 50));
+    mPlatforms.push_back(new Platform(1270, 400, 120, 50));
+    mPlatforms.push_back(new Platform(1440, 280, 150, 50));
+    mPlatforms.push_back(new Platform(1640, 380, 150, 50));
+    mPlatforms.push_back(new Platform(1840, 240, 200, 50));  // Plateforme du boss
+    mPlatforms.push_back(new Platform(2100, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(410, 370, BlockType::QUESTION));
+    mBlocks.push_back(new Block(730, 330, BlockType::BRICK));
+    mBlocks.push_back(new Block(1100, 270, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1480, 230, BlockType::HARD));
+    
+    mCoins.push_back(new Coin(420, 370));
+    mCoins.push_back(new Coin(740, 330));
+    mCoins.push_back(new Coin(760, 280));
+    mCoins.push_back(new Coin(1110, 270));
+    
+    mEnemies.push_back(new Enemy(400, 370, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(550, 430, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(760, 330, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1080, 270, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1280, 350, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(1920, 190, EnemyType::BOSS));  // Boss
+    
+    mCheckpoints.push_back(new Checkpoint(1400, 230));
+    mPowerUps.push_back(new PowerUp(750, 330, PowerUpType::FEATHER));
+    mClouds.push_back(new Cloud(600, 50, 80, 40));
+    mClouds.push_back(new Cloud(1500, 60, 90, 45));
+}
+
+void Game::LoadLevel6() {
+    // Niveau 6 - Tuyaux et téléportation
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 500, 120, 50));
+    mPlatforms.push_back(new Platform(380, 450, 100, 50));
+    mPlatforms.push_back(new Platform(530, 500, 120, 50));
+    mPlatforms.push_back(new Platform(700, 400, 150, 50));
+    mPlatforms.push_back(new Platform(900, 480, 120, 50));
+    mPlatforms.push_back(new Platform(1070, 350, 150, 50));
+    mPlatforms.push_back(new Platform(1270, 420, 120, 50));
+    mPlatforms.push_back(new Platform(1440, 300, 150, 50));
+    mPlatforms.push_back(new Platform(1640, 380, 150, 50));
+    mPlatforms.push_back(new Platform(1840, 260, 150, 50));
+    mPlatforms.push_back(new Platform(2040, 340, 150, 50));
+    mPlatforms.push_back(new Platform(2240, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(410, 400, BlockType::QUESTION));
+    mBlocks.push_back(new Block(730, 350, BlockType::BRICK));
+    mBlocks.push_back(new Block(1100, 300, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1480, 250, BlockType::QUESTION));
+    
+    mCoins.push_back(new Coin(420, 400));
+    mCoins.push_back(new Coin(600, 350));
+    mCoins.push_back(new Coin(740, 350));
+    mCoins.push_back(new Coin(1110, 300));
+    
+    mEnemies.push_back(new Enemy(400, 400, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(560, 450, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(760, 350, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1080, 300, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1280, 370, EnemyType::KOOPA));
+    
+    mPipes.push_back(new Pipe(750, 350, 40, 100, 1500, 250));
+    mPipes.push_back(new Pipe(1600, 330, 40, 100, 1900, 210));
+    
+    mCheckpoints.push_back(new Checkpoint(1400, 250));
+    mClouds.push_back(new Cloud(700, 50, 80, 40));
+    mClouds.push_back(new Cloud(1700, 60, 90, 45));
+}
+
+void Game::LoadLevel7() {
+    // Niveau 7 - Plateformes destructibles
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 480, 120, 50));
+    mPlatforms.push_back(new Platform(380, 420, 100, 50, PlatformType::DESTRUCTIBLE));
+    mPlatforms.push_back(new Platform(530, 480, 120, 50));
+    mPlatforms.push_back(new Platform(700, 380, 150, 50, PlatformType::DESTRUCTIBLE));
+    mPlatforms.push_back(new Platform(900, 450, 120, 50));
+    mPlatforms.push_back(new Platform(1070, 320, 150, 50));
+    mPlatforms.push_back(new Platform(1270, 400, 120, 50, PlatformType::DESTRUCTIBLE));
+    mPlatforms.push_back(new Platform(1440, 280, 150, 50));
+    mPlatforms.push_back(new Platform(1640, 360, 150, 50));
+    mPlatforms.push_back(new Platform(1840, 240, 150, 50));
+    mPlatforms.push_back(new Platform(2040, 320, 150, 50));
+    mPlatforms.push_back(new Platform(2240, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(410, 370, BlockType::QUESTION));
+    mBlocks.push_back(new Block(730, 330, BlockType::BRICK));
+    mBlocks.push_back(new Block(1100, 270, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1480, 230, BlockType::HARD));
+    
+    mCoins.push_back(new Coin(420, 370));
+    mCoins.push_back(new Coin(740, 330));
+    mCoins.push_back(new Coin(1110, 270));
+    mCoins.push_back(new Coin(1490, 230));
+    
+    mEnemies.push_back(new Enemy(400, 370, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(560, 430, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(1080, 270, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1280, 350, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1680, 310, EnemyType::KOOPA));
+    
+    mCheckpoints.push_back(new Checkpoint(1400, 230));
+    mSpikes.push_back(new Spike(530, 490, 120, 20));
+    mSpikes.push_back(new Spike(1270, 410, 120, 20));
+    mClouds.push_back(new Cloud(800, 50, 80, 40));
+    mClouds.push_back(new Cloud(1800, 60, 90, 45));
+}
+
+void Game::LoadLevel8() {
+    // Niveau 8 - Mixte difficile
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 500, 100, 50));
+    mPlatforms.push_back(new Platform(350, 450, 120, 50, PlatformType::MOVING_H));
+    mPlatforms.push_back(new Platform(520, 520, 80, 50));
+    mPlatforms.push_back(new Platform(650, 400, 100, 50, PlatformType::MOVING_V));
+    mPlatforms.push_back(new Platform(800, 480, 120, 50));
+    mPlatforms.push_back(new Platform(970, 350, 100, 50, PlatformType::DESTRUCTIBLE));
+    mPlatforms.push_back(new Platform(1120, 450, 120, 50));
+    mPlatforms.push_back(new Platform(1290, 300, 100, 50, PlatformType::MOVING_H));
+    mPlatforms.push_back(new Platform(1440, 400, 120, 50));
+    mPlatforms.push_back(new Platform(1610, 250, 150, 50));
+    mPlatforms.push_back(new Platform(1810, 350, 100, 50));
+    mPlatforms.push_back(new Platform(2010, 280, 150, 50));
+    mPlatforms.push_back(new Platform(2210, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(370, 400, BlockType::QUESTION));
+    mBlocks.push_back(new Block(660, 350, BlockType::BRICK));
+    mBlocks.push_back(new Block(990, 300, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1310, 250, BlockType::HARD));
+    
+    mCoins.push_back(new Coin(380, 400));
+    mCoins.push_back(new Coin(670, 350));
+    mCoins.push_back(new Coin(1000, 300));
+    mCoins.push_back(new Coin(1320, 250));
+    
+    mEnemies.push_back(new Enemy(360, 400, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(560, 450, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(780, 430, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1000, 300, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(1160, 400, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1650, 200, EnemyType::FLYING));
+    
+    mCheckpoints.push_back(new Checkpoint(1300, 250));
+    mSpikes.push_back(new Spike(520, 530, 80, 20));
+    mSpikes.push_back(new Spike(1120, 460, 80, 20));
+    mClouds.push_back(new Cloud(900, 50, 80, 40));
+    mClouds.push_back(new Cloud(1900, 70, 90, 45));
+}
+
+void Game::LoadLevel9() {
+    // Niveau 9 - Avant dernier niveau
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 480, 120, 50));
+    mPlatforms.push_back(new Platform(380, 420, 100, 50));
+    mPlatforms.push_back(new Platform(530, 480, 120, 50));
+    mPlatforms.push_back(new Platform(700, 380, 150, 50, PlatformType::MOVING_H));
+    mPlatforms.push_back(new Platform(900, 450, 120, 50));
+    mPlatforms.push_back(new Platform(1070, 320, 150, 50));
+    mPlatforms.push_back(new Platform(1270, 400, 120, 50, PlatformType::DESTRUCTIBLE));
+    mPlatforms.push_back(new Platform(1440, 280, 150, 50));
+    mPlatforms.push_back(new Platform(1640, 360, 150, 50, PlatformType::MOVING_V));
+    mPlatforms.push_back(new Platform(1840, 240, 150, 50));
+    mPlatforms.push_back(new Platform(2040, 320, 150, 50));
+    mPlatforms.push_back(new Platform(2240, 200, 150, 50));
+    mPlatforms.push_back(new Platform(2440, 550, 300, 50));
+    
+    mBlocks.push_back(new Block(410, 370, BlockType::QUESTION));
+    mBlocks.push_back(new Block(730, 330, BlockType::BRICK));
+    mBlocks.push_back(new Block(1100, 270, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1480, 230, BlockType::QUESTION));
+    mBlocks.push_back(new Block(2280, 150, BlockType::HARD));
+    
+    mCoins.push_back(new Coin(420, 370));
+    mCoins.push_back(new Coin(600, 330));
+    mCoins.push_back(new Coin(740, 330));
+    mCoins.push_back(new Coin(1110, 270));
+    mCoins.push_back(new Coin(1490, 230));
+    
+    mEnemies.push_back(new Enemy(400, 370, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(560, 430, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(780, 330, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1080, 270, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1280, 350, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(1680, 310, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(2320, 150, EnemyType::BOSS));
+    
+    mCheckpoints.push_back(new Checkpoint(1400, 230));
+    mCheckpoints.push_back(new Checkpoint(2200, 150));
+    mSpikes.push_back(new Spike(530, 490, 120, 20));
+    mSpikes.push_back(new Spike(1270, 410, 120, 20));
+    mPowerUps.push_back(new PowerUp(1120, 270, PowerUpType::STAR));
+    mClouds.push_back(new Cloud(1000, 50, 80, 40));
+    mClouds.push_back(new Cloud(2000, 60, 90, 45));
+}
+
+void Game::LoadLevel10() {
+    // Niveau 10 - Final avec grand boss
+    mPlatforms.push_back(new Platform(0, 550, 150, 50));
+    mPlatforms.push_back(new Platform(200, 500, 120, 50));
+    mPlatforms.push_back(new Platform(380, 450, 100, 50));
+    mPlatforms.push_back(new Platform(530, 480, 120, 50));
+    mPlatforms.push_back(new Platform(700, 400, 150, 50, PlatformType::MOVING_H));
+    mPlatforms.push_back(new Platform(900, 450, 120, 50));
+    mPlatforms.push_back(new Platform(1070, 350, 150, 50));
+    mPlatforms.push_back(new Platform(1270, 400, 120, 50));
+    mPlatforms.push_back(new Platform(1440, 300, 150, 50, PlatformType::MOVING_V));
+    mPlatforms.push_back(new Platform(1640, 380, 150, 50));
+    mPlatforms.push_back(new Platform(1840, 260, 150, 50));
+    mPlatforms.push_back(new Platform(2040, 340, 150, 50));
+    mPlatforms.push_back(new Platform(2240, 220, 200, 50));
+    mPlatforms.push_back(new Platform(2490, 300, 150, 50));
+    mPlatforms.push_back(new Platform(2690, 380, 150, 50));
+    mPlatforms.push_back(new Platform(2890, 260, 250, 50));  // Plateforme du boss final
+    mPlatforms.push_back(new Platform(3200, 550, 800, 50));
+    
+    mBlocks.push_back(new Block(410, 400, BlockType::QUESTION));
+    mBlocks.push_back(new Block(730, 350, BlockType::BRICK));
+    mBlocks.push_back(new Block(1100, 300, BlockType::QUESTION));
+    mBlocks.push_back(new Block(1480, 250, BlockType::QUESTION));
+    mBlocks.push_back(new Block(2280, 170, BlockType::HARD));
+    
+    mCoins.push_back(new Coin(420, 400));
+    mCoins.push_back(new Coin(600, 350));
+    mCoins.push_back(new Coin(740, 350));
+    mCoins.push_back(new Coin(1110, 300));
+    mCoins.push_back(new Coin(1490, 250));
+    mCoins.push_back(new Coin(2290, 170));
+    
+    mEnemies.push_back(new Enemy(400, 400, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(560, 430, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(780, 350, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(1080, 300, EnemyType::GOOMBA));
+    mEnemies.push_back(new Enemy(1280, 350, EnemyType::KOOPA));
+    mEnemies.push_back(new Enemy(1680, 330, EnemyType::FLYING));
+    mEnemies.push_back(new Enemy(3040, 210, EnemyType::BOSS));  // Grand boss final
+    
+    mCheckpoints.push_back(new Checkpoint(1400, 250));
+    mCheckpoints.push_back(new Checkpoint(2800, 210));
+    mSpikes.push_back(new Spike(530, 490, 120, 20));
+    mSpikes.push_back(new Spike(1270, 410, 120, 20));
+    mSpikes.push_back(new Spike(2040, 350, 150, 20));
+    mPowerUps.push_back(new PowerUp(1120, 300, PowerUpType::STAR));
+    mPipes.push_back(new Pipe(1550, 330, 40, 100, 2300, 170));
+    mClouds.push_back(new Cloud(1100, 50, 80, 40));
+    mClouds.push_back(new Cloud(2500, 60, 90, 45));
+}
+
+void Game::LoadLevelExtra(int level) {
+    // Niveaux supplémentaires (11+) - Génération procédurale basique
+    float baseX = 0.0f;
+    float spacing = 200.0f;
+    
+    // Sol de départ
+    mPlatforms.push_back(new Platform(baseX, 550, 150, 50));
+    baseX += 200;
+    
+    // Générer des plateformes aléatoires
+    for (int i = 0; i < 15 + (level - 10); i++) {
+        float height = 450.0f + (rand() % 150);
+        float width = 100.0f + (rand() % 100);
+        
+        PlatformType type = PlatformType::STATIC;
+        if (rand() % 4 == 0) {
+            type = (rand() % 2 == 0) ? PlatformType::MOVING_H : PlatformType::MOVING_V;
+        } else if (rand() % 5 == 0) {
+            type = PlatformType::DESTRUCTIBLE;
+        }
+        
+        mPlatforms.push_back(new Platform(baseX, height, width, 50, type));
+        
+        // Ajouter des blocs et pièces occasionnellement
+        if (rand() % 3 == 0) {
+            BlockType blockType = (rand() % 3 == 0) ? BlockType::QUESTION : BlockType::BRICK;
+            mBlocks.push_back(new Block(baseX + 20, height - 50, blockType));
+        }
+        
+        if (rand() % 2 == 0) {
+            mCoins.push_back(new Coin(baseX + 30, height - 30));
+        }
+        
+        // Ajouter des ennemis occasionnellement
+        if (rand() % 3 == 0) {
+            EnemyType enemyType = EnemyType::GOOMBA;
+            int enemyRand = rand() % 10;
+            if (enemyRand < 4) enemyType = EnemyType::GOOMBA;
+            else if (enemyRand < 7) enemyType = EnemyType::KOOPA;
+            else enemyType = EnemyType::FLYING;
+            
+            mEnemies.push_back(new Enemy(baseX + 40, height - 30, enemyType));
+        }
+        
+        baseX += spacing + (rand() % 100);
+    }
+    
+    // Sol de fin
+    mPlatforms.push_back(new Platform(baseX, 550, 300, 50));
+    
+    // Boss tous les 5 niveaux supplémentaires
+    if ((level - 10) % 5 == 0) {
+        mEnemies.push_back(new Enemy(baseX - 100, 400, EnemyType::BOSS));
+    }
+    
+    // Checkpoints
+    mCheckpoints.push_back(new Checkpoint(baseX / 3, 400));
+    mCheckpoints.push_back(new Checkpoint(baseX * 2 / 3, 300));
+    
+    mClouds.push_back(new Cloud(baseX / 4, 50, 80, 40));
+    mClouds.push_back(new Cloud(baseX / 2, 60, 90, 45));
+    mClouds.push_back(new Cloud(baseX * 3 / 4, 70, 85, 42));
+}
+
 void Game::ResetLevel() {
     delete mPlayer;
     mPlayer = nullptr;
