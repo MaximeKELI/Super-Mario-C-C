@@ -723,10 +723,67 @@ void Game::ProcessInput() {
             if (mGameState == GameState::MENU) {
                 if (e.key.keysym.sym == SDLK_RETURN || e.key.keysym.sym == SDLK_SPACE) {
                     mGameState = GameState::PLAYING;
+                    mLevelStartTime = SDL_GetTicks() / 1000.0f;
+                    if (mPlayer) mLastPlayerX = mPlayer->GetX();
+                } else if (e.key.keysym.sym == SDLK_h) {
+                    mGameState = GameState::HIGH_SCORES;
+                } else if (e.key.keysym.sym == SDLK_s) {
+                    mGameState = GameState::STATISTICS;
+                } else if (e.key.keysym.sym == SDLK_l) {
+                    if (LoadGame()) {
+                        mGameState = GameState::PLAYING;
+                    }
                 }
             } else if (mGameState == GameState::PLAYING) {
                 if (e.key.keysym.sym == SDLK_ESCAPE || e.key.keysym.sym == SDLK_p) {
                     mPaused = !mPaused;
+                    mPauseMenuSelection = 0;
+                }
+            } else if (mGameState == GameState::HIGH_SCORES || mGameState == GameState::STATISTICS) {
+                if (e.key.keysym.sym == SDLK_ESCAPE) {
+                    mGameState = GameState::MENU;
+                }
+            } else if (mGameState == GameState::ENTER_NAME) {
+                if (e.key.keysym.sym == SDLK_RETURN) {
+                    if (!mPlayerName.empty()) {
+                        // Ajouter le high score
+                        HighScore newHS(mPlayerName, mScore, mCurrentLevel, mDifficulty);
+                        mHighScores.push_back(newHS);
+                        std::sort(mHighScores.begin(), mHighScores.end(), 
+                            [](const HighScore& a, const HighScore& b) { return a.score > b.score; });
+                        if (mHighScores.size() > MAX_HIGH_SCORES) {
+                            mHighScores.resize(MAX_HIGH_SCORES);
+                        }
+                        SaveHighScores();
+                    }
+                    mGameState = GameState::MENU;
+                    mWaitingForName = false;
+                } else if (e.key.keysym.sym == SDLK_BACKSPACE && !mPlayerName.empty()) {
+                    mPlayerName.pop_back();
+                } else if (e.key.keysym.sym >= SDLK_a && e.key.keysym.sym <= SDLK_z) {
+                    if (mPlayerName.length() < 15) {
+                        mPlayerName += static_cast<char>('A' + (e.key.keysym.sym - SDLK_a));
+                    }
+                }
+            } else if (mPaused) {
+                if (e.key.keysym.sym == SDLK_ESCAPE || e.key.keysym.sym == SDLK_p) {
+                    mPaused = false;
+                } else if (e.key.keysym.sym == SDLK_UP) {
+                    mPauseMenuSelection = (mPauseMenuSelection - 1 + mPauseMenuMaxItems) % mPauseMenuMaxItems;
+                } else if (e.key.keysym.sym == SDLK_DOWN) {
+                    mPauseMenuSelection = (mPauseMenuSelection + 1) % mPauseMenuMaxItems;
+                } else if (e.key.keysym.sym == SDLK_RETURN) {
+                    if (mPauseMenuSelection == 0) {
+                        mPaused = false;
+                    } else if (mPauseMenuSelection == 1) {
+                        // Options - TODO
+                        mInOptionsMenu = true;
+                    } else if (mPauseMenuSelection == 2) {
+                        SaveGame();
+                    } else if (mPauseMenuSelection == 3) {
+                        mGameState = GameState::MENU;
+                        mPaused = false;
+                    }
                 }
             } else if (mGameState == GameState::GAME_OVER || mGameState == GameState::LEVEL_COMPLETE) {
                 if (e.key.keysym.sym == SDLK_RETURN || e.key.keysym.sym == SDLK_SPACE) {
