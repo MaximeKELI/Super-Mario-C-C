@@ -1067,6 +1067,7 @@ void Game::CheckCollisions() {
             coin->Collect();
             mScore += 200;
             mCoinsCollected++;
+            mStats.totalCoinsCollected++;
         }
     }
     
@@ -1077,6 +1078,7 @@ void Game::CheckCollisions() {
         SDL_FRect powerUpRect = powerUp->GetRect();
         if (SDL_HasIntersectionF(&playerRect, &powerUpRect)) {
             powerUp->Collect();
+            mStats.powerUpsCollected++;
             if (powerUp->GetType() == PowerUpType::MUSHROOM) {
                 mPlayer->CollectMushroom();
                 mScore += 500;
