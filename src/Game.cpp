@@ -1349,7 +1349,76 @@ void Game::RenderMenu() {
     SDL_RenderFillRect(mRenderer, &pressRect);
 }
 
+void Game::LoadHighScores() {
+    mHighScores.clear();
+    std::ifstream file("highscores.dat", std::ios::binary);
+    if (!file.is_open()) {
+        // Fichier n'existe pas, créer des scores par défaut vides
+        return;
+    }
+    
+    int count = 0;
+    file.read(reinterpret_cast<char*>(&count), sizeof(int));
+    
+    for (int i = 0; i < count && i < MAX_HIGH_SCORES; i++) {
+        HighScore hs;
+        int nameLen = 0;
+        file.read(reinterpret_cast<char*>(&nameLen), sizeof(int));
+        if (nameLen > 0 && nameLen < 100) {
+            hs.name.resize(nameLen);
+            file.read(&hs.name[0], nameLen);
+        }
+        file.read(reinterpret_cast<char*>(&hs.score), sizeof(int));
+        file.read(reinterpret_cast<char*>(&hs.level), sizeof(int));
+        int diff;
+        file.read(reinterpret_cast<char*>(&diff), sizeof(int));
+        hs.difficulty = static_cast<Difficulty>(diff);
+        mHighScores.push_back(hs);
+    }
+    
+    file.close();
+}
+
+void Game::SaveHighScores() {
+    std::ofstream file("highscores.dat", std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Impossible d'ouvrir highscores.dat pour l'écriture" << std::endl;
+        return;
+    }
+    
+    int count = mHighScores.size();
+    file.write(reinterpret_cast<const char*>(&count), sizeof(int));
+    
+    for (const auto& hs : mHighScores) {
+        int nameLen = hs.name.length();
+        file.write(reinterpret_cast<const char*>(&nameLen), sizeof(int));
+        if (nameLen > 0) {
+            file.write(hs.name.c_str(), nameLen);
+        }
+        file.write(reinterpret_cast<const char*>(&hs.score), sizeof(int));
+        file.write(reinterpret_cast<const char*>(&hs.level), sizeof(int));
+        int diff = static_cast<int>(hs.difficulty);
+        file.write(reinterpret_cast<const char*>(&diff), sizeof(int));
+    }
+    
+    file.close();
+}
+
+bool Game::CheckAndAddHighScore(int score) {
+    // Vérifier si le score est suffisamment élevé
+    if (mHighScores.size() < MAX_HIGH_SCORES || score > mHighScores.back().score) {
+        // Demander le nom du joueur
+        mWaitingForName = true;
+        mPlayerName = "";
+        mPlayerNameCursorPos = 0;
+        mGameState = GameState::ENTER_NAME;
+        return true;
+    }
+    return false;
+}
+
 void Game::Shutdown() {
+    SaveHighScores();
     ResetLevel();
     
     if (mRenderer) {
