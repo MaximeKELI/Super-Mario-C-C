@@ -1383,33 +1383,24 @@ void Game::RenderMenu() {
     SDL_SetRenderDrawColor(mRenderer, 50, 50, 150, 255);
     SDL_RenderClear(mRenderer);
     
-    // Boîte du menu
-    SDL_SetRenderDrawColor(mRenderer, 0, 0, 100, 255);
-    SDL_Rect menuRect = {200, 150, 400, 300};
-    SDL_RenderFillRect(mRenderer, &menuRect);
+    // Titre
+    SDL_Color titleColor = {255, 255, 0, 255};
+    RenderText("SUPER MARIO", 280, 100, titleColor, 48);
     
-    // Bordure
-    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
-    SDL_RenderDrawRect(mRenderer, &menuRect);
+    // Options du menu
+    SDL_Color textColor = {255, 255, 255, 255};
+    int y = 200;
+    RenderText("ENTREE - Nouvelle partie", 250, y, textColor, 24);
+    y += 40;
+    RenderText("H - High Scores", 250, y, textColor, 24);
+    y += 40;
+    RenderText("S - Statistiques", 250, y, textColor, 24);
+    y += 40;
+    RenderText("L - Charger partie", 250, y, textColor, 24);
     
-    // Titre (simulé avec des rectangles)
-    SDL_SetRenderDrawColor(mRenderer, 255, 255, 0, 255);
-    SDL_Rect titleRect = {250, 180, 300, 40};
-    SDL_RenderFillRect(mRenderer, &titleRect);
-    
-    // Instructions (simulé avec des rectangles)
-    SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
-    SDL_Rect instRect1 = {220, 250, 360, 20};
-    SDL_Rect instRect2 = {220, 280, 360, 20};
-    SDL_Rect instRect3 = {220, 310, 360, 20};
-    SDL_RenderFillRect(mRenderer, &instRect1);
-    SDL_RenderFillRect(mRenderer, &instRect2);
-    SDL_RenderFillRect(mRenderer, &instRect3);
-    
-    // Indicateur "Appuyez sur Entree"
-    SDL_SetRenderDrawColor(mRenderer, 0, 255, 0, 255);
-    SDL_Rect pressRect = {250, 380, 300, 30};
-    SDL_RenderFillRect(mRenderer, &pressRect);
+    // Instructions
+    SDL_Color instructionColor = {150, 150, 150, 255};
+    RenderText("Fleches: Bouger | Espace: Sauter | X: Tirer", 180, 450, instructionColor, 20);
 }
 
 void Game::LoadHighScores() {
@@ -1501,25 +1492,31 @@ void Game::RenderHighScores() {
     RenderText("Difficulte", 600, y, headerColor, 24);
     
     y += 40;
-    for (size_t i = 0; i < mHighScores.size() && i < MAX_HIGH_SCORES; i++) {
-        std::ostringstream rankStream;
-        rankStream << (i + 1) << ".";
-        RenderText(rankStream.str().c_str(), 50, y, textColor, 20);
-        RenderText(mHighScores[i].name.c_str(), 150, y, textColor, 20);
-        
-        std::ostringstream scoreStream;
-        scoreStream << mHighScores[i].score;
-        RenderText(scoreStream.str().c_str(), 350, y, textColor, 20);
-        
-        std::ostringstream levelStream;
-        levelStream << mHighScores[i].level;
-        RenderText(levelStream.str().c_str(), 500, y, textColor, 20);
-        
-        std::string diffStr = (mHighScores[i].difficulty == Difficulty::EASY) ? "Facile" :
-                              (mHighScores[i].difficulty == Difficulty::HARD) ? "Difficile" : "Normal";
-        RenderText(diffStr.c_str(), 600, y, textColor, 20);
-        
-        y += 35;
+    if (mHighScores.empty()) {
+        // Afficher un message si aucun score
+        SDL_Color emptyColor = {150, 150, 150, 255};
+        RenderText("Aucun score enregistre", 280, y, emptyColor, 24);
+    } else {
+        for (size_t i = 0; i < mHighScores.size() && i < MAX_HIGH_SCORES; i++) {
+            std::ostringstream rankStream;
+            rankStream << (i + 1) << ".";
+            RenderText(rankStream.str().c_str(), 50, y, textColor, 20);
+            RenderText(mHighScores[i].name.c_str(), 150, y, textColor, 20);
+            
+            std::ostringstream scoreStream;
+            scoreStream << mHighScores[i].score;
+            RenderText(scoreStream.str().c_str(), 350, y, textColor, 20);
+            
+            std::ostringstream levelStream;
+            levelStream << mHighScores[i].level;
+            RenderText(levelStream.str().c_str(), 500, y, textColor, 20);
+            
+            std::string diffStr = (mHighScores[i].difficulty == Difficulty::EASY) ? "Facile" :
+                                  (mHighScores[i].difficulty == Difficulty::HARD) ? "Difficile" : "Normal";
+            RenderText(diffStr.c_str(), 600, y, textColor, 20);
+            
+            y += 35;
+        }
     }
     
     // Instructions
