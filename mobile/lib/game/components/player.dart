@@ -5,9 +5,9 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/models.dart';
 import '../../theme/mario_theme.dart';
 import '../mario_game.dart';
-import 'fireball.dart';
 import 'platform_block.dart';
 
 class PlayerComponent extends PositionComponent

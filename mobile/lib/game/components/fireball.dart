@@ -4,6 +4,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/models.dart';
 import '../../theme/mario_theme.dart';
 import '../mario_game.dart';
 import 'enemy.dart';
@@ -66,6 +67,3 @@ class FireballComponent extends PositionComponent
     );
   }
 }
-
-// re-export for enemy kind check
-import '../../data/models.dart' show EnemyKind;
