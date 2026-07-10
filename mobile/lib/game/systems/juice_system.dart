@@ -29,7 +29,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
     for (var i = 0; i < count; i++) {
       final angle = _rng.nextDouble() * pi * 2;
       final speed = 80 + _rng.nextDouble() * 160;
-      particles.add(_Particle(
+      particles.add(JuiceParticle(
         pos: at.clone(),
         vel: Vector2(cos(angle), sin(angle)) * speed,
         life: 0.4 + _rng.nextDouble() * 0.5,
@@ -40,7 +40,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
   }
 
   void scorePopup(Vector2 at, String text) {
-    particles.add(_Particle(
+    particles.add(JuiceParticle(
       pos: at.clone(),
       vel: Vector2(0, -60),
       life: 0.9,
@@ -102,7 +102,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
   }
 }
 
-class _Particle {
+class JuiceParticle {
   Vector2 pos;
   Vector2 vel;
   double life;
@@ -110,7 +110,7 @@ class _Particle {
   double size;
   String? label;
 
-  _Particle({
+  JuiceParticle({
     required this.pos,
     required this.vel,
     required this.life,

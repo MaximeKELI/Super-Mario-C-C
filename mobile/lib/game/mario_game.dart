@@ -303,11 +303,6 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     await AudioService.instance.resumeBgmAfterClear();
     await loadLevel(currentLevel + 1);
   }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-  }
 }
 
 class _SkyBackdrop extends PositionComponent {
