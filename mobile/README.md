@@ -1,17 +1,20 @@
-# super_mario_mobile
+# Super Mario Mobile (Flutter)
 
-A new Flutter project.
+Premium mobile port of the C++ Super Mario game — Flame engine, classic Mario palette, extreme animation juice.
 
-## Getting Started
+## Run
 
-This project is a starting point for a Flutter application.
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+Landscape controls: D-pad left/right, jump, fire, pipe enter.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Features
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- 10 levels ported from the C++ layouts
+- Power-ups, enemies, checkpoints, pipes, spikes
+- High scores, save/load, statistics, difficulty
+- Squash/stretch, particles, hit-stop, screen shake, level-clear banner
