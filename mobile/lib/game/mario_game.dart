@@ -99,7 +99,7 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   }
 
   Future<void> loadLevel(int n) async {
-    world.removeAll(world.children);
+    world.removeAll(world.children.toList());
     pipes.clear();
     currentLevel = n;
     final data = Levels.get(n);
@@ -108,7 +108,7 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     phase = PlayPhase.playing;
     levelClearTimer = 0;
 
-    // sky backdrop painter
+    juice = JuiceSystem();
     world.add(_SkyBackdrop());
 
     for (final c in data.clouds) {
@@ -149,7 +149,6 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     world.add(juice);
     lastPlayerX = player.position.x;
 
-    // flag / end marker
     world.add(_GoalFlag(Vector2(levelEndX, 200)));
   }
 
@@ -263,7 +262,6 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     }
 
     super.update(scaled);
-    juice.update(dt);
 
     levelTimer += dt;
     stats.totalPlayTime += dt;
@@ -309,7 +307,6 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    juice.renderParticles(canvas);
   }
 }
 

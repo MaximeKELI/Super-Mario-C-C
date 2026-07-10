@@ -5,12 +5,12 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/mario_theme.dart';
+import '../mario_game.dart';
 
-class JuiceSystem extends Component with HasGameReference {
+class JuiceSystem extends Component with HasGameReference<MarioGame> {
   double hitStop = 0;
   double shakeTime = 0;
   double shakeIntensity = 0;
-  double timeScale = 1;
   final List<_Particle> particles = [];
   final Random _rng = Random();
 
@@ -60,12 +60,7 @@ class JuiceSystem extends Component with HasGameReference {
 
   @override
   void update(double dt) {
-    if (hitStop > 0) {
-      hitStop -= dt;
-      timeScale = 0.05;
-    } else {
-      timeScale = 1;
-    }
+    if (hitStop > 0) hitStop -= dt;
     if (shakeTime > 0) {
       shakeTime -= dt;
       shakeIntensity *= 0.92;
@@ -78,9 +73,10 @@ class JuiceSystem extends Component with HasGameReference {
     particles.removeWhere((p) => p.life <= 0);
   }
 
-  void renderParticles(Canvas canvas) {
+  @override
+  void render(Canvas canvas) {
     for (final p in particles) {
-      final alpha = (p.life.clamp(0, 1));
+      final alpha = p.life.clamp(0.0, 1.0);
       if (p.label != null) {
         final tp = TextPainter(
           text: TextSpan(
@@ -96,8 +92,11 @@ class JuiceSystem extends Component with HasGameReference {
         )..layout();
         tp.paint(canvas, Offset(p.pos.x - tp.width / 2, p.pos.y));
       } else {
-        final paint = Paint()..color = p.color.withValues(alpha: alpha);
-        canvas.drawCircle(Offset(p.pos.x, p.pos.y), p.size * alpha, paint);
+        canvas.drawCircle(
+          Offset(p.pos.x, p.pos.y),
+          p.size * alpha,
+          Paint()..color = p.color.withValues(alpha: alpha),
+        );
       }
     }
   }
