@@ -56,7 +56,8 @@ class BlockComponent extends PositionComponent
   }
 
   @override
-  void onCollision(Set<Vector2> points, PositionComponent other) {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
     if (other is PlayerComponent) {
       final hittingFromBelow =
           other.velocity.y < 0 && other.position.y >= position.y + size.y - 16;

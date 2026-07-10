@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,7 +30,7 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late MarioGame game;
-  int _coinPulse = 0;
+  Timer? _hudTick;
 
   @override
   void initState() {
@@ -43,10 +45,14 @@ class _GameScreenState extends State<GameScreen> {
       onExitToMenu: widget.onExit,
       onNeedName: (score) => EnterNameSheet.show(context, score),
     );
+    _hudTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
+    _hudTick?.cancel();
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     super.dispose();
   }
@@ -59,7 +65,6 @@ class _GameScreenState extends State<GameScreen> {
         overlayBuilderMap: {
           'hud': (context, MarioGame g) => _GameHud(
                 game: g,
-                coinPulseKey: _coinPulse,
                 onPause: () {
                   g.togglePause();
                   setState(() {});
@@ -90,15 +95,12 @@ class _GameHud extends StatelessWidget {
   const _GameHud({
     required this.game,
     required this.onPause,
-    required this.coinPulseKey,
   });
   final MarioGame game;
   final VoidCallback onPause;
-  final int coinPulseKey;
 
   @override
   Widget build(BuildContext context) {
-    // refresh overlays based on phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
       final overlays = game.overlays;

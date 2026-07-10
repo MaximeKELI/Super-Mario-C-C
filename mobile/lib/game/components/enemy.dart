@@ -79,7 +79,8 @@ class EnemyComponent extends PositionComponent
   }
 
   @override
-  void onCollision(Set<Vector2> points, PositionComponent other) {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
     if (dead) return;
     if (other is PlatformBlock && !other.destroyed && kind != EnemyKind.flying) {
       final bottom = position.y + size.y;

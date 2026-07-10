@@ -11,7 +11,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
   double hitStop = 0;
   double shakeTime = 0;
   double shakeIntensity = 0;
-  final List<_Particle> particles = [];
+  final List<JuiceParticle> particles = [];
   final Random _rng = Random();
 
   bool get isFrozen => hitStop > 0;

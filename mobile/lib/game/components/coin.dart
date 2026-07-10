@@ -30,7 +30,8 @@ class CoinComponent extends PositionComponent
   }
 
   @override
-  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
     if (other is PlayerComponent) {
       game.juice.burst(absoluteCenter, color: MarioColors.yellow, count: 18);
       game.juice.scorePopup(absoluteCenter, '+50');

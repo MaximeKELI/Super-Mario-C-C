@@ -33,7 +33,8 @@ class PowerUpComponent extends PositionComponent
   }
 
   @override
-  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
     if (other is! PlayerComponent) return;
     switch (kind) {
       case PowerUpKind.mushroom:

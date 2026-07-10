@@ -37,7 +37,8 @@ class FireballComponent extends PositionComponent
   }
 
   @override
-  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
     if (other is EnemyComponent && !other.dead) {
       other.damage();
       game.onEnemyKilled(other.kind == EnemyKind.boss ? 500 : 100);

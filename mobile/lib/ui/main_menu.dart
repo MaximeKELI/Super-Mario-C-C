@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../data/models.dart';
 import '../../data/save_service.dart';
 import '../../theme/mario_theme.dart';
-import '../widgets/parallax_sky.dart';
+import 'widgets/parallax_sky.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({

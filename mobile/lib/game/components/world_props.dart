@@ -21,7 +21,8 @@ class SpikeComponent extends PositionComponent
   }
 
   @override
-  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
     if (other is PlayerComponent && !other.dead && !other.invincible) {
       other.shrink();
       game.juice.shake(intensity: 10, duration: 0.35);
@@ -88,7 +89,8 @@ class CheckpointComponent extends PositionComponent
   void update(double dt) => wave += dt * 4;
 
   @override
-  void onCollisionStart(Set<Vector2> points, PositionComponent other) {
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
     if (other is PlayerComponent && !activated) {
       activated = true;
       game.setCheckpoint(position.x, position.y);
@@ -129,7 +131,8 @@ class PipeComponent extends PositionComponent
   void update(double dt) => cooldown = (cooldown - dt).clamp(0, 2);
 
   @override
-  void onCollision(Set<Vector2> points, PositionComponent other) {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
     if (other is PlayerComponent && cooldown <= 0 && other.wantJump == false) {
       // enter when standing on top and pressing down-ish (left+right idle near center)
       final onTop = other.position.y + other.size.y <= position.y + 8;

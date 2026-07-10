@@ -181,7 +181,8 @@ class PlayerComponent extends PositionComponent
   }
 
   @override
-  void onCollision(Set<Vector2> points, PositionComponent other) {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
     if (other is PlatformBlock && !other.destroyed) {
       _resolvePlatform(other);
     }
