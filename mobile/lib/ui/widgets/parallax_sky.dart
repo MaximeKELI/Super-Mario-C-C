@@ -101,6 +101,11 @@ class _SkyPainter extends CustomPainter {
   bool shouldRepaint(covariant _SkyPainter oldDelegate) => oldDelegate.t != t;
 }
 
+import 'package:flutter/material.dart';
+
+import '../../theme/mario_theme.dart';
+import '../responsive.dart';
+
 class PremiumButton extends StatefulWidget {
   const PremiumButton({
     super.key,
@@ -124,6 +129,9 @@ class _PremiumButtonState extends State<PremiumButton> {
 
   @override
   Widget build(BuildContext context) {
+    final r = Responsive.of(context);
+    final compact = r.isCompact;
+
     return GestureDetector(
       onTapDown: (_) => setState(() => _down = true),
       onTapUp: (_) {
@@ -137,7 +145,10 @@ class _PremiumButtonState extends State<PremiumButton> {
         curve: Curves.easeOutBack,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? r.sp(18) : 28,
+            vertical: compact ? r.sp(10) : 16,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             gradient: LinearGradient(
@@ -153,32 +164,37 @@ class _PremiumButtonState extends State<PremiumButton> {
             boxShadow: [
               BoxShadow(
                 color: widget.color.withValues(alpha: 0.55),
-                blurRadius: _down ? 6 : 22,
-                offset: Offset(0, _down ? 1 : 10),
+                blurRadius: _down ? 6 : (compact ? 12 : 22),
+                offset: Offset(0, _down ? 1 : (compact ? 4 : 10)),
               ),
               BoxShadow(
                 color: MarioColors.yellow.withValues(alpha: _down ? 0.2 : 0.5),
-                blurRadius: 30,
+                blurRadius: compact ? 16 : 30,
                 spreadRadius: -2,
               ),
             ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.icon != null) ...[
-                Icon(widget.icon, color: MarioColors.cream, size: 22),
-                const SizedBox(width: 10),
+                Icon(widget.icon, color: MarioColors.cream, size: compact ? r.sp(18) : 22),
+                SizedBox(width: compact ? 6 : 10),
               ],
-              Text(
-                widget.label,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: MarioColors.cream,
-                      letterSpacing: 0.6,
-                      shadows: const [
-                        Shadow(color: Colors.black45, blurRadius: 2, offset: Offset(1, 1)),
-                      ],
-                    ),
+              Flexible(
+                child: Text(
+                  widget.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: MarioColors.cream,
+                        letterSpacing: 0.6,
+                        fontSize: compact ? r.sp(16) : null,
+                        shadows: const [
+                          Shadow(color: Colors.black45, blurRadius: 2, offset: Offset(1, 1)),
+                        ],
+                      ),
+                ),
               ),
             ],
           ),
@@ -187,3 +203,4 @@ class _PremiumButtonState extends State<PremiumButton> {
     );
   }
 }
+
