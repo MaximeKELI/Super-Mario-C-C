@@ -143,63 +143,66 @@ class _GameHud extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(r.sp(10), r.sp(6), r.sp(10), 0),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.topLeft,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - r.sp(20)),
-                child: Row(
-                  children: [
-                    _HudPill(
-                      icon: Icons.favorite,
-                      label: 'x${game.lives}',
-                      color: MarioColors.red,
-                      scale: r.scale,
-                    ),
-                    SizedBox(width: r.sp(6)),
-                    _HudPill(
-                      icon: Icons.monetization_on,
-                      label: '${game.coins}',
-                      color: MarioColors.yellow,
-                      scale: r.scale,
-                    ).animate(key: ValueKey(game.coins)).scale(
-                          begin: const Offset(1.25, 1.25),
-                          end: const Offset(1, 1),
-                          duration: 280.ms,
-                          curve: Curves.easeOutBack,
+            child: Row(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        _HudPill(
+                          icon: Icons.favorite,
+                          label: 'x${game.lives}',
+                          color: MarioColors.red,
+                          scale: r.scale,
                         ),
-                    SizedBox(width: r.sp(6)),
-                    _HudPill(
-                      icon: Icons.star,
-                      label: '${game.score}',
-                      color: MarioColors.blue,
-                      scale: r.scale,
+                        SizedBox(width: r.sp(6)),
+                        _HudPill(
+                          icon: Icons.monetization_on,
+                          label: '${game.coins}',
+                          color: MarioColors.yellow,
+                          scale: r.scale,
+                        ).animate(key: ValueKey(game.coins)).scale(
+                              begin: const Offset(1.25, 1.25),
+                              end: const Offset(1, 1),
+                              duration: 280.ms,
+                              curve: Curves.easeOutBack,
+                            ),
+                        SizedBox(width: r.sp(6)),
+                        _HudPill(
+                          icon: Icons.star,
+                          label: '${game.score}',
+                          color: MarioColors.blue,
+                          scale: r.scale,
+                        ),
+                        SizedBox(width: r.sp(8)),
+                        _HudPill(
+                          icon: Icons.flag,
+                          label: r.isNarrow ? 'W${game.currentLevel}' : 'WORLD ${game.currentLevel}',
+                          color: MarioColors.green,
+                          scale: r.scale,
+                        ),
+                        if (!r.isCompact) ...[
+                          SizedBox(width: r.sp(6)),
+                          _MiniMap(game: game, scale: r.scale),
+                        ],
+                      ],
                     ),
-                    SizedBox(width: r.sp(8)),
-                    _HudPill(
-                      icon: Icons.flag,
-                      label: r.isNarrow ? 'W${game.currentLevel}' : 'WORLD ${game.currentLevel}',
-                      color: MarioColors.green,
-                      scale: r.scale,
-                    ),
-                    if (!r.isCompact) ...[
-                      SizedBox(width: r.sp(6)),
-                      _MiniMap(game: game, scale: r.scale),
-                    ],
-                    SizedBox(width: r.sp(4)),
-                    IconButton(
-                      onPressed: onPause,
-                      visualDensity: VisualDensity.compact,
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.85),
-                        minimumSize: Size(r.sp(40), r.sp(40)),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      icon: Icon(Icons.pause_rounded, color: MarioColors.dark, size: r.sp(22)),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                SizedBox(width: r.sp(4)),
+                IconButton(
+                  onPressed: onPause,
+                  visualDensity: VisualDensity.compact,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.85),
+                    minimumSize: Size(r.sp(40), r.sp(40)),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: Icon(Icons.pause_rounded, color: MarioColors.dark, size: r.sp(22)),
+                ),
+              ],
             ),
           ),
           if (showKeyboardHint) const _KeyboardHint(),
