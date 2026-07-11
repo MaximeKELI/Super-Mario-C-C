@@ -31,6 +31,7 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   late MarioGame game;
   Timer? _hudTick;
+  final FocusNode _gameFocus = FocusNode();
 
   @override
   void initState() {
@@ -48,11 +49,15 @@ class _GameScreenState extends State<GameScreen> {
     _hudTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (mounted) setState(() {});
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _gameFocus.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _hudTick?.cancel();
+    _gameFocus.dispose();
     SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     super.dispose();
   }
@@ -63,7 +68,7 @@ class _GameScreenState extends State<GameScreen> {
       body: GameWidget(
         game: game,
         autofocus: true,
-        focusNode: FocusNode()..requestFocus(),
+        focusNode: _gameFocus,
         overlayBuilderMap: {
           'hud': (context, MarioGame g) => _GameHud(
                 game: g,
@@ -157,6 +162,30 @@ class _GameHud extends StatelessWidget {
               icon: const Icon(Icons.pause_rounded, color: MarioColors.dark),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// keyboard hint shown under HUD row via separate overlay piece — kept in controls
+class _KeyboardHint extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const IgnorePointer(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: EdgeInsets.only(top: 48),
+          child: Text(
+            'Clavier: ←→/AD  ·  Saut: Espace/W  ·  Feu: X  ·  Pipe: ↓/S  ·  Pause: P',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+            ),
+          ),
         ),
       ),
     );
