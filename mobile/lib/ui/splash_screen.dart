@@ -69,8 +69,8 @@ class _SplashScreenState extends State<SplashScreen>
                       );
                     },
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 140,
+                      height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const RadialGradient(
@@ -85,7 +85,12 @@ class _SplashScreenState extends State<SplashScreen>
                         ],
                         border: Border.all(color: Colors.white, width: 4),
                       ),
-                      child: const Icon(Icons.sports_esports, size: 56, color: Colors.white),
+                      padding: const EdgeInsets.all(10),
+                      child: Image.asset(
+                        'assets/images/Mario.gif',
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.none,
+                      ),
                     )
                         .animate()
                         .scale(

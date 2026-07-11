@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
 import '../../theme/mario_theme.dart';
+import '../gif_loader.dart';
 import '../mario_game.dart';
 import 'platform_block.dart';
 
@@ -15,7 +16,7 @@ class PlayerComponent extends PositionComponent
   static const jumpForce = -520.0;
   static const moveSpeed = 220.0;
   static const maxFall = 700.0;
-  static const baseW = 36.0;
+  static const baseW = 48.0;
   static const baseH = 48.0;
 
   Vector2 velocity = Vector2.zero();
@@ -40,6 +41,10 @@ class PlayerComponent extends PositionComponent
   bool wantShoot = false;
   bool jumpConsumed = false;
 
+  List<GifFrameData> _gifFrames = const [];
+  int _frameIndex = 0;
+  double _frameTimer = 0;
+
   PlayerComponent({required Vector2 position})
       : super(
           position: position,
@@ -51,6 +56,11 @@ class PlayerComponent extends PositionComponent
   @override
   Future<void> onLoad() async {
     add(RectangleHitbox());
+    try {
+      _gifFrames = await GifLoader.load('assets/images/Mario.gif');
+    } catch (_) {
+      _gifFrames = const [];
+    }
   }
 
   void respawn(Vector2 pos) {
@@ -63,7 +73,7 @@ class PlayerComponent extends PositionComponent
   void collectMushroom() {
     if (!isBig) {
       isBig = true;
-      size = Vector2(baseW * 1.15, baseH * 1.35);
+      size = Vector2(baseW * 1.2, baseH * 1.35);
       squashY = 1.3;
     }
   }
@@ -106,6 +116,15 @@ class PlayerComponent extends PositionComponent
     if (dead) return;
     animT += dt;
     shootCooldown = max(0, shootCooldown - dt);
+
+    if (_gifFrames.isNotEmpty) {
+      _frameTimer += dt;
+      final delay = _gifFrames[_frameIndex].delaySeconds;
+      if (_frameTimer >= delay) {
+        _frameTimer = 0;
+        _frameIndex = (_frameIndex + 1) % _gifFrames.length;
+      }
+    }
 
     if (flyTime > 0) {
       flyTime -= dt;
@@ -165,12 +184,10 @@ class PlayerComponent extends PositionComponent
     onGround = false;
     position += velocity * dt;
 
-    // world bounds / fall death
     if (position.y > 700) {
       dead = true;
     }
 
-    // juice recovery
     squashY += (1 - squashY) * 14 * dt;
     stretchX += (1 - stretchX) * 14 * dt;
     if (onGround && velocity.x.abs() > 40) {
@@ -196,12 +213,11 @@ class PlayerComponent extends PositionComponent
 
     final playerLeft = position.x;
     final playerRight = position.x + size.x;
-    final playerTop = position.y;
     final playerBottom = position.y + size.y;
+    final playerTop = position.y;
 
     if (playerRight <= platLeft || playerLeft >= platRight) return;
 
-    // landing from above
     if (velocity.y >= 0 && prevBottom <= platTop + 12 && playerBottom >= platTop) {
       position.y = platTop - size.y;
       velocity.y = 0;
@@ -215,13 +231,9 @@ class PlayerComponent extends PositionComponent
         );
       }
       onGround = true;
-      if (platform.kind == PlatformKind.destructible) {
-        // soft wear when standing briefly handled elsewhere
-      }
       return;
     }
 
-    // hit from below
     if (velocity.y < 0 && playerTop <= platBottom && playerBottom > platBottom) {
       position.y = platBottom;
       velocity.y = 0;
@@ -230,7 +242,6 @@ class PlayerComponent extends PositionComponent
       return;
     }
 
-    // sides
     if (playerRight > platLeft && playerLeft < platLeft && absoluteCenter.y > platTop) {
       position.x = platLeft - size.x;
       velocity.x = 0;
@@ -252,51 +263,29 @@ class PlayerComponent extends PositionComponent
     canvas.scale(facingRight ? stretchX : -stretchX, squashY);
     canvas.translate(-cx, -cy);
 
-    final bodyColor = hasFire
-        ? MarioColors.red
-        : (invincible ? MarioColors.yellow : MarioColors.red);
-    final body = RRect.fromRectAndRadius(
-      Rect.fromLTWH(4, 10, size.x - 8, size.y - 14),
-      const Radius.circular(8),
-    );
-    canvas.drawRRect(body, Paint()..color = bodyColor);
-
-    // hat
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(2, 2, size.x - 4, 14),
-        const Radius.circular(6),
-      ),
-      Paint()..color = MarioColors.red,
-    );
-    // face
-    canvas.drawCircle(
-      Offset(size.x * 0.55, 18),
-      7,
-      Paint()..color = const Color(0xFFFFDBAC),
-    );
-    // overalls
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(6, size.y * 0.45, size.x - 12, size.y * 0.4),
-        const Radius.circular(4),
-      ),
-      Paint()..color = MarioColors.blue,
-    );
-    // shoes
-    canvas.drawOval(
-      Rect.fromLTWH(4, size.y - 10, 12, 8),
-      Paint()..color = MarioColors.brown,
-    );
-    canvas.drawOval(
-      Rect.fromLTWH(size.x - 16, size.y - 10, 12, 8),
-      Paint()..color = MarioColors.brown,
-    );
+    if (_gifFrames.isNotEmpty) {
+      final frame = _gifFrames[_frameIndex].image;
+      final dst = Rect.fromLTWH(0, 0, size.x, size.y);
+      paintImage(
+        canvas: canvas,
+        rect: dst,
+        image: frame,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+      );
+      if (hasFire) {
+        canvas.drawRect(dst, Paint()..color = const Color(0x33FF6A00));
+      } else if (invincible) {
+        canvas.drawRect(dst, Paint()..color = MarioColors.yellow.withValues(alpha: 0.22));
+      }
+    } else {
+      _renderFallback(canvas);
+    }
 
     if (hasFly) {
       canvas.drawOval(
-        Rect.fromLTWH(-4, 16, 12, 8),
-        Paint()..color = Colors.white.withValues(alpha: 0.85),
+        const Rect.fromLTWH(-6, 14, 14, 10),
+        Paint()..color = Colors.white.withValues(alpha: 0.9),
       );
     }
     if (hasComet) {
@@ -310,5 +299,23 @@ class PlayerComponent extends PositionComponent
     }
 
     canvas.restore();
+  }
+
+  void _renderFallback(Canvas canvas) {
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(4, 10, size.x - 8, size.y - 14),
+        const Radius.circular(8),
+      ),
+      Paint()..color = MarioColors.red,
+    );
+    canvas.drawCircle(Offset(size.x * 0.55, 18), 7, Paint()..color = const Color(0xFFFFDBAC));
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(6, size.y * 0.45, size.x - 12, size.y * 0.4),
+        const Radius.circular(4),
+      ),
+      Paint()..color = MarioColors.blue,
+    );
   }
 }

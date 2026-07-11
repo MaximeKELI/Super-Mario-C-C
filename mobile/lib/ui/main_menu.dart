@@ -47,6 +47,17 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Spacer(flex: 2),
+                Center(
+                  child: Image.asset(
+                    'assets/images/Mario.gif',
+                    height: 110,
+                    filterQuality: FilterQuality.none,
+                  ),
+                )
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .scale(begin: const Offset(0.7, 0.7), curve: Curves.easeOutBack),
+                const SizedBox(height: 8),
                 Text(
                   'SUPER\nMARIO',
                   textAlign: TextAlign.center,
