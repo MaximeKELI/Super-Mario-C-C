@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../../theme/mario_theme.dart';
+import '../responsive.dart';
 
 class ParallaxSky extends StatefulWidget {
   const ParallaxSky({super.key, this.child});
@@ -100,11 +101,6 @@ class _SkyPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SkyPainter oldDelegate) => oldDelegate.t != t;
 }
-
-import 'package:flutter/material.dart';
-
-import '../../theme/mario_theme.dart';
-import '../responsive.dart';
 
 class PremiumButton extends StatefulWidget {
   const PremiumButton({
