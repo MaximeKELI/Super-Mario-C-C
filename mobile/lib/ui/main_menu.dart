@@ -72,7 +72,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 const SizedBox(height: 6),
                 Center(
                   child: Image.asset(
-                    'assets/images/Mario.gif',
+                    'assets/images/Mario_clean.webp',
                     height: 72,
                     filterQuality: FilterQuality.none,
                   ),

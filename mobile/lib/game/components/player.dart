@@ -318,6 +318,7 @@ class PlayerComponent extends PositionComponent
         image: frame,
         fit: BoxFit.contain,
         filterQuality: FilterQuality.none,
+        isAntiAlias: false,
       );
       if (hasFire) {
         canvas.drawRect(dst, Paint()..color = const Color(0x33FF6A00));
