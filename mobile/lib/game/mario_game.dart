@@ -1,6 +1,7 @@
 
 import 'dart:async';
 
+import 'package:flame/camera.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -34,6 +35,9 @@ class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, Ta
     this.onExitToMenu,
     this.onNeedName,
   });
+
+  /// Design resolution matching the original SDL playfield (letterboxed on device).
+  static final Vector2 designResolution = Vector2(800, 600);
 
   final Difficulty difficulty;
   final int startLevel;
@@ -86,6 +90,7 @@ class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, Ta
   Future<void> onLoad() async {
     await super.onLoad();
     juice = JuiceSystem();
+    camera.viewport = FixedResolutionViewport(resolution: designResolution);
     camera.viewfinder.anchor = Anchor.topLeft;
     _padSub = Gamepads.normalizedEvents.listen(_onGamepad);
 
