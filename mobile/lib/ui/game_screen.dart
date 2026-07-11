@@ -127,48 +127,52 @@ class _GameHud extends StatelessWidget {
     });
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-        child: Row(
-          children: [
-            _HudPill(icon: Icons.favorite, label: 'x${game.lives}', color: MarioColors.red),
-            const SizedBox(width: 8),
-            _HudPill(
-              icon: Icons.monetization_on,
-              label: '${game.coins}',
-              color: MarioColors.yellow,
-            ).animate(key: ValueKey(game.coins)).scale(
-                  begin: const Offset(1.25, 1.25),
-                  end: const Offset(1, 1),
-                  duration: 280.ms,
-                  curve: Curves.easeOutBack,
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+            child: Row(
+              children: [
+                _HudPill(icon: Icons.favorite, label: 'x${game.lives}', color: MarioColors.red),
+                const SizedBox(width: 8),
+                _HudPill(
+                  icon: Icons.monetization_on,
+                  label: '${game.coins}',
+                  color: MarioColors.yellow,
+                ).animate(key: ValueKey(game.coins)).scale(
+                      begin: const Offset(1.25, 1.25),
+                      end: const Offset(1, 1),
+                      duration: 280.ms,
+                      curve: Curves.easeOutBack,
+                    ),
+                const SizedBox(width: 8),
+                _HudPill(icon: Icons.star, label: '${game.score}', color: MarioColors.blue),
+                const Spacer(),
+                _HudPill(
+                  icon: Icons.flag,
+                  label: 'WORLD ${game.currentLevel}',
+                  color: MarioColors.green,
                 ),
-            const SizedBox(width: 8),
-            _HudPill(icon: Icons.star, label: '${game.score}', color: MarioColors.blue),
-            const Spacer(),
-            _HudPill(
-              icon: Icons.flag,
-              label: 'WORLD ${game.currentLevel}',
-              color: MarioColors.green,
+                const SizedBox(width: 8),
+                _MiniMap(game: game),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: onPause,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.85),
+                  ),
+                  icon: const Icon(Icons.pause_rounded, color: MarioColors.dark),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            _MiniMap(game: game),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: onPause,
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.85),
-              ),
-              icon: const Icon(Icons.pause_rounded, color: MarioColors.dark),
-            ),
-          ],
-        ),
+          ),
+          _KeyboardHint(),
+        ],
       ),
     );
   }
 }
 
-// keyboard hint shown under HUD row via separate overlay piece — kept in controls
 class _KeyboardHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -178,7 +182,7 @@ class _KeyboardHint extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.only(top: 48),
           child: Text(
-            'Clavier: ←→/AD  ·  Saut: Espace/W  ·  Feu: X  ·  Pipe: ↓/S  ·  Pause: P',
+            'Clavier: ←→/AD  ·  Saut: Espace/W  ·  Feu: X  ·  Pipe: ↓/S  ·  Pause: P  ·  Manette OK',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 11,
