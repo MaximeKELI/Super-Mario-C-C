@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../theme/mario_theme.dart';
 import '../gif_loader.dart';
 import '../mario_game.dart';
+import '../render/pseudo3d.dart';
 import 'platform_block.dart';
 
 class PlayerComponent extends PositionComponent
@@ -289,13 +290,23 @@ class PlayerComponent extends PositionComponent
     final blink = invincible && (animT * 22).floor().isOdd;
     if (blink) return;
 
+    // Ground shadow (2.5D contact)
+    Pseudo3d.dropShadow(
+      canvas,
+      Rect.fromCenter(
+        center: Offset(size.x / 2, size.y + 1),
+        width: size.x * (onGround ? 0.78 : 0.55),
+        height: onGround ? 11 : 7,
+      ),
+      blur: onGround ? 5 : 8,
+      alpha: onGround ? 0.32 : 0.18,
+    );
+
     canvas.save();
     final cx = size.x / 2;
     final cy = size.y / 2;
     canvas.translate(cx, cy);
-    // Flip only — no run squash so the GIF stays sharp
     canvas.scale(facingRight ? 1.0 : -1.0, 1.0);
-    // Tiny landing/jump squash (near 1.0 most of the time)
     canvas.scale(stretchX.clamp(0.85, 1.15), squashY.clamp(0.85, 1.15));
     canvas.translate(-cx, -cy);
 

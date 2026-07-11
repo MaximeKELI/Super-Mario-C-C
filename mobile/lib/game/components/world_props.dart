@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import '../../theme/mario_theme.dart';
 import '../mario_game.dart';
+import '../render/pseudo3d.dart';
 import 'player.dart';
 
 class SpikeComponent extends PositionComponent
@@ -64,10 +65,19 @@ class CloudComponent extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
-    final paint = Paint()..color = Colors.white.withValues(alpha: 0.85);
-    canvas.drawOval(Rect.fromLTWH(0, size.y * 0.3, size.x, size.y * 0.6), paint);
-    canvas.drawCircle(Offset(size.x * 0.3, size.y * 0.35), size.y * 0.4, paint);
-    canvas.drawCircle(Offset(size.x * 0.6, size.y * 0.25), size.y * 0.45, paint);
+    // Soft volumetric cloud
+    final base = Paint()..color = Colors.white.withValues(alpha: 0.9);
+    final shade = Paint()..color = const Color(0xFFE8F4FF).withValues(alpha: 0.85);
+    canvas.drawOval(
+      Rect.fromLTWH(4, size.y * 0.45, size.x, size.y * 0.55),
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.12)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawOval(Rect.fromLTWH(0, size.y * 0.3, size.x, size.y * 0.6), shade);
+    canvas.drawCircle(Offset(size.x * 0.3, size.y * 0.32), size.y * 0.42, base);
+    canvas.drawCircle(Offset(size.x * 0.58, size.y * 0.22), size.y * 0.48, base);
+    canvas.drawCircle(Offset(size.x * 0.78, size.y * 0.38), size.y * 0.32, shade);
   }
 }
 
@@ -153,14 +163,57 @@ class PipeComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    final body = RRect.fromRectAndRadius(size.toRect(), const Radius.circular(4));
-    canvas.drawRRect(body, Paint()..color = MarioColors.pipe);
+    // Pipe cylinder 2.5D
+    Pseudo3d.dropShadow(
+      canvas,
+      Rect.fromCenter(
+        center: Offset(size.x / 2, size.y + 4),
+        width: size.x + 16,
+        height: 12,
+      ),
+    );
+
+    // Body side
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(-4, 0, size.x + 8, 16),
+        Rect.fromLTWH(4, 12, size.x, size.y - 8),
         const Radius.circular(4),
       ),
       Paint()..color = const Color(0xFF2E8B2E),
+    );
+    // Body front
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 12, size.x, size.y - 12),
+        const Radius.circular(4),
+      ),
+      Paint()..color = MarioColors.pipe,
+    );
+    // Rim (lip)
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-6, 0, size.x + 12, 18),
+        const Radius.circular(6),
+      ),
+      Paint()..color = const Color(0xFF3CB371),
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-6, 0, size.x + 12, 18),
+        const Radius.circular(6),
+      ),
+      Paint()
+        ..color = Colors.white24
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    // Highlight stripe
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(size.x * 0.2, 20, size.x * 0.18, size.y - 24),
+        const Radius.circular(3),
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.18),
     );
   }
 }

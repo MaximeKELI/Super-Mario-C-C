@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/mario_theme.dart';
 import '../mario_game.dart';
+import '../render/pseudo3d.dart';
 import 'player.dart';
 
 class CoinComponent extends PositionComponent
@@ -44,34 +45,12 @@ class CoinComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    final scaleX = 0.25 + 0.75 * ((sin(t * 3) + 1) / 2);
-    final bounce = 1.0 + 0.15 * sin(t * 2);
+    final scaleX = 0.28 + 0.72 * ((sin(t * 3) + 1) / 2);
+    final bounce = 1.0 + 0.12 * sin(t * 2);
     canvas.save();
     canvas.translate(size.x / 2, size.y / 2);
-    canvas.scale(scaleX, bounce);
-    canvas.drawCircle(
-      Offset.zero,
-      size.x / 2 + 4,
-      Paint()
-        ..color = MarioColors.yellow.withValues(alpha: 0.35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-    );
-    canvas.drawCircle(Offset.zero, size.x / 2, Paint()..color = MarioColors.yellow);
-    canvas.drawCircle(
-      Offset.zero,
-      size.x / 2,
-      Paint()
-        ..color = const Color(0xFFFFF3A0)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5,
-    );
-    canvas.drawLine(
-      const Offset(0, -7),
-      const Offset(0, 7),
-      Paint()
-        ..color = const Color(0xFFE0A800)
-        ..strokeWidth = 2.5,
-    );
+    canvas.scale(1, bounce);
+    Pseudo3d.cylinderCoin(canvas, size.x / 2, scaleX);
     canvas.restore();
   }
 }

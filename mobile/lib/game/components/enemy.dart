@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import '../../theme/mario_theme.dart';
 import '../mario_game.dart';
+import '../render/pseudo3d.dart';
 import 'platform_block.dart';
 import 'player.dart';
 
@@ -117,13 +118,29 @@ class EnemyComponent extends PositionComponent
       EnemyKind.flying => const Color(0xFF7B5EA7),
       EnemyKind.boss => MarioColors.red,
     };
-    final paint = Paint()
-      ..color = flash > 0 ? Colors.white : color;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(size.toRect(), const Radius.circular(10)),
-      paint,
+
+    // Contact shadow
+    Pseudo3d.dropShadow(
+      canvas,
+      Rect.fromCenter(
+        center: Offset(size.x / 2, size.y + 2),
+        width: size.x * 0.85,
+        height: 9,
+      ),
+      blur: 5,
+      alpha: 0.3,
     );
-    // eyes
+
+    Pseudo3d.extrudedBox(
+      canvas,
+      Rect.fromLTWH(2, 2, size.x - 4, size.y - 4),
+      face: flash > 0 ? Colors.white : color,
+      top: Color.lerp(color, Colors.white, 0.25)!,
+      side: Color.lerp(color, Colors.black, 0.3)!,
+      d: 7,
+      radius: 10,
+    );
+
     canvas.drawCircle(Offset(size.x * 0.35, size.y * 0.35), 4, Paint()..color = Colors.white);
     canvas.drawCircle(Offset(size.x * 0.65, size.y * 0.35), 4, Paint()..color = Colors.white);
     canvas.drawCircle(Offset(size.x * 0.35, size.y * 0.35), 2, Paint()..color = Colors.black);

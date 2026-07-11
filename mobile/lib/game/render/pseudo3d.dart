@@ -89,7 +89,7 @@ class Pseudo3d {
   static void cylinderCoin(Canvas canvas, double radius, double squashX) {
     // Shadow
     canvas.drawOval(
-      Rect.fromCenter(center: const Offset(2, radius * 0.85), width: radius * 1.6, height: radius * 0.45),
+      Rect.fromCenter(center: Offset(2, radius * 0.85), width: radius * 1.6, height: radius * 0.45),
       Paint()
         ..color = Colors.black26
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),

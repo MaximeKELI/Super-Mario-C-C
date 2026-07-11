@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import '../../theme/mario_theme.dart';
 import '../mario_game.dart';
+import '../render/pseudo3d.dart';
 import 'player.dart';
 import 'power_up.dart';
 

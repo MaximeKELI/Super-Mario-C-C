@@ -15,6 +15,7 @@ import '../data/save_service.dart';
 import '../theme/mario_theme.dart';
 import 'components/block.dart';
 import 'components/coin.dart';
+import 'components/depth_backdrop.dart';
 import 'components/enemy.dart';
 import 'components/fireball.dart';
 import 'components/platform_block.dart';
@@ -194,7 +195,7 @@ class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, Ta
     levelClearTimer = 0;
 
     juice = JuiceSystem();
-    world.add(_SkyBackdrop());
+    world.add(DepthBackdrop());
 
     for (final c in data.clouds) {
       world.add(CloudComponent(c));
@@ -355,7 +356,9 @@ class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, Ta
     final target = (player.position.x - size.x * 0.35).clamp(0.0, levelEndX);
     cameraX += (target - cameraX) * 6 * dt;
     final shake = juice.cameraOffset();
-    camera.viewfinder.position = Vector2(cameraX + shake.x, shake.y - 40);
+    // Slight vertical settle for a 2.5D stage feel
+    final camY = -36 + (player.position.y - 400) * 0.04;
+    camera.viewfinder.position = Vector2(cameraX + shake.x, camY + shake.y);
 
     if (player.dead && phase == PlayPhase.playing) {
       onPlayerDied();
@@ -388,36 +391,26 @@ class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, Ta
   }
 }
 
-class _SkyBackdrop extends PositionComponent {
-  _SkyBackdrop() : super(position: Vector2.zero(), size: Vector2(5000, 800), priority: -20);
-
-  @override
-  void render(Canvas canvas) {
-    final rect = size.toRect();
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [MarioColors.skyTop, MarioColors.skyBottom, Color(0xFF8FDE7A)],
-          stops: [0, 0.72, 1],
-        ).createShader(rect),
-    );
-  }
-}
-
 class _GoalFlag extends PositionComponent {
   _GoalFlag(Vector2 pos) : super(position: pos, size: Vector2(20, 120), priority: 5);
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRect(const Rect.fromLTWH(8, 0, 4, 120), Paint()..color = Colors.white);
+    // Pole with slight extrusion
+    canvas.drawRect(const Rect.fromLTWH(10, 0, 5, 120), Paint()..color = const Color(0xFFE8E8E8));
+    canvas.drawRect(const Rect.fromLTWH(14, 0, 2, 120), Paint()..color = Colors.white70);
     final path = Path()
-      ..moveTo(12, 8)
-      ..lineTo(48, 24)
-      ..lineTo(12, 40)
+      ..moveTo(15, 6)
+      ..lineTo(52, 22)
+      ..lineTo(15, 38)
       ..close();
     canvas.drawPath(path, Paint()..color = MarioColors.yellow);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xFFFFF3A0)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
   }
 }
