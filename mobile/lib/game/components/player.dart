@@ -208,13 +208,13 @@ class PlayerComponent extends PositionComponent
     stretchX += (1 - stretchX) * 16 * dt;
 
     if (_isRunning) {
-      // Very light dust
+      // Barely-visible dust
       _dustTimer += dt;
-      if (_dustTimer > 0.28) {
+      if (_dustTimer > 0.45) {
         _dustTimer = 0;
         game.juice.burst(
           Vector2(absoluteCenter.x - (facingRight ? 12 : -12), position.y + size.y - 2),
-          color: const Color(0x44C4A484),
+          color: const Color(0x22A89070),
           count: 1,
         );
       }
@@ -249,10 +249,11 @@ class PlayerComponent extends PositionComponent
       if (!onGround) {
         squashY = 0.82;
         stretchX = 1.12;
+        // Landing puff — almost invisible
         game.juice.burst(
           Vector2(absoluteCenter.x, platTop),
-          color: MarioColors.green,
-          count: 6,
+          color: const Color(0x18A8C878),
+          count: 1,
         );
       }
       onGround = true;

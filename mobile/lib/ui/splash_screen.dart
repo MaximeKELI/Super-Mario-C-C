@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _orbit = AnimationController(vsync: this, duration: const Duration(seconds: 3))
       ..repeat();
-    Future.delayed(const Duration(milliseconds: 2800), () {
+    Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) widget.onDone();
     });
   }
@@ -78,20 +78,14 @@ class _SplashScreenState extends State<SplashScreen>
                       fit: BoxFit.contain,
                       filterQuality: FilterQuality.high,
                     )
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .animate()
                         .scale(
-                          begin: const Offset(0.15, 0.15),
+                          begin: const Offset(0.6, 0.6),
                           end: const Offset(1, 1),
-                          curve: Curves.elasticOut,
-                          duration: 1200.ms,
+                          curve: Curves.easeOutBack,
+                          duration: 450.ms,
                         )
-                        .then()
-                        .scale(
-                          begin: const Offset(1, 1),
-                          end: const Offset(1.06, 1.06),
-                          duration: 700.ms,
-                          curve: Curves.easeInOut,
-                        ),
+                        .fadeIn(duration: 300.ms),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -101,8 +95,8 @@ class _SplashScreenState extends State<SplashScreen>
                   textAlign: TextAlign.center,
                 )
                     .animate()
-                    .fadeIn(duration: 600.ms, delay: 200.ms)
-                    .slideY(begin: 0.4, curve: Curves.easeOutBack),
+                    .fadeIn(duration: 300.ms, delay: 80.ms)
+                    .slideY(begin: 0.2, curve: Curves.easeOut),
                 const SizedBox(height: 8),
                 Text(
                   'MOBILE PREMIUM',
@@ -113,8 +107,7 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                 )
                     .animate()
-                    .fadeIn(delay: 500.ms)
-                    .shimmer(duration: 1600.ms, color: Colors.white70),
+                    .fadeIn(delay: 150.ms),
               ],
             ),
           ),

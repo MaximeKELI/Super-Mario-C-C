@@ -1,12 +1,12 @@
 {
-    "name": "super_mario_mobile",
-    "short_name": "super_mario_mobile",
+    "name": "Super Mario Mobile",
+    "short_name": "Mario",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#049CD8",
+    "theme_color": "#E52521",
+    "description": "Super Mario mobile — Flutter premium platformer",
+    "orientation": "landscape-primary",
     "prefer_related_applications": false,
     "icons": [
         {
