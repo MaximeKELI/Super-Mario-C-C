@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -124,7 +123,13 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
       world.add(CoinComponent(c.x, c.y));
     }
     for (final e in data.enemies) {
-      world.add(EnemyComponent(e));
+      final enemy = EnemyComponent(e);
+      if (difficulty == Difficulty.hard) {
+        enemy.velocity.x *= 1.35;
+      } else if (difficulty == Difficulty.easy) {
+        enemy.velocity.x *= 0.75;
+      }
+      world.add(enemy);
     }
     for (final s in data.spikes) {
       world.add(SpikeComponent(s));
