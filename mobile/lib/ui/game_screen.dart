@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -10,6 +11,7 @@ import '../../theme/mario_theme.dart';
 import '../../game/mario_game.dart';
 import 'enter_name_sheet.dart';
 import 'pause_overlay.dart';
+import 'responsive.dart';
 import 'widgets/parallax_sky.dart';
 
 class GameScreen extends StatefulWidget {
@@ -58,13 +60,17 @@ class _GameScreenState extends State<GameScreen> {
   void dispose() {
     _hudTick?.cancel();
     _gameFocus.dispose();
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: MarioColors.skyTop,
       body: GameWidget(
         game: game,
         autofocus: true,
@@ -126,47 +132,77 @@ class _GameHud extends StatelessWidget {
       }
     });
 
+    final r = Responsive.of(context);
+    final showKeyboardHint = !r.isCompact &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux ||
+            defaultTargetPlatform == TargetPlatform.macOS);
+
     return SafeArea(
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-            child: Row(
-              children: [
-                _HudPill(icon: Icons.favorite, label: 'x${game.lives}', color: MarioColors.red),
-                const SizedBox(width: 8),
-                _HudPill(
-                  icon: Icons.monetization_on,
-                  label: '${game.coins}',
-                  color: MarioColors.yellow,
-                ).animate(key: ValueKey(game.coins)).scale(
-                      begin: const Offset(1.25, 1.25),
-                      end: const Offset(1, 1),
-                      duration: 280.ms,
-                      curve: Curves.easeOutBack,
+            padding: EdgeInsets.fromLTRB(r.sp(10), r.sp(6), r.sp(10), 0),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.topLeft,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - r.sp(20)),
+                child: Row(
+                  children: [
+                    _HudPill(
+                      icon: Icons.favorite,
+                      label: 'x${game.lives}',
+                      color: MarioColors.red,
+                      scale: r.scale,
                     ),
-                const SizedBox(width: 8),
-                _HudPill(icon: Icons.star, label: '${game.score}', color: MarioColors.blue),
-                const Spacer(),
-                _HudPill(
-                  icon: Icons.flag,
-                  label: 'WORLD ${game.currentLevel}',
-                  color: MarioColors.green,
+                    SizedBox(width: r.sp(6)),
+                    _HudPill(
+                      icon: Icons.monetization_on,
+                      label: '${game.coins}',
+                      color: MarioColors.yellow,
+                      scale: r.scale,
+                    ).animate(key: ValueKey(game.coins)).scale(
+                          begin: const Offset(1.25, 1.25),
+                          end: const Offset(1, 1),
+                          duration: 280.ms,
+                          curve: Curves.easeOutBack,
+                        ),
+                    SizedBox(width: r.sp(6)),
+                    _HudPill(
+                      icon: Icons.star,
+                      label: '${game.score}',
+                      color: MarioColors.blue,
+                      scale: r.scale,
+                    ),
+                    SizedBox(width: r.sp(8)),
+                    _HudPill(
+                      icon: Icons.flag,
+                      label: r.isNarrow ? 'W${game.currentLevel}' : 'WORLD ${game.currentLevel}',
+                      color: MarioColors.green,
+                      scale: r.scale,
+                    ),
+                    if (!r.isCompact) ...[
+                      SizedBox(width: r.sp(6)),
+                      _MiniMap(game: game, scale: r.scale),
+                    ],
+                    SizedBox(width: r.sp(4)),
+                    IconButton(
+                      onPressed: onPause,
+                      visualDensity: VisualDensity.compact,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.85),
+                        minimumSize: Size(r.sp(40), r.sp(40)),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: Icon(Icons.pause_rounded, color: MarioColors.dark, size: r.sp(22)),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                _MiniMap(game: game),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: onPause,
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.85),
-                  ),
-                  icon: const Icon(Icons.pause_rounded, color: MarioColors.dark),
-                ),
-              ],
+              ),
             ),
           ),
-          _KeyboardHint(),
+          if (showKeyboardHint) const _KeyboardHint(),
         ],
       ),
     );
@@ -174,6 +210,8 @@ class _GameHud extends StatelessWidget {
 }
 
 class _KeyboardHint extends StatelessWidget {
+  const _KeyboardHint();
+
   @override
   Widget build(BuildContext context) {
     return const IgnorePointer(
@@ -197,34 +235,40 @@ class _KeyboardHint extends StatelessWidget {
 }
 
 class _HudPill extends StatelessWidget {
-  const _HudPill({required this.icon, required this.label, required this.color});
+  const _HudPill({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.scale = 1,
+  });
   final IconData icon;
   final String label;
   final Color color;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 8 * scale, vertical: 4 * scale),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color, width: 2),
+        borderRadius: BorderRadius.circular(16 * scale),
+        border: Border.all(color: color, width: 1.5 * scale),
         boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3)),
+          BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 6 * scale, offset: Offset(0, 2 * scale)),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 14 * scale, color: color),
+          SizedBox(width: 3 * scale),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w900,
               color: MarioColors.dark,
-              fontSize: 13,
+              fontSize: 12 * scale,
             ),
           ),
         ],
@@ -234,13 +278,14 @@ class _HudPill extends StatelessWidget {
 }
 
 class _MiniMap extends StatelessWidget {
-  const _MiniMap({required this.game});
+  const _MiniMap({required this.game, this.scale = 1});
   final MarioGame game;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(90, 28),
+      size: Size(72 * scale, 22 * scale),
       painter: _MiniMapPainter(game),
     );
   }
@@ -284,9 +329,13 @@ class _VirtualControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = Responsive.of(context);
+    final gap = r.sp(8);
+    final pad = r.sp(r.isCompact ? 10 : 16);
+
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(pad),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -294,12 +343,14 @@ class _VirtualControls extends StatelessWidget {
               children: [
                 _CtrlBtn(
                   icon: Icons.arrow_back_rounded,
+                  scale: r.scale,
                   onDown: () => game.ctrlLeft = true,
                   onUp: () => game.ctrlLeft = false,
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: gap),
                 _CtrlBtn(
                   icon: Icons.arrow_forward_rounded,
+                  scale: r.scale,
                   onDown: () => game.ctrlRight = true,
                   onUp: () => game.ctrlRight = false,
                 ),
@@ -310,23 +361,26 @@ class _VirtualControls extends StatelessWidget {
               children: [
                 _CtrlBtn(
                   icon: Icons.arrow_downward_rounded,
-                  label: 'PIPE',
+                  label: r.isCompact ? null : 'PIPE',
                   color: MarioColors.pipe,
+                  scale: r.scale,
                   onDown: () => game.ctrlPipe = true,
                   onUp: () => game.ctrlPipe = false,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: gap),
                 _CtrlBtn(
                   icon: Icons.local_fire_department_rounded,
                   color: const Color(0xFFFF6A00),
+                  scale: r.scale,
                   onDown: () => game.ctrlFire = true,
                   onUp: () => game.ctrlFire = false,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: gap),
                 _CtrlBtn(
                   icon: Icons.keyboard_arrow_up_rounded,
                   color: MarioColors.yellow,
                   big: true,
+                  scale: r.scale,
                   onDown: () => game.ctrlJump = true,
                   onUp: () => game.ctrlJump = false,
                 ),
@@ -347,6 +401,7 @@ class _CtrlBtn extends StatelessWidget {
     this.color = MarioColors.blue,
     this.big = false,
     this.label,
+    this.scale = 1,
   });
   final IconData icon;
   final VoidCallback onDown;
@@ -354,10 +409,11 @@ class _CtrlBtn extends StatelessWidget {
   final Color color;
   final bool big;
   final String? label;
+  final double scale;
 
   @override
   Widget build(BuildContext context) {
-    final size = big ? 72.0 : 58.0;
+    final size = (big ? 64.0 : 50.0) * scale;
     return Listener(
       onPointerDown: (_) => onDown(),
       onPointerUp: (_) => onUp(),
@@ -370,25 +426,25 @@ class _CtrlBtn extends StatelessWidget {
           gradient: RadialGradient(
             colors: [Color.lerp(color, Colors.white, 0.35)!, color],
           ),
-          border: Border.all(color: Colors.white70, width: 3),
+          border: Border.all(color: Colors.white70, width: 2.5 * scale),
           boxShadow: [
             BoxShadow(
               color: color.withValues(alpha: 0.45),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
+              blurRadius: 10 * scale,
+              offset: Offset(0, 4 * scale),
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: big ? 36 : 28),
+            Icon(icon, color: Colors.white, size: (big ? 30 : 24) * scale),
             if (label != null)
               Text(
                 label!,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 9,
+                  fontSize: 8 * scale,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -404,39 +460,44 @@ class _LevelClearBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = Responsive.of(context);
     return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 22),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            colors: [MarioColors.yellow, MarioColors.red],
-          ),
-          border: Border.all(color: Colors.white, width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: MarioColors.yellow.withValues(alpha: 0.55),
-              blurRadius: 28,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: EdgeInsets.symmetric(horizontal: r.sp(28), vertical: r.sp(16)),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: const LinearGradient(
+              colors: [MarioColors.yellow, MarioColors.red],
             ),
-          ],
-        ),
-        child: Text(
-          'LEVEL CLEAR!',
-          style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                color: Colors.white,
-                fontSize: 42,
-                shadows: const [
-                  Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(2, 2)),
-                  Shadow(color: MarioColors.yellow, blurRadius: 18),
-                ],
+            border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: MarioColors.yellow.withValues(alpha: 0.55),
+                blurRadius: 28,
               ),
+            ],
+          ),
+          child: Text(
+            'LEVEL CLEAR!',
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: Colors.white,
+                  fontSize: r.sp(36),
+                  shadows: const [
+                    Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(2, 2)),
+                    Shadow(color: MarioColors.yellow, blurRadius: 18),
+                  ],
+                ),
+          ),
         ),
       )
           .animate()
           .scale(begin: const Offset(0.2, 0.2), curve: Curves.elasticOut, duration: 900.ms)
           .fadeIn()
           .then()
-          .shake(hz: 3, rotation: 0.04, duration: 500.ms)
+          .shake(hz: 3, offset: 0.04, duration: 500.ms)
           .shimmer(duration: 1200.ms, color: Colors.white),
     );
   }
@@ -449,19 +510,32 @@ class _GameOverOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final r = Responsive.of(context);
     return Container(
       color: Colors.black54,
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('GAME OVER', style: Theme.of(context).textTheme.displayMedium),
-            const SizedBox(height: 8),
-            Text('Score $score', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: MarioColors.cream)),
-            const SizedBox(height: 20),
-            PremiumButton(label: 'MENU', onPressed: onMenu),
-          ],
-        ).animate().fadeIn().slideY(begin: 0.2),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(r.sp(16)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'GAME OVER',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: r.sp(32)),
+              ),
+              SizedBox(height: r.sp(8)),
+              Text(
+                'Score $score',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: MarioColors.cream,
+                      fontSize: r.sp(18),
+                    ),
+              ),
+              SizedBox(height: r.sp(16)),
+              PremiumButton(label: 'MENU', onPressed: onMenu),
+            ],
+          ).animate().fadeIn().slideY(begin: 0.2),
+        ),
       ),
     );
   }
