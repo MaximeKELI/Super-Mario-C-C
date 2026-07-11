@@ -62,6 +62,8 @@ class _GameScreenState extends State<GameScreen> {
     return Scaffold(
       body: GameWidget(
         game: game,
+        autofocus: true,
+        focusNode: FocusNode()..requestFocus(),
         overlayBuilderMap: {
           'hud': (context, MarioGame g) => _GameHud(
                 game: g,

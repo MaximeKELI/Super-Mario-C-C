@@ -364,14 +364,7 @@ class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, Ta
       return;
     }
 
-    player.wantLeft = false;
-    player.wantRight = false;
-    player.wantJump = false;
-    player.wantShoot = false;
     _applyInputs();
-    if (false) {
-      // placeholder removed
-    }
 
     super.update(scaled);
 
