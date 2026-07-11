@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
@@ -12,7 +11,7 @@ class GifFrameData {
   const GifFrameData(this.image, this.delaySeconds);
 }
 
-/// Decodes an animated GIF asset into Flame-ready frames (same idea as C++ IMG_LoadGIFAnimation).
+/// Decodes an animated GIF asset into frames (same idea as C++ IMG_LoadGIFAnimation).
 class GifLoader {
   static final Map<String, Future<List<GifFrameData>>> _cache = {};
 
@@ -23,7 +22,7 @@ class GifLoader {
   static Future<List<GifFrameData>> _decode(String assetPath) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List();
-    final animation = img.GifDecoder().decode(bytes) ?? img.decodeAnimation(bytes);
+    final animation = img.GifDecoder().decode(bytes);
     if (animation == null || animation.frames.isEmpty) {
       throw StateError('Failed to decode GIF: $assetPath');
     }

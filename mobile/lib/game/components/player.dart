@@ -4,7 +4,6 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../data/models.dart';
 import '../../theme/mario_theme.dart';
 import '../gif_loader.dart';
 import '../mario_game.dart';
