@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -12,11 +13,11 @@ import 'platform_block.dart';
 class PlayerComponent extends PositionComponent
     with CollisionCallbacks, HasGameReference<MarioGame> {
   static const gravity = 1400.0;
-  static const jumpForce = -520.0;
-  static const moveSpeed = 220.0;
-  static const maxFall = 700.0;
-  static const baseW = 48.0;
-  static const baseH = 48.0;
+  static const jumpForce = -560.0;
+  static const moveSpeed = 240.0;
+  static const maxFall = 720.0;
+  static const baseW = 78.0;
+  static const baseH = 78.0;
 
   Vector2 velocity = Vector2.zero();
   bool onGround = false;
@@ -33,7 +34,10 @@ class PlayerComponent extends PositionComponent
   double shootCooldown = 0;
   double squashY = 1;
   double stretchX = 1;
+  double lean = 0;
   double animT = 0;
+  double _dustTimer = 0;
+  double _trailTimer = 0;
   bool wantLeft = false;
   bool wantRight = false;
   bool wantJump = false;
@@ -43,6 +47,7 @@ class PlayerComponent extends PositionComponent
   List<GifFrameData> _gifFrames = const [];
   int _frameIndex = 0;
   double _frameTimer = 0;
+  final List<_AfterImage> _trails = [];
 
   PlayerComponent({required Vector2 position})
       : super(
@@ -67,13 +72,18 @@ class PlayerComponent extends PositionComponent
     velocity.setZero();
     dead = false;
     onGround = false;
+    _trails.clear();
   }
 
   void collectMushroom() {
     if (!isBig) {
       isBig = true;
-      size = Vector2(baseW * 1.2, baseH * 1.35);
-      squashY = 1.3;
+      size = Vector2(baseW * 1.28, baseH * 1.38);
+      squashY = 1.55;
+      stretchX = 0.75;
+      game.juice.burst(absoluteCenter, color: MarioColors.red, count: 28);
+      game.juice.shake(intensity: 8, duration: 0.28);
+      game.juice.triggerHitStop(0.08);
     }
   }
 
@@ -85,16 +95,20 @@ class PlayerComponent extends PositionComponent
   void collectFeather() {
     hasFly = true;
     flyTime = 8;
+    game.juice.burst(absoluteCenter, color: Colors.white, count: 24);
   }
 
   void collectStar() {
     invincible = true;
     invincibleTime = 12;
+    game.juice.burst(absoluteCenter, color: MarioColors.yellow, count: 36);
+    game.juice.shake(intensity: 10, duration: 0.35);
   }
 
   void collectComet() {
     hasComet = true;
     cometTime = 10;
+    game.juice.burst(absoluteCenter, color: MarioColors.blue, count: 30);
   }
 
   void shrink() {
@@ -104,11 +118,15 @@ class PlayerComponent extends PositionComponent
       size = Vector2(baseW, baseH);
       invincible = true;
       invincibleTime = 2;
-      squashY = 0.6;
+      squashY = 0.45;
+      stretchX = 1.4;
+      game.juice.shake(intensity: 14, duration: 0.4);
     } else {
       dead = true;
     }
   }
+
+  bool get _isRunning => onGround && velocity.x.abs() > 50;
 
   @override
   void update(double dt) {
@@ -118,7 +136,9 @@ class PlayerComponent extends PositionComponent
 
     if (_gifFrames.isNotEmpty) {
       _frameTimer += dt;
-      final delay = _gifFrames[_frameIndex].delaySeconds;
+      final baseDelay = _gifFrames[_frameIndex].delaySeconds;
+      final speedMul = _isRunning ? 0.35 : (velocity.x.abs() > 20 ? 0.55 : 1.0);
+      final delay = max(0.04, baseDelay * speedMul);
       if (_frameTimer >= delay) {
         _frameTimer = 0;
         _frameIndex = (_frameIndex + 1) % _gifFrames.length;
@@ -138,7 +158,7 @@ class PlayerComponent extends PositionComponent
       if (cometTime <= 0) hasComet = false;
     }
 
-    final speed = moveSpeed * (hasComet ? 1.7 : 1.0);
+    final speed = moveSpeed * (hasComet ? 1.85 : 1.0);
     if (wantLeft) {
       velocity.x = -speed;
       facingRight = false;
@@ -155,15 +175,16 @@ class PlayerComponent extends PositionComponent
         velocity.y = jumpForce;
         onGround = false;
         jumpConsumed = true;
-        stretchX = 0.75;
-        squashY = 1.35;
+        stretchX = 0.55;
+        squashY = 1.65;
         game.juice.burst(
           absoluteCenter + Vector2(0, size.y / 2),
-          color: Colors.white70,
-          count: 6,
+          color: Colors.white,
+          count: 16,
         );
+        game.juice.shake(intensity: 3, duration: 0.12);
       } else if (hasFly) {
-        velocity.y = min(velocity.y, -180);
+        velocity.y = min(velocity.y, -200);
       }
     } else {
       jumpConsumed = false;
@@ -172,9 +193,12 @@ class PlayerComponent extends PositionComponent
     if (wantShoot && hasFire && shootCooldown <= 0) {
       shootCooldown = 0.35;
       game.spawnFireball(
-        absoluteCenter + Vector2(facingRight ? 20 : -20, 0),
+        absoluteCenter + Vector2(facingRight ? 28 : -28, 0),
         facingRight,
       );
+      stretchX = 1.25;
+      squashY = 0.85;
+      game.juice.burst(absoluteCenter, color: const Color(0xFFFF6A00), count: 10);
     }
 
     velocity.y += gravity * dt;
@@ -187,11 +211,52 @@ class PlayerComponent extends PositionComponent
       dead = true;
     }
 
-    squashY += (1 - squashY) * 14 * dt;
-    stretchX += (1 - stretchX) * 14 * dt;
-    if (onGround && velocity.x.abs() > 40) {
-      stretchX = 1 + sin(animT * 18) * 0.04;
-      squashY = 1 - sin(animT * 18) * 0.04;
+    squashY += (1 - squashY) * 10 * dt;
+    stretchX += (1 - stretchX) * 10 * dt;
+    final targetLean = (velocity.x / speed).clamp(-1.0, 1.0) * 0.18;
+    lean += (targetLean - lean) * 14 * dt;
+
+    if (_isRunning) {
+      final pulse = sin(animT * 28);
+      stretchX = 1.12 + pulse * 0.14;
+      squashY = 0.88 - pulse * 0.12;
+
+      _dustTimer += dt;
+      if (_dustTimer > 0.045) {
+        _dustTimer = 0;
+        game.juice.burst(
+          Vector2(absoluteCenter.x - (facingRight ? 18 : -18), position.y + size.y),
+          color: const Color(0xFFD2B48C),
+          count: 4,
+        );
+      }
+
+      _trailTimer += dt;
+      if (_trailTimer > 0.04 && _gifFrames.isNotEmpty) {
+        _trailTimer = 0;
+        _trails.add(_AfterImage(
+          pos: position.clone(),
+          size: size.clone(),
+          frame: _gifFrames[_frameIndex].image,
+          facingRight: facingRight,
+          life: 0.28,
+        ));
+      }
+    }
+
+    for (final t in _trails) {
+      t.life -= dt;
+    }
+    _trails.removeWhere((t) => t.life <= 0);
+
+    if (!onGround) {
+      if (velocity.y < -80) {
+        stretchX = min(stretchX, 0.72);
+        squashY = max(squashY, 1.28);
+      } else if (velocity.y > 120) {
+        stretchX = max(stretchX, 1.18);
+        squashY = min(squashY, 0.82);
+      }
     }
   }
 
@@ -217,17 +282,19 @@ class PlayerComponent extends PositionComponent
 
     if (playerRight <= platLeft || playerLeft >= platRight) return;
 
-    if (velocity.y >= 0 && prevBottom <= platTop + 12 && playerBottom >= platTop) {
+    if (velocity.y >= 0 && prevBottom <= platTop + 16 && playerBottom >= platTop) {
       position.y = platTop - size.y;
       velocity.y = 0;
       if (!onGround) {
-        squashY = 0.65;
-        stretchX = 1.25;
+        squashY = 0.42;
+        stretchX = 1.55;
         game.juice.burst(
           Vector2(absoluteCenter.x, platTop),
           color: MarioColors.green,
-          count: 5,
+          count: 14,
         );
+        game.juice.shake(intensity: 5, duration: 0.18);
+        game.juice.triggerHitStop(0.035);
       }
       onGround = true;
       return;
@@ -237,7 +304,8 @@ class PlayerComponent extends PositionComponent
       position.y = platBottom;
       velocity.y = 0;
       platform.hit();
-      squashY = 1.2;
+      squashY = 1.4;
+      stretchX = 0.7;
       return;
     }
 
@@ -252,19 +320,55 @@ class PlayerComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    final blink = invincible && (animT * 20).floor().isOdd;
+    for (final trail in _trails) {
+      final a = (trail.life / 0.28).clamp(0.0, 1.0);
+      canvas.save();
+      canvas.translate(trail.pos.x - position.x, trail.pos.y - position.y);
+      final tcx = trail.size.x / 2;
+      final tcy = trail.size.y / 2;
+      canvas.translate(tcx, tcy);
+      canvas.scale(trail.facingRight ? 1.0 : -1.0, 1.0);
+      canvas.translate(-tcx, -tcy);
+      paintImage(
+        canvas: canvas,
+        rect: Rect.fromLTWH(0, 0, trail.size.x, trail.size.y),
+        image: trail.frame,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.none,
+        opacity: a * 0.45,
+      );
+      canvas.restore();
+    }
+
+    final blink = invincible && (animT * 22).floor().isOdd;
     if (blink) return;
 
     canvas.save();
     final cx = size.x / 2;
     final cy = size.y / 2;
     canvas.translate(cx, cy);
+    canvas.rotate(lean);
     canvas.scale(facingRight ? stretchX : -stretchX, squashY);
+    canvas.scale(1.12, 1.12);
     canvas.translate(-cx, -cy);
 
     if (_gifFrames.isNotEmpty) {
       final frame = _gifFrames[_frameIndex].image;
       final dst = Rect.fromLTWH(0, 0, size.x, size.y);
+      if (_isRunning || hasComet || invincible) {
+        canvas.drawCircle(
+          Offset(size.x / 2, size.y * 0.7),
+          size.x * 0.55,
+          Paint()
+            ..color = (hasComet
+                    ? MarioColors.blue
+                    : invincible
+                        ? MarioColors.yellow
+                        : MarioColors.red)
+                .withValues(alpha: 0.22)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+        );
+      }
       paintImage(
         canvas: canvas,
         rect: dst,
@@ -273,48 +377,44 @@ class PlayerComponent extends PositionComponent
         filterQuality: FilterQuality.none,
       );
       if (hasFire) {
-        canvas.drawRect(dst, Paint()..color = const Color(0x33FF6A00));
+        canvas.drawRect(dst, Paint()..color = const Color(0x44FF6A00));
       } else if (invincible) {
-        canvas.drawRect(dst, Paint()..color = MarioColors.yellow.withValues(alpha: 0.22));
+        canvas.drawRect(dst, Paint()..color = MarioColors.yellow.withValues(alpha: 0.28));
       }
     } else {
-      _renderFallback(canvas);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(4, 10, size.x - 8, size.y - 14),
+          const Radius.circular(8),
+        ),
+        Paint()..color = MarioColors.red,
+      );
     }
 
     if (hasFly) {
+      final flap = 0.7 + 0.3 * sin(animT * 20);
       canvas.drawOval(
-        const Rect.fromLTWH(-6, 14, 14, 10),
-        Paint()..color = Colors.white.withValues(alpha: 0.9),
-      );
-    }
-    if (hasComet) {
-      canvas.drawCircle(
-        Offset(size.x / 2, size.y / 2),
-        size.x * 0.7,
-        Paint()
-          ..color = MarioColors.blue.withValues(alpha: 0.2)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        Rect.fromLTWH(-10, 18, 18 * flap, 12),
+        Paint()..color = Colors.white.withValues(alpha: 0.92),
       );
     }
 
     canvas.restore();
   }
+}
 
-  void _renderFallback(Canvas canvas) {
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(4, 10, size.x - 8, size.y - 14),
-        const Radius.circular(8),
-      ),
-      Paint()..color = MarioColors.red,
-    );
-    canvas.drawCircle(Offset(size.x * 0.55, 18), 7, Paint()..color = const Color(0xFFFFDBAC));
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(6, size.y * 0.45, size.x - 12, size.y * 0.4),
-        const Radius.circular(4),
-      ),
-      Paint()..color = MarioColors.blue,
-    );
-  }
+class _AfterImage {
+  Vector2 pos;
+  Vector2 size;
+  ui.Image frame;
+  bool facingRight;
+  double life;
+
+  _AfterImage({
+    required this.pos,
+    required this.size,
+    required this.frame,
+    required this.facingRight,
+    required this.life,
+  });
 }

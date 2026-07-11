@@ -389,13 +389,20 @@ class _LevelClearBanner extends StatelessWidget {
           'LEVEL CLEAR!',
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
                 color: Colors.white,
-                shadows: const [Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(2, 2))],
+                fontSize: 42,
+                shadows: const [
+                  Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(2, 2)),
+                  Shadow(color: MarioColors.yellow, blurRadius: 18),
+                ],
               ),
         ),
       )
           .animate()
-          .scale(begin: const Offset(0.4, 0.4), curve: Curves.elasticOut, duration: 800.ms)
-          .fadeIn(),
+          .scale(begin: const Offset(0.2, 0.2), curve: Curves.elasticOut, duration: 900.ms)
+          .fadeIn()
+          .then()
+          .shake(hz: 3, rotation: 0.04, duration: 500.ms)
+          .shimmer(duration: 1200.ms, color: Colors.white),
     );
   }
 }

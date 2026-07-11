@@ -50,13 +50,20 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 Center(
                   child: Image.asset(
                     'assets/images/Mario.gif',
-                    height: 110,
+                    height: 160,
                     filterQuality: FilterQuality.none,
                   ),
                 )
-                    .animate()
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
                     .fadeIn(duration: 400.ms)
-                    .scale(begin: const Offset(0.7, 0.7), curve: Curves.easeOutBack),
+                    .scale(begin: const Offset(0.5, 0.5), curve: Curves.elasticOut, duration: 900.ms)
+                    .then()
+                    .moveY(begin: 0, end: -14, duration: 700.ms, curve: Curves.easeInOut)
+                    .scale(
+                      begin: const Offset(1, 1),
+                      end: const Offset(1.1, 1.1),
+                      duration: 700.ms,
+                    ),
                 const SizedBox(height: 8),
                 Text(
                   'SUPER\nMARIO',

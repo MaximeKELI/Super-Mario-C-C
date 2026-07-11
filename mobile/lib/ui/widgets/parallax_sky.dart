@@ -132,11 +132,11 @@ class _PremiumButtonState extends State<PremiumButton> {
       },
       onTapCancel: () => setState(() => _down = false),
       child: AnimatedScale(
-        scale: _down ? 0.92 : 1,
-        duration: const Duration(milliseconds: 120),
+        scale: _down ? 0.86 : 1,
+        duration: const Duration(milliseconds: 90),
         curve: Curves.easeOutBack,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
+          duration: const Duration(milliseconds: 140),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
@@ -152,14 +152,14 @@ class _PremiumButtonState extends State<PremiumButton> {
             border: Border.all(color: Colors.white.withValues(alpha: 0.55), width: 2),
             boxShadow: [
               BoxShadow(
-                color: widget.color.withValues(alpha: 0.45),
-                blurRadius: _down ? 8 : 18,
-                offset: Offset(0, _down ? 2 : 8),
+                color: widget.color.withValues(alpha: 0.55),
+                blurRadius: _down ? 6 : 22,
+                offset: Offset(0, _down ? 1 : 10),
               ),
               BoxShadow(
-                color: MarioColors.yellow.withValues(alpha: _down ? 0.15 : 0.35),
-                blurRadius: 24,
-                spreadRadius: -4,
+                color: MarioColors.yellow.withValues(alpha: _down ? 0.2 : 0.5),
+                blurRadius: 30,
+                spreadRadius: -2,
               ),
             ],
           ),

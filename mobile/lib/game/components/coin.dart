@@ -24,16 +24,19 @@ class CoinComponent extends PositionComponent
 
   @override
   void update(double dt) {
-    t += dt * 4;
-    position.y = baseY + sin(t) * 6;
+    t += dt * 7;
+    position.y = baseY + sin(t) * 12;
   }
 
   @override
   void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is PlayerComponent) {
-      game.juice.burst(absoluteCenter, color: MarioColors.yellow, count: 18);
+      game.juice.burst(absoluteCenter, color: MarioColors.yellow, count: 32);
+      game.juice.ring(absoluteCenter, color: MarioColors.yellow, count: 14);
       game.juice.scorePopup(absoluteCenter, '+50');
+      game.juice.triggerHitStop(0.04);
+      game.juice.shake(intensity: 4, duration: 0.12);
       game.onCoinCollected();
       removeFromParent();
     }
@@ -41,29 +44,33 @@ class CoinComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    final scaleX = 0.55 + 0.45 * ((sin(t * 2) + 1) / 2);
+    final scaleX = 0.25 + 0.75 * ((sin(t * 3) + 1) / 2);
+    final bounce = 1.0 + 0.15 * sin(t * 2);
     canvas.save();
     canvas.translate(size.x / 2, size.y / 2);
-    canvas.scale(scaleX, 1);
+    canvas.scale(scaleX, bounce);
     canvas.drawCircle(
       Offset.zero,
-      size.x / 2,
-      Paint()..color = MarioColors.yellow,
+      size.x / 2 + 4,
+      Paint()
+        ..color = MarioColors.yellow.withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
     );
+    canvas.drawCircle(Offset.zero, size.x / 2, Paint()..color = MarioColors.yellow);
     canvas.drawCircle(
       Offset.zero,
       size.x / 2,
       Paint()
         ..color = const Color(0xFFFFF3A0)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+        ..strokeWidth = 2.5,
     );
     canvas.drawLine(
-      const Offset(0, -6),
-      const Offset(0, 6),
+      const Offset(0, -7),
+      const Offset(0, 7),
       Paint()
         ..color = const Color(0xFFE0A800)
-        ..strokeWidth = 2,
+        ..strokeWidth = 2.5,
     );
     canvas.restore();
   }

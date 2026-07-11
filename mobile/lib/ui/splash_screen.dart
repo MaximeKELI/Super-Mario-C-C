@@ -44,24 +44,27 @@ class _SplashScreenState extends State<SplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: 220,
-                  height: 220,
+                  width: 280,
+                  height: 280,
                   child: AnimatedBuilder(
                     animation: _orbit,
                     builder: (context, child) {
                       return Stack(
                         alignment: Alignment.center,
                         children: [
-                          for (var i = 0; i < 8; i++)
+                          for (var i = 0; i < 12; i++)
                             Transform.translate(
                               offset: Offset(
-                                cos(_orbit.value * pi * 2 + i) * 90,
-                                sin(_orbit.value * pi * 2 + i) * 70,
+                                cos(_orbit.value * pi * 2 + i) * (100 + (i % 3) * 12),
+                                sin(_orbit.value * pi * 2 + i * 1.3) * (80 + (i % 2) * 16),
                               ),
-                              child: Icon(
-                                Icons.star_rounded,
-                                color: MarioColors.yellow.withValues(alpha: 0.85),
-                                size: 18 + (i % 3) * 4,
+                              child: Transform.rotate(
+                                angle: _orbit.value * pi * 2 + i,
+                                child: Icon(
+                                  Icons.star_rounded,
+                                  color: MarioColors.yellow.withValues(alpha: 0.9),
+                                  size: 20.0 + (i % 4) * 6,
+                                ),
                               ),
                             ),
                           child!,
@@ -69,8 +72,8 @@ class _SplashScreenState extends State<SplashScreen>
                       );
                     },
                     child: Container(
-                      width: 140,
-                      height: 140,
+                      width: 190,
+                      height: 190,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const RadialGradient(
@@ -78,29 +81,39 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: MarioColors.red.withValues(alpha: 0.5),
-                            blurRadius: 30,
-                            spreadRadius: 4,
+                            color: MarioColors.red.withValues(alpha: 0.55),
+                            blurRadius: 40,
+                            spreadRadius: 6,
+                          ),
+                          BoxShadow(
+                            color: MarioColors.yellow.withValues(alpha: 0.45),
+                            blurRadius: 28,
                           ),
                         ],
-                        border: Border.all(color: Colors.white, width: 4),
+                        border: Border.all(color: Colors.white, width: 5),
                       ),
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8),
                       child: Image.asset(
                         'assets/images/Mario.gif',
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.none,
                       ),
                     )
-                        .animate()
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
                         .scale(
-                          begin: const Offset(0.2, 0.2),
+                          begin: const Offset(0.15, 0.15),
                           end: const Offset(1, 1),
                           curve: Curves.elasticOut,
-                          duration: 1100.ms,
+                          duration: 1200.ms,
                         )
                         .then()
-                        .shake(hz: 2, rotation: 0.02),
+                        .scale(
+                          begin: const Offset(1, 1),
+                          end: const Offset(1.08, 1.08),
+                          duration: 700.ms,
+                          curve: Curves.easeInOut,
+                        )
+                        .shake(hz: 2.5, rotation: 0.03, duration: 600.ms),
                   ),
                 ),
                 const SizedBox(height: 28),

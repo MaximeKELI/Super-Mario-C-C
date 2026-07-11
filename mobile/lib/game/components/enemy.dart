@@ -46,13 +46,14 @@ class EnemyComponent extends PositionComponent
 
   void damage() {
     health--;
-    flash = 0.2;
-    game.juice.triggerHitStop(0.05);
-    game.juice.shake(intensity: 4, duration: 0.15);
+    flash = 0.25;
+    game.juice.triggerHitStop(0.08);
+    game.juice.shake(intensity: kind == EnemyKind.boss ? 14 : 7, duration: 0.28);
+    game.juice.ring(absoluteCenter, color: MarioColors.red, count: 12);
     if (health <= 0) {
       dead = true;
-      deathT = 0.5;
-      game.juice.burst(absoluteCenter, color: MarioColors.brown, count: 16);
+      deathT = 0.7;
+      game.juice.burst(absoluteCenter, color: MarioColors.brown, count: 28);
       game.juice.scorePopup(absoluteCenter, kind == EnemyKind.boss ? '+500' : '+100');
     }
   }
