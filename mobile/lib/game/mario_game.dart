@@ -150,38 +150,16 @@ class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, Ta
     }
   }
 
-  bool _keyDown(Set<LogicalKeyboardKey> keys, List<LogicalKeyboardKey> anyOf) {
-    for (final k in anyOf) {
-      if (keys.contains(k)) return true;
-    }
-    return false;
-  }
-
   void _applyInputs() {
     final keys = HardwareKeyboard.instance.logicalKeysPressed;
-    final keyLeft = _keyDown(keys, const [
-      LogicalKeyboardKey.arrowLeft,
-      LogicalKeyboardKey.keyA,
-    ]);
-    final keyRight = _keyDown(keys, const [
-      LogicalKeyboardKey.arrowRight,
-      LogicalKeyboardKey.keyD,
-    ]);
-    final keyJump = _keyDown(keys, const [
-      LogicalKeyboardKey.space,
-      LogicalKeyboardKey.arrowUp,
-      LogicalKeyboardKey.keyW,
-    ]);
-    final keyFire = _keyDown(keys, const [
-      LogicalKeyboardKey.keyX,
-      LogicalKeyboardKey.keyJ,
-      LogicalKeyboardKey.shiftLeft,
-      LogicalKeyboardKey.shiftRight,
-    ]);
-    final keyPipe = _keyDown(keys, const [
-      LogicalKeyboardKey.arrowDown,
-      LogicalKeyboardKey.keyS,
-    ]);
+    // Touches directionnelles pour le déplacement
+    final keyLeft = keys.contains(LogicalKeyboardKey.arrowLeft);
+    final keyRight = keys.contains(LogicalKeyboardKey.arrowRight);
+    final keyJump = keys.contains(LogicalKeyboardKey.arrowUp) ||
+        keys.contains(LogicalKeyboardKey.space);
+    final keyFire =
+        keys.contains(LogicalKeyboardKey.keyX) || keys.contains(LogicalKeyboardKey.keyJ);
+    final keyPipe = keys.contains(LogicalKeyboardKey.arrowDown);
 
     player.wantLeft = ctrlLeft || keyLeft || padLeft;
     player.wantRight = ctrlRight || keyRight || padRight;

@@ -208,14 +208,14 @@ class PlayerComponent extends PositionComponent
     stretchX += (1 - stretchX) * 16 * dt;
 
     if (_isRunning) {
-      // Light dust only
+      // Very light dust
       _dustTimer += dt;
-      if (_dustTimer > 0.14) {
+      if (_dustTimer > 0.28) {
         _dustTimer = 0;
         game.juice.burst(
-          Vector2(absoluteCenter.x - (facingRight ? 14 : -14), position.y + size.y - 2),
-          color: const Color(0x66C4A484),
-          count: 2,
+          Vector2(absoluteCenter.x - (facingRight ? 12 : -12), position.y + size.y - 2),
+          color: const Color(0x44C4A484),
+          count: 1,
         );
       }
     }

@@ -182,7 +182,7 @@ class _KeyboardHint extends StatelessWidget {
         child: Padding(
           padding: EdgeInsets.only(top: 48),
           child: Text(
-            'Clavier: ←→/AD  ·  Saut: Espace/W  ·  Feu: X  ·  Pipe: ↓/S  ·  Pause: P  ·  Manette OK',
+            '← → déplacer  ·  ↑/Espace saut  ·  ↓ pipe  ·  X feu  ·  P pause',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 11,
