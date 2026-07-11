@@ -124,11 +124,11 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     }
     for (final e in data.enemies) {
       final enemy = EnemyComponent(e);
-      if (difficulty == Difficulty.hard) {
-        enemy.velocity.x *= 1.35;
-      } else if (difficulty == Difficulty.easy) {
-        enemy.velocity.x *= 0.75;
-      }
+      enemy.speedMult = switch (difficulty) {
+        Difficulty.hard => 1.35,
+        Difficulty.easy => 0.75,
+        Difficulty.normal => 1.0,
+      };
       world.add(enemy);
     }
     for (final s in data.spikes) {

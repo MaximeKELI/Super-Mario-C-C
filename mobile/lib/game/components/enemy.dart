@@ -14,6 +14,7 @@ class EnemyComponent extends PositionComponent
     with CollisionCallbacks, HasGameReference<MarioGame> {
   final EnemyKind kind;
   Vector2 velocity = Vector2(-50, 0);
+  double speedMult = 1;
   int health;
   bool dead = false;
   double startX;
@@ -36,7 +37,11 @@ class EnemyComponent extends PositionComponent
   @override
   Future<void> onLoad() async {
     add(RectangleHitbox());
-    if (kind == EnemyKind.flying) velocity = Vector2(-40, 0);
+    if (kind == EnemyKind.flying) {
+      velocity = Vector2(-40 * speedMult, 0);
+    } else {
+      velocity.x *= speedMult;
+    }
   }
 
   void damage() {
