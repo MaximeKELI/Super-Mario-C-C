@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../game/gif_loader.dart';
 import '../../theme/mario_theme.dart';
 import 'widgets/parallax_sky.dart';
 
@@ -17,15 +18,35 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _orbit;
+  bool _assetsReady = false;
+  bool _minTimeDone = false;
+  bool _finishScheduled = false;
 
   @override
   void initState() {
     super.initState();
     _orbit = AnimationController(vsync: this, duration: const Duration(seconds: 3))
       ..repeat();
-    Future.delayed(const Duration(milliseconds: 900), () {
-      if (mounted) widget.onDone();
+    _bootstrap();
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      _minTimeDone = true;
+      _tryFinish();
     });
+  }
+
+  Future<void> _bootstrap() async {
+    await GifLoader.preloadMario();
+    if (!mounted) return;
+    setState(() => _assetsReady = true);
+    _tryFinish();
+  }
+
+  void _tryFinish() {
+    if (_assetsReady && _minTimeDone && mounted && !_finishScheduled) {
+      _finishScheduled = true;
+      widget.onDone();
+    }
   }
 
   @override
@@ -99,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                     .slideY(begin: 0.2, curve: Curves.easeOut),
                 const SizedBox(height: 8),
                 Text(
-                  'MOBILE PREMIUM',
+                  _assetsReady ? 'MOBILE PREMIUM' : 'CHARGEMENT...',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: MarioColors.yellow,
                         letterSpacing: 4,

@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 
 class GifFrameData {
   final ui.Image image;
@@ -11,35 +9,42 @@ class GifFrameData {
   const GifFrameData(this.image, this.delaySeconds);
 }
 
-/// Decodes an animated GIF asset into frames (same idea as C++ IMG_LoadGIFAnimation).
+/// Fast GIF decode via Flutter's native codec (scaled down for gameplay).
 class GifLoader {
   static final Map<String, Future<List<GifFrameData>>> _cache = {};
+  static List<GifFrameData>? marioFrames;
 
-  static Future<List<GifFrameData>> load(String assetPath) {
-    return _cache.putIfAbsent(assetPath, () => _decode(assetPath));
+  static Future<List<GifFrameData>> load(
+    String assetPath, {
+    int targetWidth = 96,
+  }) {
+    final key = '$assetPath@$targetWidth';
+    return _cache.putIfAbsent(key, () => _decode(assetPath, targetWidth));
   }
 
-  static Future<List<GifFrameData>> _decode(String assetPath) async {
+  /// Call during splash so the first level starts instantly.
+  static Future<void> preloadMario() async {
+    marioFrames = await load('assets/images/Mario.gif', targetWidth: 96);
+  }
+
+  static Future<List<GifFrameData>> _decode(String assetPath, int targetWidth) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List();
-    final animation = img.GifDecoder().decode(bytes);
-    if (animation == null || animation.frames.isEmpty) {
-      throw StateError('Failed to decode GIF: $assetPath');
-    }
+
+    final codec = await ui.instantiateImageCodec(
+      bytes,
+      targetWidth: targetWidth,
+    );
 
     final frames = <GifFrameData>[];
-    for (final frame in animation.frames) {
-      final png = Uint8List.fromList(img.encodePng(frame));
-      final image = await _pngToUiImage(png);
-      final delayMs = frame.frameDuration <= 0 ? 100 : frame.frameDuration;
-      frames.add(GifFrameData(image, delayMs / 1000.0));
+    for (var i = 0; i < codec.frameCount; i++) {
+      final info = await codec.getNextFrame();
+      final ms = info.duration.inMilliseconds;
+      frames.add(GifFrameData(
+        info.image,
+        (ms <= 0 ? 80 : ms) / 1000.0,
+      ));
     }
     return frames;
-  }
-
-  static Future<ui.Image> _pngToUiImage(Uint8List png) {
-    final completer = Completer<ui.Image>();
-    ui.decodeImageFromList(png, completer.complete);
-    return completer.future;
   }
 }

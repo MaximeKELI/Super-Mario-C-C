@@ -56,8 +56,14 @@ class PlayerComponent extends PositionComponent
   @override
   Future<void> onLoad() async {
     add(RectangleHitbox());
+    // Use splash preload when available — avoids 30s decode stall
+    if (GifLoader.marioFrames != null && GifLoader.marioFrames!.isNotEmpty) {
+      _gifFrames = GifLoader.marioFrames!;
+      return;
+    }
     try {
-      _gifFrames = await GifLoader.load('assets/images/Mario.gif');
+      _gifFrames = await GifLoader.load('assets/images/Mario.gif', targetWidth: 96);
+      GifLoader.marioFrames = _gifFrames;
     } catch (_) {
       _gifFrames = const [];
     }
