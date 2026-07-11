@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
@@ -34,10 +33,8 @@ class PlayerComponent extends PositionComponent
   double shootCooldown = 0;
   double squashY = 1;
   double stretchX = 1;
-  double lean = 0;
   double animT = 0;
   double _dustTimer = 0;
-  double _trailTimer = 0;
   bool wantLeft = false;
   bool wantRight = false;
   bool wantJump = false;
@@ -47,7 +44,6 @@ class PlayerComponent extends PositionComponent
   List<GifFrameData> _gifFrames = const [];
   int _frameIndex = 0;
   double _frameTimer = 0;
-  final List<_AfterImage> _trails = [];
 
   PlayerComponent({required Vector2 position})
       : super(
@@ -72,18 +68,16 @@ class PlayerComponent extends PositionComponent
     velocity.setZero();
     dead = false;
     onGround = false;
-    _trails.clear();
   }
 
   void collectMushroom() {
     if (!isBig) {
       isBig = true;
       size = Vector2(baseW * 1.28, baseH * 1.38);
-      squashY = 1.55;
-      stretchX = 0.75;
-      game.juice.burst(absoluteCenter, color: MarioColors.red, count: 28);
-      game.juice.shake(intensity: 8, duration: 0.28);
-      game.juice.triggerHitStop(0.08);
+      squashY = 1.12;
+      stretchX = 0.92;
+      game.juice.burst(absoluteCenter, color: MarioColors.red, count: 20);
+      game.juice.shake(intensity: 5, duration: 0.2);
     }
   }
 
@@ -175,14 +169,14 @@ class PlayerComponent extends PositionComponent
         velocity.y = jumpForce;
         onGround = false;
         jumpConsumed = true;
-        stretchX = 0.55;
-        squashY = 1.65;
+        // Mild squash only — keep GIF proportions readable
+        stretchX = 0.88;
+        squashY = 1.12;
         game.juice.burst(
           absoluteCenter + Vector2(0, size.y / 2),
-          color: Colors.white,
-          count: 16,
+          color: Colors.white70,
+          count: 8,
         );
-        game.juice.shake(intensity: 3, duration: 0.12);
       } else if (hasFly) {
         velocity.y = min(velocity.y, -200);
       }
@@ -196,9 +190,7 @@ class PlayerComponent extends PositionComponent
         absoluteCenter + Vector2(facingRight ? 28 : -28, 0),
         facingRight,
       );
-      stretchX = 1.25;
-      squashY = 0.85;
-      game.juice.burst(absoluteCenter, color: const Color(0xFFFF6A00), count: 10);
+      game.juice.burst(absoluteCenter, color: const Color(0xFFFF6A00), count: 8);
     }
 
     velocity.y += gravity * dt;
@@ -211,51 +203,20 @@ class PlayerComponent extends PositionComponent
       dead = true;
     }
 
-    squashY += (1 - squashY) * 10 * dt;
-    stretchX += (1 - stretchX) * 10 * dt;
-    final targetLean = (velocity.x / speed).clamp(-1.0, 1.0) * 0.18;
-    lean += (targetLean - lean) * 14 * dt;
+    // Recover squash gently; never warp GIF while running
+    squashY += (1 - squashY) * 16 * dt;
+    stretchX += (1 - stretchX) * 16 * dt;
 
     if (_isRunning) {
-      final pulse = sin(animT * 28);
-      stretchX = 1.12 + pulse * 0.14;
-      squashY = 0.88 - pulse * 0.12;
-
+      // Light dust only
       _dustTimer += dt;
-      if (_dustTimer > 0.045) {
+      if (_dustTimer > 0.14) {
         _dustTimer = 0;
         game.juice.burst(
-          Vector2(absoluteCenter.x - (facingRight ? 18 : -18), position.y + size.y),
-          color: const Color(0xFFD2B48C),
-          count: 4,
+          Vector2(absoluteCenter.x - (facingRight ? 14 : -14), position.y + size.y - 2),
+          color: const Color(0x66C4A484),
+          count: 2,
         );
-      }
-
-      _trailTimer += dt;
-      if (_trailTimer > 0.04 && _gifFrames.isNotEmpty) {
-        _trailTimer = 0;
-        _trails.add(_AfterImage(
-          pos: position.clone(),
-          size: size.clone(),
-          frame: _gifFrames[_frameIndex].image,
-          facingRight: facingRight,
-          life: 0.28,
-        ));
-      }
-    }
-
-    for (final t in _trails) {
-      t.life -= dt;
-    }
-    _trails.removeWhere((t) => t.life <= 0);
-
-    if (!onGround) {
-      if (velocity.y < -80) {
-        stretchX = min(stretchX, 0.72);
-        squashY = max(squashY, 1.28);
-      } else if (velocity.y > 120) {
-        stretchX = max(stretchX, 1.18);
-        squashY = min(squashY, 0.82);
       }
     }
   }
@@ -286,15 +247,13 @@ class PlayerComponent extends PositionComponent
       position.y = platTop - size.y;
       velocity.y = 0;
       if (!onGround) {
-        squashY = 0.42;
-        stretchX = 1.55;
+        squashY = 0.82;
+        stretchX = 1.12;
         game.juice.burst(
           Vector2(absoluteCenter.x, platTop),
           color: MarioColors.green,
-          count: 14,
+          count: 6,
         );
-        game.juice.shake(intensity: 5, duration: 0.18);
-        game.juice.triggerHitStop(0.035);
       }
       onGround = true;
       return;
@@ -304,8 +263,8 @@ class PlayerComponent extends PositionComponent
       position.y = platBottom;
       velocity.y = 0;
       platform.hit();
-      squashY = 1.4;
-      stretchX = 0.7;
+      squashY = 1.1;
+      stretchX = 0.92;
       return;
     }
 
@@ -320,26 +279,6 @@ class PlayerComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
-    for (final trail in _trails) {
-      final a = (trail.life / 0.28).clamp(0.0, 1.0);
-      canvas.save();
-      canvas.translate(trail.pos.x - position.x, trail.pos.y - position.y);
-      final tcx = trail.size.x / 2;
-      final tcy = trail.size.y / 2;
-      canvas.translate(tcx, tcy);
-      canvas.scale(trail.facingRight ? 1.0 : -1.0, 1.0);
-      canvas.translate(-tcx, -tcy);
-      paintImage(
-        canvas: canvas,
-        rect: Rect.fromLTWH(0, 0, trail.size.x, trail.size.y),
-        image: trail.frame,
-        fit: BoxFit.contain,
-        filterQuality: FilterQuality.none,
-        opacity: a * 0.45,
-      );
-      canvas.restore();
-    }
-
     final blink = invincible && (animT * 22).floor().isOdd;
     if (blink) return;
 
@@ -347,26 +286,23 @@ class PlayerComponent extends PositionComponent
     final cx = size.x / 2;
     final cy = size.y / 2;
     canvas.translate(cx, cy);
-    canvas.rotate(lean);
-    canvas.scale(facingRight ? stretchX : -stretchX, squashY);
-    canvas.scale(1.12, 1.12);
+    // Flip only — no run squash so the GIF stays sharp
+    canvas.scale(facingRight ? 1.0 : -1.0, 1.0);
+    // Tiny landing/jump squash (near 1.0 most of the time)
+    canvas.scale(stretchX.clamp(0.85, 1.15), squashY.clamp(0.85, 1.15));
     canvas.translate(-cx, -cy);
 
     if (_gifFrames.isNotEmpty) {
       final frame = _gifFrames[_frameIndex].image;
       final dst = Rect.fromLTWH(0, 0, size.x, size.y);
-      if (_isRunning || hasComet || invincible) {
+      if (hasComet || invincible) {
         canvas.drawCircle(
           Offset(size.x / 2, size.y * 0.7),
-          size.x * 0.55,
+          size.x * 0.45,
           Paint()
-            ..color = (hasComet
-                    ? MarioColors.blue
-                    : invincible
-                        ? MarioColors.yellow
-                        : MarioColors.red)
-                .withValues(alpha: 0.22)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+            ..color = (hasComet ? MarioColors.blue : MarioColors.yellow)
+                .withValues(alpha: 0.18)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
         );
       }
       paintImage(
@@ -377,9 +313,9 @@ class PlayerComponent extends PositionComponent
         filterQuality: FilterQuality.none,
       );
       if (hasFire) {
-        canvas.drawRect(dst, Paint()..color = const Color(0x44FF6A00));
+        canvas.drawRect(dst, Paint()..color = const Color(0x33FF6A00));
       } else if (invincible) {
-        canvas.drawRect(dst, Paint()..color = MarioColors.yellow.withValues(alpha: 0.28));
+        canvas.drawRect(dst, Paint()..color = MarioColors.yellow.withValues(alpha: 0.2));
       }
     } else {
       canvas.drawRRect(
@@ -401,20 +337,4 @@ class PlayerComponent extends PositionComponent
 
     canvas.restore();
   }
-}
-
-class _AfterImage {
-  Vector2 pos;
-  Vector2 size;
-  ui.Image frame;
-  bool facingRight;
-  double life;
-
-  _AfterImage({
-    required this.pos,
-    required this.size,
-    required this.frame,
-    required this.facingRight,
-    required this.life,
-  });
 }
