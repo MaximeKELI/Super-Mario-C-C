@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../audio/audio_service.dart';
 import '../../game/mario_game.dart';
 import '../../theme/mario_theme.dart';
+import 'responsive.dart';
 import 'widgets/parallax_sky.dart';
 
 class PauseOverlay extends StatefulWidget {
@@ -27,29 +28,38 @@ class _PauseOverlayState extends State<PauseOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    final r = Responsive.of(context);
+    final maxW = (MediaQuery.sizeOf(context).width * 0.9).clamp(240.0, 360.0);
+
     return Container(
       color: Colors.black.withValues(alpha: 0.55),
       child: Center(
-        child: Container(
-          width: 320,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFFFF8E7), Color(0xFFFFE08A)],
-            ),
-            border: Border.all(color: MarioColors.red, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: MarioColors.red.withValues(alpha: 0.35),
-                blurRadius: 24,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(r.sp(12)),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxW),
+            child: Container(
+              width: maxW,
+              padding: EdgeInsets.all(r.sp(r.isCompact ? 16 : 24)),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFF8E7), Color(0xFFFFE08A)],
+                ),
+                border: Border.all(color: MarioColors.red, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: MarioColors.red.withValues(alpha: 0.35),
+                    blurRadius: 24,
+                  ),
+                ],
               ),
-            ],
+              child: options ? _options() : _main(),
+            ).animate().scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
           ),
-          child: options ? _options() : _main(),
-        ).animate().scale(begin: const Offset(0.85, 0.85), curve: Curves.easeOutBack),
+        ),
       ),
     );
   }
