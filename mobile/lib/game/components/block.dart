@@ -82,14 +82,14 @@ class BlockComponent extends PositionComponent
       BlockKind.brick => MarioColors.brick,
       BlockKind.hard => const Color(0xFF888888),
     };
-    final r = RRect.fromRectAndRadius(size.toRect(), const Radius.circular(4));
-    canvas.drawRRect(r, Paint()..color = color);
-    canvas.drawRRect(
-      r,
-      Paint()
-        ..color = Colors.black26
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+    Pseudo3d.extrudedBox(
+      canvas,
+      size.toRect(),
+      face: color,
+      top: Color.lerp(color, Colors.white, 0.3)!,
+      side: Color.lerp(color, Colors.black, 0.3)!,
+      d: 8,
+      radius: 4,
     );
     if (kind == BlockKind.question && !used) {
       final tp = TextPainter(
@@ -99,6 +99,7 @@ class BlockComponent extends PositionComponent
             color: MarioColors.red,
             fontSize: 26,
             fontWeight: FontWeight.w900,
+            shadows: [Shadow(color: Colors.black26, blurRadius: 2, offset: Offset(1, 1))],
           ),
         ),
         textDirection: TextDirection.ltr,
