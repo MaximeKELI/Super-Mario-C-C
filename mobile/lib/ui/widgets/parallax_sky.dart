@@ -178,19 +178,17 @@ class _PremiumButtonState extends State<PremiumButton> {
                 Icon(widget.icon, color: MarioColors.cream, size: compact ? r.sp(18) : 22),
                 SizedBox(width: compact ? 6 : 10),
               ],
-              Flexible(
-                child: Text(
-                  widget.label,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: MarioColors.cream,
-                        letterSpacing: 0.6,
-                        fontSize: compact ? r.sp(16) : null,
-                        shadows: const [
-                          Shadow(color: Colors.black45, blurRadius: 2, offset: Offset(1, 1)),
-                        ],
-                      ),
-                ),
+              Text(
+                widget.label,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: MarioColors.cream,
+                      letterSpacing: 0.6,
+                      fontSize: compact ? r.sp(16) : null,
+                      shadows: const [
+                        Shadow(color: Colors.black45, blurRadius: 2, offset: Offset(1, 1)),
+                      ],
+                    ),
               ),
             ],
           ),

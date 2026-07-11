@@ -500,7 +500,7 @@ class _LevelClearBanner extends StatelessWidget {
           .scale(begin: const Offset(0.2, 0.2), curve: Curves.elasticOut, duration: 900.ms)
           .fadeIn()
           .then()
-          .shake(hz: 3, offset: 0.04, duration: 500.ms)
+          .shake(hz: 3, duration: 500.ms)
           .shimmer(duration: 1200.ms, color: Colors.white),
     );
   }
