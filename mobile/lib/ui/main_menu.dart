@@ -49,21 +49,34 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 const Spacer(flex: 2),
                 Center(
                   child: Image.asset(
-                    'assets/images/Mario.gif',
-                    height: 160,
-                    filterQuality: FilterQuality.none,
+                    'assets/images/app_logo.png',
+                    height: 140,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
                   ),
                 )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .fadeIn(duration: 400.ms)
-                    .scale(begin: const Offset(0.5, 0.5), curve: Curves.elasticOut, duration: 900.ms)
+                    .scale(
+                      begin: const Offset(0.5, 0.5),
+                      curve: Curves.elasticOut,
+                      duration: 900.ms,
+                    )
                     .then()
-                    .moveY(begin: 0, end: -14, duration: 700.ms, curve: Curves.easeInOut)
+                    .moveY(begin: 0, end: -10, duration: 800.ms, curve: Curves.easeInOut)
                     .scale(
                       begin: const Offset(1, 1),
-                      end: const Offset(1.1, 1.1),
-                      duration: 700.ms,
+                      end: const Offset(1.06, 1.06),
+                      duration: 800.ms,
                     ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Image.asset(
+                    'assets/images/Mario.gif',
+                    height: 72,
+                    filterQuality: FilterQuality.none,
+                  ),
+                ).animate().fadeIn(delay: 200.ms),
                 const SizedBox(height: 8),
                 Text(
                   'SUPER\nMARIO',

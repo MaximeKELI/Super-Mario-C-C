@@ -44,8 +44,8 @@ class _SplashScreenState extends State<SplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(
-                  width: 280,
-                  height: 280,
+                  width: 300,
+                  height: 300,
                   child: AnimatedBuilder(
                     animation: _orbit,
                     builder: (context, child) {
@@ -55,8 +55,8 @@ class _SplashScreenState extends State<SplashScreen>
                           for (var i = 0; i < 12; i++)
                             Transform.translate(
                               offset: Offset(
-                                cos(_orbit.value * pi * 2 + i) * (100 + (i % 3) * 12),
-                                sin(_orbit.value * pi * 2 + i * 1.3) * (80 + (i % 2) * 16),
+                                cos(_orbit.value * pi * 2 + i) * (110 + (i % 3) * 12),
+                                sin(_orbit.value * pi * 2 + i * 1.3) * (90 + (i % 2) * 16),
                               ),
                               child: Transform.rotate(
                                 angle: _orbit.value * pi * 2 + i,
@@ -71,33 +71,12 @@ class _SplashScreenState extends State<SplashScreen>
                         ],
                       );
                     },
-                    child: Container(
-                      width: 190,
-                      height: 190,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const RadialGradient(
-                          colors: [MarioColors.yellow, MarioColors.red],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: MarioColors.red.withValues(alpha: 0.55),
-                            blurRadius: 40,
-                            spreadRadius: 6,
-                          ),
-                          BoxShadow(
-                            color: MarioColors.yellow.withValues(alpha: 0.45),
-                            blurRadius: 28,
-                          ),
-                        ],
-                        border: Border.all(color: Colors.white, width: 5),
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: Image.asset(
-                        'assets/images/Mario.gif',
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.none,
-                      ),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 210,
+                      height: 210,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                     )
                         .animate(onPlay: (c) => c.repeat(reverse: true))
                         .scale(
@@ -109,14 +88,13 @@ class _SplashScreenState extends State<SplashScreen>
                         .then()
                         .scale(
                           begin: const Offset(1, 1),
-                          end: const Offset(1.08, 1.08),
+                          end: const Offset(1.06, 1.06),
                           duration: 700.ms,
                           curve: Curves.easeInOut,
-                        )
-                        .shake(hz: 2.5, rotation: 0.03, duration: 600.ms),
+                        ),
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
                 Text(
                   'SUPER MARIO',
                   style: Theme.of(context).textTheme.displayLarge,
