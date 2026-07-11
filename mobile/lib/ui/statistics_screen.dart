@@ -29,11 +29,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget build(BuildContext context) {
     final rows = [
       ('Play time', '${stats.totalPlayTime.toStringAsFixed(0)}s'),
-      ('Enemies defeated', '${stats.enemiesKilled}'),
-      ('Power-ups', '${stats.powerUpsCollected}'),
-      ('Distance', '${stats.distanceTraveled.toStringAsFixed(0)}'),
-      ('Coins lifetime', '${stats.totalCoinsCollected}'),
-      ('Levels cleared', '${stats.levelsCompleted}'),
+      ('Enemies defeated', stats.enemiesKilled.toString()),
+      ('Power-ups', stats.powerUpsCollected.toString()),
+      ('Distance', stats.distanceTraveled.toStringAsFixed(0)),
+      ('Coins lifetime', stats.totalCoinsCollected.toString()),
+      ('Levels cleared', stats.levelsCompleted.toString()),
     ];
     return Scaffold(
       body: ParallaxSky(
