@@ -39,11 +39,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       body: ParallaxSky(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: Column(
               children: [
-                Text('STATISTICS', style: Theme.of(context).textTheme.displayMedium),
-                const SizedBox(height: 20),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('STATISTICS', style: Theme.of(context).textTheme.displayMedium),
+                ),
+                const SizedBox(height: 12),
                 Expanded(
                   child: ListView(
                     children: [
@@ -74,6 +77,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 8),
                 PremiumButton(label: 'BACK', color: MarioColors.green, onPressed: widget.onBack),
               ],
             ),
