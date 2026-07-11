@@ -1,8 +1,12 @@
 
+import 'dart:async';
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:gamepads/gamepads.dart';
 
 import '../audio/audio_service.dart';
 import '../data/levels/levels.dart';
@@ -21,7 +25,7 @@ import 'systems/juice_system.dart';
 
 enum PlayPhase { playing, paused, levelClear, gameOver }
 
-class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
+class MarioGame extends FlameGame with HasCollisionDetection, KeyboardEvents, TapCallbacks {
   MarioGame({
     required this.difficulty,
     this.startLevel = 1,
@@ -55,12 +59,20 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
   GameStats stats = GameStats();
   double lastPlayerX = 0;
 
-  // virtual controls
+  // Touch overlay
   bool ctrlLeft = false;
   bool ctrlRight = false;
   bool ctrlJump = false;
   bool ctrlFire = false;
   bool ctrlPipe = false;
+
+  // Gamepad state
+  bool padLeft = false;
+  bool padRight = false;
+  bool padJump = false;
+  bool padFire = false;
+  bool padPipe = false;
+  StreamSubscription<NormalizedGamepadEvent>? _padSub;
 
   final SaveService _saves = SaveService();
   final HighScoreService _scores = HighScoreService();
@@ -74,6 +86,7 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
     await super.onLoad();
     juice = JuiceSystem();
     camera.viewfinder.anchor = Anchor.topLeft;
+    _padSub = Gamepads.normalizedEvents.listen(_onGamepad);
 
     if (initialSave != null) {
       currentLevel = initialSave!.currentLevel;
@@ -95,6 +108,101 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
 
     await loadLevel(currentLevel);
     AudioService.instance.playBgm();
+  }
+
+  @override
+  void onRemove() {
+    _padSub?.cancel();
+    super.onRemove();
+  }
+
+  void _onGamepad(NormalizedGamepadEvent event) {
+    if (event.button != null) {
+      final pressed = event.value != 0;
+      switch (event.button!) {
+        case GamepadButton.dpadLeft:
+          padLeft = pressed;
+        case GamepadButton.dpadRight:
+          padRight = pressed;
+        case GamepadButton.dpadDown:
+          padPipe = pressed;
+        case GamepadButton.a:
+        case GamepadButton.b:
+          padJump = pressed;
+        case GamepadButton.x:
+        case GamepadButton.y:
+        case GamepadButton.rightBumper:
+          padFire = pressed;
+        case GamepadButton.start:
+          if (pressed) togglePause();
+        default:
+          break;
+      }
+    }
+    if (event.axis != null) {
+      if (event.axis == GamepadAxis.leftStickX) {
+        padLeft = event.value < -0.35;
+        padRight = event.value > 0.35;
+      }
+      if (event.axis == GamepadAxis.leftStickY) {
+        padPipe = event.value > 0.55;
+      }
+    }
+  }
+
+  bool _keyDown(Set<LogicalKeyboardKey> keys, List<LogicalKeyboardKey> anyOf) {
+    for (final k in anyOf) {
+      if (keys.contains(k)) return true;
+    }
+    return false;
+  }
+
+  void _applyInputs() {
+    final keys = HardwareKeyboard.instance.logicalKeysPressed;
+    final keyLeft = _keyDown(keys, const [
+      LogicalKeyboardKey.arrowLeft,
+      LogicalKeyboardKey.keyA,
+    ]);
+    final keyRight = _keyDown(keys, const [
+      LogicalKeyboardKey.arrowRight,
+      LogicalKeyboardKey.keyD,
+    ]);
+    final keyJump = _keyDown(keys, const [
+      LogicalKeyboardKey.space,
+      LogicalKeyboardKey.arrowUp,
+      LogicalKeyboardKey.keyW,
+    ]);
+    final keyFire = _keyDown(keys, const [
+      LogicalKeyboardKey.keyX,
+      LogicalKeyboardKey.keyJ,
+      LogicalKeyboardKey.shiftLeft,
+      LogicalKeyboardKey.shiftRight,
+    ]);
+    final keyPipe = _keyDown(keys, const [
+      LogicalKeyboardKey.arrowDown,
+      LogicalKeyboardKey.keyS,
+    ]);
+
+    player.wantLeft = ctrlLeft || keyLeft || padLeft;
+    player.wantRight = ctrlRight || keyRight || padRight;
+    player.wantJump = ctrlJump || keyJump || padJump;
+    player.wantShoot = ctrlFire || keyFire || padFire;
+    if (ctrlPipe || keyPipe || padPipe) {
+      for (final p in pipes) {
+        p.tryEnter(player);
+      }
+    }
+  }
+
+  @override
+  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (event is KeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.escape ||
+          event.logicalKey == LogicalKeyboardKey.keyP) {
+        togglePause();
+      }
+    }
+    return KeyEventResult.handled;
   }
 
   Future<void> loadLevel(int n) async {
@@ -256,14 +364,13 @@ class MarioGame extends FlameGame with HasCollisionDetection, TapCallbacks {
       return;
     }
 
-    player.wantLeft = ctrlLeft;
-    player.wantRight = ctrlRight;
-    player.wantJump = ctrlJump;
-    player.wantShoot = ctrlFire;
-    if (ctrlPipe) {
-      for (final p in pipes) {
-        p.tryEnter(player);
-      }
+    player.wantLeft = false;
+    player.wantRight = false;
+    player.wantJump = false;
+    player.wantShoot = false;
+    _applyInputs();
+    if (false) {
+      // placeholder removed
     }
 
     super.update(scaled);
