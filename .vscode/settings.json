@@ -1,5 +1,6 @@
 {
     "files.associations": {
         "sstream": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/admin20/Super-Mario-C-C/mobile/linux"
 }
