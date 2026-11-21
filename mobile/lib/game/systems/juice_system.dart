@@ -4,7 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
-import '../mario_game.dart';
+import '../pipeleap_game.dart';
 
 class JuiceSystem extends Component with HasGameReference<PipeLeapGame> {
   double hitStop = 0;

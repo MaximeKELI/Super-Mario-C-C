@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
 import '../gif_loader.dart';
-import '../mario_game.dart';
+import '../pipeleap_game.dart';
 import '../render/pseudo3d.dart';
 import 'platform_block.dart';
 

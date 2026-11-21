@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_theme.dart';
-import '../mario_game.dart';
+import '../pipeleap_game.dart';
 
 /// Multi-layer parallax sky + hills for a 2.5D depth feel.
 class DepthBackdrop extends PositionComponent with HasGameReference<PipeLeapGame> {
