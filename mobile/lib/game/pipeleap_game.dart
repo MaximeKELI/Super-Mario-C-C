@@ -14,6 +14,7 @@ import '../data/levels/levels.dart';
 import '../data/models.dart';
 import '../data/save_service.dart';
 import '../theme/app_theme.dart';
+import 'components/ambient_fx.dart';
 import 'components/block.dart';
 import 'components/coin.dart';
 import 'components/depth_backdrop.dart';
@@ -63,6 +64,8 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   double levelTimer = 0;
   GameStats stats = GameStats();
   double lastPlayerX = 0;
+  int comboCount = 0;
+  double comboTimer = 0;
 
   // Touch overlay
   bool ctrlLeft = false;
@@ -201,6 +204,8 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
 
     juice = JuiceSystem();
     world.add(DepthBackdrop());
+    comboCount = 0;
+    comboTimer = 0;
 
     for (final c in data.clouds) {
       world.add(CloudComponent(c));
@@ -243,6 +248,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
         : Vector2(60, 400);
     player = PlayerComponent(position: spawn);
     world.add(player);
+    world.add(AmbientFx(levelEndX: levelEndX));
     world.add(juice);
     lastPlayerX = player.position.x;
 
@@ -252,6 +258,44 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   void spawnFireball(Vector2 pos, bool right) {
     world.add(FireballComponent(pos, right));
   }
+
+  void alertNearby(Vector2 origin, double radius) {
+    for (final c in world.children) {
+      if (c is EnemyComponent && !c.dead) {
+        if ((c.absoluteCenter - origin).length <= radius) {
+          c.receiveAlert(origin);
+        }
+      }
+    }
+  }
+
+  void onBossDefeated(Vector2 at) {
+    for (final c in world.children) {
+      if (c is EnemyComponent && !c.dead && c.kind != EnemyKind.boss) {
+        c.forceFlee();
+      }
+    }
+    juice.leaves(at, count: 14);
+  }
+
+  void spawnMinionNear(Vector2 at) {
+    var spawned = 0;
+    for (final offset in [Vector2(-40, 0), Vector2(40, 0)]) {
+      if (spawned >= 2) break;
+      final def = EnemyDef(at.x + offset.x, at.y, EnemyKind.goomba);
+      final e = EnemyComponent(def)..speedMult = speedMultForDifficulty();
+      e.state = EnemyState.chase;
+      e.stateTimer = 2;
+      world.add(e);
+      spawned++;
+    }
+  }
+
+  double speedMultForDifficulty() => switch (difficulty) {
+        Difficulty.hard => 1.35,
+        Difficulty.easy => 0.75,
+        Difficulty.normal => 1.0,
+      };
 
   void setCheckpoint(double x, double y) {
     checkpointX = x;
