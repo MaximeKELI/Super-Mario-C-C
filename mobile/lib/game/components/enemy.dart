@@ -169,53 +169,50 @@ class EnemyComponent extends PositionComponent
       game.alertNearby(absoluteCenter, senseRadius * 0.7);
     }
 
-    switch (state) {
-      case EnemyState.alert:
-        velocity.x *= 0.9;
-        if (stateTimer <= 0) {
-          state = kind == EnemyKind.koopa ? EnemyState.attack : EnemyState.chase;
-          stateTimer = kind == EnemyKind.koopa ? 1.1 : 1.6;
-          if (kind == EnemyKind.koopa) charging = true;
-        }
-      case EnemyState.chase:
-        if (!playerAlive || dist > senseRadius * 1.4 || stateTimer <= 0) {
-          state = EnemyState.patrol;
-          startX = position.x;
-          velocity.x = -50 * speedMult;
-        } else {
-          velocity.x = toPlayer.x.sign * 70 * speedMult;
-          position.x += velocity.x * dt;
-          position.y += 400 * dt;
-        }
-      case EnemyState.attack:
-        if (!charging || stateTimer <= 0) {
-          charging = false;
-          state = EnemyState.patrol;
-          startX = position.x;
-          velocity.x = -55 * speedMult;
-          chargeCooldown = 1.4;
-        } else {
-          velocity.x = toPlayer.x.sign * 160 * speedMult;
-          position.x += velocity.x * dt;
-          position.y += 400 * dt;
-        }
-      case EnemyState.flee:
-        velocity.x = toPlayer.x.sign * -90 * speedMult;
+    if (state == EnemyState.alert) {
+      velocity.x *= 0.9;
+      if (stateTimer <= 0) {
+        state = kind == EnemyKind.koopa ? EnemyState.attack : EnemyState.chase;
+        stateTimer = kind == EnemyKind.koopa ? 1.1 : 1.6;
+        if (kind == EnemyKind.koopa) charging = true;
+      }
+    } else if (state == EnemyState.chase) {
+      if (!playerAlive || dist > senseRadius * 1.4 || stateTimer <= 0) {
+        state = EnemyState.patrol;
+        startX = position.x;
+        velocity.x = -50 * speedMult;
+      } else {
+        velocity.x = toPlayer.x.sign * 70 * speedMult;
         position.x += velocity.x * dt;
         position.y += 400 * dt;
-        if (stateTimer <= 0) {
-          state = EnemyState.patrol;
-          startX = position.x;
-        }
-      case EnemyState.patrol:
-      case EnemyState.idle:
-      case EnemyState.swoop:
+      }
+    } else if (state == EnemyState.attack) {
+      if (!charging || stateTimer <= 0) {
+        charging = false;
+        state = EnemyState.patrol;
+        startX = position.x;
+        velocity.x = -55 * speedMult;
+        chargeCooldown = 1.4;
+      } else {
+        velocity.x = toPlayer.x.sign * 160 * speedMult;
         position.x += velocity.x * dt;
         position.y += 400 * dt;
-        if ((position.x - startX).abs() > 90) {
-          velocity.x *= -1;
-          startX = position.x;
-        }
+      }
+    } else if (state == EnemyState.flee) {
+      velocity.x = toPlayer.x.sign * -90 * speedMult;
+      position.x += velocity.x * dt;
+      position.y += 400 * dt;
+      if (stateTimer <= 0) {
+        state = EnemyState.patrol;
+        startX = position.x;
+      }
+    } else {
+      position.x += velocity.x * dt;
+      position.y += 400 * dt;
+      if ((position.x - startX).abs() > 90) {
+        velocity.x *= -1;
+        startX = position.x;
+      }
     }
   }
 
