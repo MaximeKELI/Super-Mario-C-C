@@ -39,8 +39,10 @@ class FireballComponent extends PositionComponent
   void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is EnemyComponent && !other.dead) {
-      other.damage(fromStomp: false);
-      game.onEnemyKilled(other.kind == EnemyKind.boss ? 500 : 100);
+      final killed = other.damage(fromStomp: false);
+      if (killed) {
+        game.onEnemyKilled(other.kind == EnemyKind.boss ? 500 : 100);
+      }
       game.juice.burst(absoluteCenter, color: AppColors.red, count: 12);
       game.juice.sparks(absoluteCenter, count: 8, color: const Color(0xFFFF6A00));
       game.juice.triggerHitStop(0.05);

@@ -21,6 +21,7 @@ class PlatformBlock extends PositionComponent
   double squash = 1;
   double sink = 0;
   double _animT = 0;
+  Vector2 movementThisFrame = Vector2.zero();
 
   PlatformBlock(PlatformDef def)
       : kind = def.kind,
@@ -31,6 +32,9 @@ class PlatformBlock extends PositionComponent
           size: Vector2(def.w, def.h),
           anchor: Anchor.topLeft,
         );
+
+  bool get isMoving =>
+      kind == PlatformKind.movingH || kind == PlatformKind.movingV;
 
   @override
   Future<void> onLoad() async {
@@ -57,20 +61,46 @@ class PlatformBlock extends PositionComponent
     _animT += dt;
     squash += (1 - squash) * 12 * dt;
     sink += (0 - sink) * 10 * dt;
+    movementThisFrame.setZero();
+
     if (kind == PlatformKind.movingH) {
-      position.x += moveDir * moveSpeed * dt;
+      final dx = moveDir * moveSpeed * dt;
+      position.x += dx;
+      movementThisFrame.x = dx;
       traveled += moveSpeed * dt;
       if (traveled >= moveRange) {
         traveled = 0;
         moveDir *= -1;
       }
     } else if (kind == PlatformKind.movingV) {
-      position.y += moveDir * moveSpeed * dt;
+      final dy = moveDir * moveSpeed * dt;
+      position.y += dy;
+      movementThisFrame.y = dy;
       traveled += moveSpeed * dt;
       if (traveled >= moveRange) {
         traveled = 0;
         moveDir *= -1;
       }
+    }
+
+    _carryRider();
+  }
+
+  void _carryRider() {
+    if (!isMoving || movementThisFrame.isZero()) return;
+    final player = game.player;
+    if (player.dead || !player.onGround) return;
+
+    final feet = player.position.y + player.size.y;
+    final onTop = (feet - position.y).abs() <= 10 &&
+        player.position.x + player.size.x > position.x + 2 &&
+        player.position.x < position.x + size.x - 2;
+    if (onTop) {
+      player.position += movementThisFrame;
+      // Keep glued to the platform top while riding.
+      player.position.y = position.y - player.size.y;
+      player.velocity.y = 0;
+      player.onGround = true;
     }
   }
 
@@ -111,7 +141,7 @@ class PlatformBlock extends PositionComponent
       side: Color.lerp(face, Colors.black, 0.32)!,
       d: 9,
       radius: 5,
-      glow: kind == PlatformKind.movingH || kind == PlatformKind.movingV,
+      glow: isMoving,
       glowColor: AppColors.blue,
       animT: _animT,
     );

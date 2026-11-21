@@ -27,7 +27,7 @@ import 'components/power_up.dart';
 import 'components/world_props.dart';
 import 'systems/juice_system.dart';
 
-enum PlayPhase { playing, paused, levelClear, gameOver }
+enum PlayPhase { playing, paused, levelClear, advancing, gameOver, victory }
 
 class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents, TapCallbacks {
   PipeLeapGame({
@@ -88,6 +88,8 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   final SaveService _saves = SaveService();
   final HighScoreService _scores = HighScoreService();
   final StatsService _statsSvc = StatsService();
+  bool worldReady = false;
+  bool _sessionEnded = false;
 
   @override
   Color backgroundColor() => AppColors.skyTop;
@@ -196,61 +198,77 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   }
 
   Future<void> loadLevel(int n) async {
-    world.removeAll(world.children.toList());
-    pipes.clear();
-    currentLevel = n;
-    final data = Levels.get(n);
-    levelEndX = data.endX;
-    levelTimer = 0;
-    phase = PlayPhase.playing;
-    levelClearTimer = 0;
+    worldReady = false;
+    try {
+      // Snapshot then remove — avoid racing with deferred Flame removals.
+      final previous = world.children.toList();
+      world.removeAll(previous);
+      for (final child in previous) {
+        await child.removed;
+      }
+      pipes.clear();
+      currentLevel = n.clamp(1, 10);
+      cameraX = 0;
+      camera.viewfinder.position = Vector2.zero();
+      final data = Levels.get(currentLevel);
+      levelEndX = data.endX;
+      levelTimer = 0;
+      phase = PlayPhase.playing;
+      levelClearTimer = 0;
 
-    juice = JuiceSystem();
-    world.add(DepthBackdrop());
-    comboCount = 0;
-    comboTimer = 0;
+      juice = JuiceSystem();
+      world.add(DepthBackdrop());
+      comboCount = 0;
+      comboTimer = 0;
 
-    for (final c in data.clouds) {
-      world.add(CloudComponent(c));
-    }
-    for (final p in data.platforms) {
-      world.add(PlatformBlock(p));
-    }
-    for (final b in data.blocks) {
-      world.add(BlockComponent(b));
-    }
-    for (final c in data.coins) {
-      world.add(CoinComponent(c.x, c.y));
-    }
-    for (final e in data.enemies) {
-      final enemy = EnemyComponent(e)..speedMult = speedMultForDifficulty();
-      world.add(enemy);
-    }
-    for (final s in data.spikes) {
-      world.add(SpikeComponent(s));
-    }
-    for (final pu in data.powerUps) {
-      world.add(PowerUpComponent(pu));
-    }
-    for (final cp in data.checkpoints) {
-      world.add(CheckpointComponent(cp));
-    }
-    for (final pipe in data.pipes) {
-      final p = PipeComponent(pipe);
-      pipes.add(p);
-      world.add(p);
-    }
+      for (final c in data.clouds) {
+        world.add(CloudComponent(c));
+      }
+      for (final p in data.platforms) {
+        world.add(PlatformBlock(p));
+      }
+      for (final b in data.blocks) {
+        world.add(BlockComponent(b));
+      }
+      for (final c in data.coins) {
+        world.add(CoinComponent(c.x, c.y));
+      }
+      for (final e in data.enemies) {
+        final enemy = EnemyComponent(e)..speedMult = speedMultForDifficulty();
+        world.add(enemy);
+      }
+      for (final s in data.spikes) {
+        world.add(SpikeComponent(s));
+      }
+      for (final pu in data.powerUps) {
+        world.add(PowerUpComponent(pu));
+      }
+      for (final cp in data.checkpoints) {
+        world.add(CheckpointComponent(cp));
+      }
+      for (final pipe in data.pipes) {
+        final p = PipeComponent(pipe);
+        pipes.add(p);
+        world.add(p);
+      }
 
-    final spawn = hasCheckpoint
-        ? Vector2(checkpointX, checkpointY - 50)
-        : Vector2(60, 400);
-    player = PlayerComponent(position: spawn, character: character);
-    world.add(player);
-    world.add(AmbientFx(levelEndX: levelEndX));
-    world.add(juice);
-    lastPlayerX = player.position.x;
+      final spawn = hasCheckpoint
+          ? Vector2(checkpointX, checkpointY - 50)
+          : Vector2(60, 400);
+      player = PlayerComponent(position: spawn, character: character);
+      world.add(player);
+      world.add(AmbientFx(levelEndX: levelEndX));
+      world.add(juice);
+      lastPlayerX = player.position.x;
 
-    world.add(_GoalFlag(Vector2(levelEndX, 200)));
+      world.add(_GoalFlag(Vector2(levelEndX, 200)));
+      worldReady = true;
+    } catch (e, st) {
+      debugPrint('loadLevel($n) failed: $e\n$st');
+      worldReady = false;
+      phase = PlayPhase.gameOver;
+      await _handleSessionEnd(victory: false);
+    }
   }
 
   void spawnFireball(Vector2 pos, bool right) {
@@ -280,7 +298,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     var spawned = 0;
     for (final offset in [Vector2(-40, 0), Vector2(40, 0)]) {
       if (spawned >= 2) break;
-      final def = EnemyDef(at.x + offset.x, at.y, EnemyKind.goomba);
+      final def = EnemyDef(at.x + offset.x, at.y, EnemyKind.grunt);
       final e = EnemyComponent(def)..speedMult = speedMultForDifficulty();
       e.state = EnemyState.chase;
       e.stateTimer = 2;
@@ -343,7 +361,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     juice.flashDamage(0.4);
     if (lives <= 0) {
       phase = PlayPhase.gameOver;
-      _handleGameOver();
+      unawaited(_handleSessionEnd(victory: false));
     } else {
       player.respawn(Vector2(
         hasCheckpoint ? checkpointX : 60,
@@ -353,8 +371,12 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     }
   }
 
-  Future<void> _handleGameOver() async {
-    await _statsSvc.save(stats);
+  Future<void> _handleSessionEnd({required bool victory}) async {
+    if (_sessionEnded) return;
+    _sessionEnded = true;
+    // Merge session into lifetime totals — never overwrite.
+    await _statsSvc.mergeSession(stats);
+    await _saves.clear();
     final name = await onNeedName?.call(score);
     if (name != null && name.isNotEmpty) {
       await _scores.tryAdd(HighScore(
@@ -364,9 +386,16 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
         difficulty: difficulty,
       ));
     }
+    if (victory) {
+      phase = PlayPhase.victory;
+    }
   }
 
   Future<void> saveGame() async {
+    if (_sessionEnded || phase == PlayPhase.gameOver || phase == PlayPhase.victory) {
+      return;
+    }
+    // Persist mid-run progress only. Lifetime stats update on session end.
     await _saves.save(SaveData(
       currentLevel: currentLevel,
       score: score,
@@ -378,16 +407,36 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
       difficulty: difficulty,
       stats: stats,
     ));
-    await _statsSvc.save(stats);
   }
 
   void togglePause() {
     if (phase == PlayPhase.playing) {
       phase = PlayPhase.paused;
       pauseEngine();
+      unawaited(AudioService.instance.pauseBgm());
     } else if (phase == PlayPhase.paused) {
       phase = PlayPhase.playing;
       resumeEngine();
+      unawaited(AudioService.instance.resumeBgm());
+    }
+  }
+
+  /// App lifecycle: freeze when backgrounded so audio/CPU stay quiet.
+  void onAppPaused() {
+    unawaited(AudioService.instance.pauseBgm());
+    if (phase == PlayPhase.playing) {
+      phase = PlayPhase.paused;
+      pauseEngine();
+    }
+  }
+
+  void onAppResumed() {
+    if (phase == PlayPhase.paused) {
+      // Stay paused — player must resume explicitly (overlay already up).
+      return;
+    }
+    if (phase == PlayPhase.playing) {
+      unawaited(AudioService.instance.resumeBgm());
     }
   }
 
@@ -397,9 +446,16 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     if (phase == PlayPhase.levelClear) {
       levelClearTimer += dt;
       if (levelClearTimer > 2.8) {
-        _advanceLevel();
+        // Guard: without this, every frame re-enters _advanceLevel and
+        // spawns duplicate players while awaits are in flight.
+        phase = PlayPhase.advancing;
+        unawaited(_advanceLevel());
       }
       super.update(scaled * 0.35);
+      return;
+    }
+    if (phase == PlayPhase.advancing) {
+      super.update(0);
       return;
     }
     if (phase != PlayPhase.playing) {
@@ -449,14 +505,21 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   }
 
   Future<void> _advanceLevel() async {
-    hasCheckpoint = false;
-    if (currentLevel >= 10) {
+    try {
+      hasCheckpoint = false;
+      if (currentLevel >= 10) {
+        await AudioService.instance.stopBgm();
+        phase = PlayPhase.victory;
+        await _handleSessionEnd(victory: true);
+        return;
+      }
+      await AudioService.instance.resumeBgmAfterClear();
+      await loadLevel(currentLevel + 1);
+    } catch (e, st) {
+      debugPrint('_advanceLevel failed: $e\n$st');
       phase = PlayPhase.gameOver;
-      await _handleGameOver();
-      return;
+      await _handleSessionEnd(victory: false);
     }
-    await AudioService.instance.resumeBgmAfterClear();
-    await loadLevel(currentLevel + 1);
   }
 }
 

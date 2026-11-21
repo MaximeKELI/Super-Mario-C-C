@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'secure_store.dart';
+
 /// Selectable playable skins.
 enum PlayableCharacter {
   mario,
@@ -49,5 +51,25 @@ class CharacterPrefs {
   Future<void> save(PlayableCharacter character) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, character.name);
+  }
+}
+
+class PlayerNamePrefs {
+  static const _key = 'pipeleap_player_name';
+
+  Future<String?> load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    if (raw == null || raw.isEmpty) return null;
+    final name = SecureStore.sanitizeName(raw, fallback: '');
+    if (name.isEmpty) return null;
+    return name;
+  }
+
+  Future<void> save(String name) async {
+    final cleaned = SecureStore.sanitizeName(name, fallback: '');
+    if (cleaned.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_key, cleaned);
   }
 }

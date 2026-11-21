@@ -22,6 +22,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.pipeleap.mobile"
         minSdk = flutter.minSdkVersion
@@ -43,18 +47,34 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            // Never fall back to debug signing for Play Store artifacts.
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             }
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
+            isJniDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
         }
+        debug {
+            isDebuggable = true
+        }
+    }
+}
+
+// Fail only when assembling a release artifact — debug `flutter run` stays usable.
+gradle.taskGraph.whenReady {
+    val buildingRelease = allTasks.any {
+        it.name.contains("Release", ignoreCase = true)
+    }
+    if (buildingRelease && !keystorePropertiesFile.exists()) {
+        throw GradleException(
+            "Missing android/key.properties — release builds require the upload keystore (see key.properties.example).",
+        )
     }
 }
 

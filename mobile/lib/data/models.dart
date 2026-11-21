@@ -1,8 +1,10 @@
+import 'secure_store.dart';
+
 enum Difficulty { easy, normal, hard }
 
 enum PlatformKind { static_, movingH, movingV, destructible }
 
-enum EnemyKind { goomba, koopa, flying, boss }
+enum EnemyKind { grunt, sheller, flying, boss }
 
 enum BlockKind { question, brick, hard }
 
@@ -17,7 +19,7 @@ class PlatformDef {
 class EnemyDef {
   final double x, y;
   final EnemyKind kind;
-  const EnemyDef(this.x, this.y, [this.kind = EnemyKind.goomba]);
+  const EnemyDef(this.x, this.y, [this.kind = EnemyKind.grunt]);
 }
 
 class CoinDef {
@@ -107,12 +109,24 @@ class HighScore {
         'difficulty': difficulty.index,
       };
 
-  factory HighScore.fromJson(Map<String, dynamic> j) => HighScore(
-        name: j['name'] as String? ?? 'Player',
-        score: j['score'] as int? ?? 0,
-        level: j['level'] as int? ?? 1,
-        difficulty: Difficulty.values[(j['difficulty'] as int? ?? 1).clamp(0, 2)],
-      );
+  factory HighScore.fromJson(Map<String, dynamic> j) {
+    final diffIdx = (j['difficulty'] as num?)?.round() ?? 1;
+    return HighScore(
+      name: SecureStore.sanitizeName(j['name'] as String?),
+      score: SecureStore.clampScore(j['score'] as num?),
+      level: SecureStore.clampLevel(j['level'] as num?),
+      difficulty: Difficulty.values[diffIdx.clamp(0, Difficulty.values.length - 1)],
+    );
+  }
+
+  /// Reject absurd / clearly tampered entries.
+  bool get isPlausible =>
+      score >= 0 &&
+      score <= SecureStore.maxScore &&
+      level >= 1 &&
+      level <= SecureStore.maxLevel &&
+      name.isNotEmpty &&
+      name.length <= SecureStore.maxNameLen;
 }
 
 class GameStats {
@@ -142,12 +156,26 @@ class GameStats {
       };
 
   factory GameStats.fromJson(Map<String, dynamic> j) => GameStats(
-        totalPlayTime: (j['totalPlayTime'] as num?)?.toDouble() ?? 0,
-        enemiesKilled: j['enemiesKilled'] as int? ?? 0,
-        powerUpsCollected: j['powerUpsCollected'] as int? ?? 0,
-        distanceTraveled: (j['distanceTraveled'] as num?)?.toDouble() ?? 0,
-        totalCoinsCollected: j['totalCoinsCollected'] as int? ?? 0,
-        levelsCompleted: j['levelsCompleted'] as int? ?? 0,
+        totalPlayTime: SecureStore.clampPlayTime(j['totalPlayTime'] as num?),
+        enemiesKilled: SecureStore.clampStatInt(j['enemiesKilled'] as num?),
+        powerUpsCollected: SecureStore.clampStatInt(j['powerUpsCollected'] as num?),
+        distanceTraveled: SecureStore.clampPlayTime(j['distanceTraveled'] as num?),
+        totalCoinsCollected: SecureStore.clampStatInt(j['totalCoinsCollected'] as num?),
+        levelsCompleted: SecureStore.clampStatInt(j['levelsCompleted'] as num?)
+            .clamp(0, SecureStore.maxLevel * 100),
+      );
+
+  /// Adds [session] onto this lifetime snapshot (does not mutate either).
+  GameStats mergedWith(GameStats session) => GameStats(
+        totalPlayTime: SecureStore.clampPlayTime(totalPlayTime + session.totalPlayTime),
+        enemiesKilled: SecureStore.clampStatInt(enemiesKilled + session.enemiesKilled),
+        powerUpsCollected:
+            SecureStore.clampStatInt(powerUpsCollected + session.powerUpsCollected),
+        distanceTraveled:
+            SecureStore.clampPlayTime(distanceTraveled + session.distanceTraveled),
+        totalCoinsCollected:
+            SecureStore.clampStatInt(totalCoinsCollected + session.totalCoinsCollected),
+        levelsCompleted: SecureStore.clampStatInt(levelsCompleted + session.levelsCompleted),
       );
 }
 
@@ -186,15 +214,20 @@ class SaveData {
         'stats': stats.toJson(),
       };
 
-  factory SaveData.fromJson(Map<String, dynamic> j) => SaveData(
-        currentLevel: j['currentLevel'] as int? ?? 1,
-        score: j['score'] as int? ?? 0,
-        lives: j['lives'] as int? ?? 3,
-        coinsCollected: j['coinsCollected'] as int? ?? 0,
-        checkpointX: (j['checkpointX'] as num?)?.toDouble() ?? 100,
-        checkpointY: (j['checkpointY'] as num?)?.toDouble() ?? 100,
-        hasCheckpoint: j['hasCheckpoint'] as bool? ?? false,
-        difficulty: Difficulty.values[(j['difficulty'] as int? ?? 1).clamp(0, 2)],
-        stats: GameStats.fromJson(Map<String, dynamic>.from(j['stats'] as Map? ?? {})),
-      );
+  factory SaveData.fromJson(Map<String, dynamic> j) {
+    final diffIdx = (j['difficulty'] as num?)?.round() ?? 1;
+    return SaveData(
+      currentLevel: SecureStore.clampLevel(j['currentLevel'] as num?),
+      score: SecureStore.clampScore(j['score'] as num?),
+      lives: SecureStore.clampLives(j['lives'] as num?),
+      coinsCollected: SecureStore.clampCoins(j['coinsCollected'] as num?),
+      checkpointX: SecureStore.clampCoord(j['checkpointX'] as num?),
+      checkpointY: SecureStore.clampCoord(j['checkpointY'] as num?),
+      hasCheckpoint: j['hasCheckpoint'] as bool? ?? false,
+      difficulty: Difficulty.values[diffIdx.clamp(0, Difficulty.values.length - 1)],
+      stats: GameStats.fromJson(
+        Map<String, dynamic>.from(j['stats'] as Map? ?? {}),
+      ),
+    );
+  }
 }

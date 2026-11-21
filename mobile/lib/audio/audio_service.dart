@@ -74,6 +74,23 @@ class AudioService {
     _bgmPlaying = false;
   }
 
+  Future<void> pauseBgm() async {
+    try {
+      await _bgm.pause();
+    } catch (e, st) {
+      debugPrint('AudioService.pauseBgm failed: $e\n$st');
+    }
+  }
+
+  Future<void> resumeBgm() async {
+    if (!_bgmPlaying) return;
+    try {
+      await _bgm.resume();
+    } catch (e, st) {
+      debugPrint('AudioService.resumeBgm failed: $e\n$st');
+    }
+  }
+
   Future<void> playLevelClear() async {
     await _ensureReady();
     try {

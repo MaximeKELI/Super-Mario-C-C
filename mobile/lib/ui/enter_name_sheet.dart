@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../data/secure_store.dart';
 import '../theme/app_theme.dart';
 import 'widgets/parallax_sky.dart';
 
@@ -9,7 +11,9 @@ class EnterNameSheet {
     int score, {
     String defaultName = 'PIP',
   }) async {
-    final controller = TextEditingController(text: defaultName);
+    final controller = TextEditingController(
+      text: SecureStore.sanitizeName(defaultName, fallback: 'PIP'),
+    );
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -30,7 +34,7 @@ class EnterNameSheet {
               children: [
                 Text('NEW HIGH SCORE!', style: Theme.of(context).textTheme.headlineMedium),
                 Text(
-                  '$score pts',
+                  '${SecureStore.clampScore(score)} pts',
                   style: const TextStyle(
                     color: AppColors.red,
                     fontWeight: FontWeight.w900,
@@ -40,7 +44,11 @@ class EnterNameSheet {
                 const SizedBox(height: 12),
                 TextField(
                   controller: controller,
-                  maxLength: 12,
+                  maxLength: SecureStore.maxNameLen,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r"[A-Za-z0-9 _\-'.]")),
+                    LengthLimitingTextInputFormatter(SecureStore.maxNameLen),
+                  ],
                   decoration: const InputDecoration(
                     labelText: 'Your name',
                     border: OutlineInputBorder(),
@@ -49,7 +57,10 @@ class EnterNameSheet {
                 const SizedBox(height: 8),
                 PremiumButton(
                   label: 'SAVE',
-                  onPressed: () => Navigator.pop(context, controller.text.trim()),
+                  onPressed: () => Navigator.pop(
+                    context,
+                    SecureStore.sanitizeName(controller.text, fallback: ''),
+                  ),
                 ),
               ],
             ),

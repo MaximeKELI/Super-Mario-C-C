@@ -51,8 +51,8 @@ class EnemyComponent extends PositionComponent
         );
 
   double get senseRadius => switch (kind) {
-        EnemyKind.goomba => 140,
-        EnemyKind.koopa => 200,
+        EnemyKind.grunt => 140,
+        EnemyKind.sheller => 200,
         EnemyKind.flying => 220,
         EnemyKind.boss => 260,
       };
@@ -72,10 +72,10 @@ class EnemyComponent extends PositionComponent
     if (dead) return;
     alertTimer = 2.5;
     if (state == EnemyState.flee) return;
-    if (kind == EnemyKind.goomba) {
+    if (kind == EnemyKind.grunt) {
       state = EnemyState.chase;
       stateTimer = 1.8;
-    } else if (kind == EnemyKind.koopa) {
+    } else if (kind == EnemyKind.sheller) {
       state = EnemyState.alert;
       stateTimer = 0.4;
     } else if (kind == EnemyKind.flying) {
@@ -91,7 +91,9 @@ class EnemyComponent extends PositionComponent
     alertTimer = 0;
   }
 
-  void damage({bool fromStomp = false}) {
+  /// Returns true only when this hit actually defeats the enemy.
+  bool damage({bool fromStomp = false}) {
+    if (dead) return false;
     health--;
     flash = 0.25;
     final stop = fromStomp
@@ -120,7 +122,9 @@ class EnemyComponent extends PositionComponent
       if (kind == EnemyKind.boss) {
         game.onBossDefeated(absoluteCenter);
       }
+      return true;
     }
+    return false;
   }
 
   @override
@@ -162,7 +166,7 @@ class EnemyComponent extends PositionComponent
       return;
     }
 
-    // Ground enemies: goomba / koopa
+    // Ground enemies: grunt / sheller
     if (playerAlive &&
         dist < senseRadius &&
         state == EnemyState.patrol &&
@@ -175,9 +179,9 @@ class EnemyComponent extends PositionComponent
     if (state == EnemyState.alert) {
       velocity.x *= 0.9;
       if (stateTimer <= 0) {
-        state = kind == EnemyKind.koopa ? EnemyState.attack : EnemyState.chase;
-        stateTimer = kind == EnemyKind.koopa ? 1.1 : 1.6;
-        if (kind == EnemyKind.koopa) charging = true;
+        state = kind == EnemyKind.sheller ? EnemyState.attack : EnemyState.chase;
+        stateTimer = kind == EnemyKind.sheller ? 1.1 : 1.6;
+        if (kind == EnemyKind.sheller) charging = true;
       }
     } else if (state == EnemyState.chase) {
       if (!playerAlive || dist > senseRadius * 1.4 || stateTimer <= 0) {
@@ -334,10 +338,12 @@ class EnemyComponent extends PositionComponent
       final stomping = other.velocity.y > 0 &&
           other.position.y + other.size.y - 12 <= position.y + 10;
       if (stomping) {
-        damage(fromStomp: true);
+        final killed = damage(fromStomp: true);
         other.velocity.y = -320;
         other.squashY = 0.7;
-        game.onEnemyKilled(kind == EnemyKind.boss ? 500 : 100);
+        if (killed) {
+          game.onEnemyKilled(kind == EnemyKind.boss ? 500 : 100);
+        }
       } else if (!other.invincible) {
         other.shrink();
         game.juice.shake(intensity: 8, duration: 0.3);
@@ -349,16 +355,16 @@ class EnemyComponent extends PositionComponent
 
   void _onEnemyBump(EnemyComponent other) {
     // Shell bowling a walker
-    if (kind == EnemyKind.koopa &&
+    if (kind == EnemyKind.sheller &&
         (charging || state == EnemyState.attack) &&
-        other.kind == EnemyKind.goomba) {
+        other.kind == EnemyKind.grunt) {
       other.knockFromShell(absoluteCenter);
       game.juice.burst(other.absoluteCenter, color: AppColors.brown, count: 8);
       return;
     }
-    if (other.kind == EnemyKind.koopa &&
+    if (other.kind == EnemyKind.sheller &&
         (other.charging || other.state == EnemyState.attack) &&
-        kind == EnemyKind.goomba) {
+        kind == EnemyKind.grunt) {
       knockFromShell(other.absoluteCenter);
       return;
     }
@@ -380,8 +386,8 @@ class EnemyComponent extends PositionComponent
   void render(Canvas canvas) {
     _squash += (1 - _squash) * 0.15;
     final color = switch (kind) {
-      EnemyKind.goomba => AppColors.brown,
-      EnemyKind.koopa => AppColors.green,
+      EnemyKind.grunt => AppColors.brown,
+      EnemyKind.sheller => AppColors.green,
       EnemyKind.flying => const Color(0xFF7B5EA7),
       EnemyKind.boss => AppColors.red,
     };
@@ -432,8 +438,8 @@ class EnemyComponent extends PositionComponent
       );
     }
 
-    // Shell ridge for koopa
-    if (kind == EnemyKind.koopa) {
+    // Shell ridge for sheller
+    if (kind == EnemyKind.sheller) {
       Pseudo3d.softGlow(
         canvas,
         Offset(size.x / 2, size.y / 2),
@@ -450,7 +456,7 @@ class EnemyComponent extends PositionComponent
       top: Color.lerp(color, Colors.white, 0.25)!,
       side: Color.lerp(color, Colors.black, 0.3)!,
       d: kind == EnemyKind.boss ? 10 : 7,
-      radius: kind == EnemyKind.koopa ? 14 : 10,
+      radius: kind == EnemyKind.sheller ? 14 : 10,
       glow: kind == EnemyKind.boss,
       glowColor: AppColors.red,
       animT: flyingT,
@@ -467,7 +473,7 @@ class EnemyComponent extends PositionComponent
     canvas.drawCircle(Offset(size.x * 0.65 + look * 1.4, eyeY), 2.2, pupil);
 
     // Antenna for walker
-    if (kind == EnemyKind.goomba) {
+    if (kind == EnemyKind.grunt) {
       canvas.drawLine(
         Offset(size.x * 0.3, 4),
         Offset(size.x * 0.22, -6),

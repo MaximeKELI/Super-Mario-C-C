@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Offline game: no INTERNET in release. Debug/profile manifests add it for tooling. -->
     <supports-screens
         android:smallScreens="true"
         android:normalScreens="true"
@@ -9,7 +10,13 @@
         android:label="PipeLeap"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:resizeableActivity="true">
+        android:resizeableActivity="true"
+        android:allowBackup="false"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:hasFragileUserData="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -34,10 +41,4 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
-        </intent>
-    </queries>
 </manifest>

@@ -34,7 +34,7 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   late PipeLeapGame game;
   Timer? _hudTick;
   final FocusNode _gameFocus = FocusNode();
@@ -42,6 +42,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -51,11 +52,23 @@ class _GameScreenState extends State<GameScreen> {
       character: widget.character,
       initialSave: widget.save,
       onExitToMenu: widget.onExit,
-      onNeedName: (score) => EnterNameSheet.show(
-        context,
-        score,
-        defaultName: widget.character.displayName.toUpperCase(),
-      ),
+      onNeedName: (score) async {
+        final prefs = PlayerNamePrefs();
+        final saved = await prefs.load();
+        if (saved != null && saved.isNotEmpty) {
+          return saved;
+        }
+        if (!mounted) return null;
+        final name = await EnterNameSheet.show(
+          context,
+          score,
+          defaultName: widget.character.displayName.toUpperCase(),
+        );
+        if (name != null && name.isNotEmpty) {
+          await prefs.save(name);
+        }
+        return name;
+      },
     );
     _hudTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (mounted) setState(() {});
@@ -66,7 +79,23 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.detached:
+        game.onAppPaused();
+        if (mounted) setState(() {});
+      case AppLifecycleState.resumed:
+        game.onAppResumed();
+        if (mounted) setState(() {});
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _hudTick?.cancel();
     _gameFocus.dispose();
     SystemChrome.setPreferredOrientations([
@@ -105,6 +134,12 @@ class _GameScreenState extends State<GameScreen> {
           'levelClear': (context, PipeLeapGame g) => const _LevelClearBanner(),
           'gameOver': (context, PipeLeapGame g) => _GameOverOverlay(
                 score: g.score,
+                victory: false,
+                onMenu: widget.onExit,
+              ),
+          'victory': (context, PipeLeapGame g) => _GameOverOverlay(
+                score: g.score,
+                victory: true,
                 onMenu: widget.onExit,
               ),
         },
@@ -194,6 +229,9 @@ class _GameHud extends StatelessWidget {
       }
       if (game.phase == PlayPhase.gameOver && !overlays.isActive('gameOver')) {
         overlays.add('gameOver');
+      }
+      if (game.phase == PlayPhase.victory && !overlays.isActive('victory')) {
+        overlays.add('victory');
       }
     });
 
@@ -374,6 +412,7 @@ class _MiniMapPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5,
     );
+    if (!game.worldReady) return;
     final progress = (game.player.position.x / game.levelEndX).clamp(0.0, 1.0);
     canvas.drawCircle(
       Offset(8 + progress * (size.width - 16), size.height / 2),
@@ -573,9 +612,14 @@ class _LevelClearBanner extends StatelessWidget {
 }
 
 class _GameOverOverlay extends StatelessWidget {
-  const _GameOverOverlay({required this.score, required this.onMenu});
+  const _GameOverOverlay({
+    required this.score,
+    required this.onMenu,
+    this.victory = false,
+  });
   final int score;
   final VoidCallback onMenu;
+  final bool victory;
 
   @override
   Widget build(BuildContext context) {
@@ -589,8 +633,11 @@ class _GameOverOverlay extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'GAME OVER',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(fontSize: r.sp(32)),
+                victory ? 'YOU WIN!' : 'GAME OVER',
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                      fontSize: r.sp(32),
+                      color: victory ? AppColors.yellow : null,
+                    ),
               ),
               SizedBox(height: r.sp(8)),
               Text(

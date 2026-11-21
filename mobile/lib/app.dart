@@ -81,13 +81,13 @@ class _PipeLeapAppState extends State<PipeLeapApp> {
                 }),
                 onLoadGame: () async {
                   final s = await SaveService().load();
-                  if (s != null) {
-                    setState(() {
-                      save = s;
-                      difficulty = s.difficulty;
-                      route = AppRoute.game;
-                    });
-                  }
+                  if (!mounted) return;
+                  if (s == null) return;
+                  setState(() {
+                    save = s;
+                    difficulty = s.difficulty;
+                    route = AppRoute.game;
+                  });
                 },
                 onHighScores: () => setState(() => route = AppRoute.scores),
                 onStats: () => setState(() => route = AppRoute.stats),
