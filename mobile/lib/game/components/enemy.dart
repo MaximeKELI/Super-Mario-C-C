@@ -182,26 +182,25 @@ class EnemyComponent extends PositionComponent
           state = EnemyState.patrol;
           startX = position.x;
           velocity.x = -50 * speedMult;
-          break;
+        } else {
+          velocity.x = toPlayer.x.sign * 70 * speedMult;
+          position.x += velocity.x * dt;
+          position.y += 400 * dt;
         }
-        velocity.x = (toPlayer.x.sign) * 70 * speedMult;
-        position.x += velocity.x * dt;
-        position.y += 400 * dt;
       case EnemyState.attack:
-        // Koopa charge
         if (!charging || stateTimer <= 0) {
           charging = false;
           state = EnemyState.patrol;
           startX = position.x;
           velocity.x = -55 * speedMult;
           chargeCooldown = 1.4;
-          break;
+        } else {
+          velocity.x = toPlayer.x.sign * 160 * speedMult;
+          position.x += velocity.x * dt;
+          position.y += 400 * dt;
         }
-        velocity.x = (toPlayer.x.sign) * 160 * speedMult;
-        position.x += velocity.x * dt;
-        position.y += 400 * dt;
       case EnemyState.flee:
-        velocity.x = (toPlayer.x.sign) * -90 * speedMult;
+        velocity.x = toPlayer.x.sign * -90 * speedMult;
         position.x += velocity.x * dt;
         position.y += 400 * dt;
         if (stateTimer <= 0) {

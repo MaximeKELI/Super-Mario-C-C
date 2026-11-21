@@ -314,8 +314,22 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   }
 
   void onEnemyKilled(int points) {
-    score += points;
+    if (comboTimer > 0) {
+      comboCount++;
+    } else {
+      comboCount = 1;
+    }
+    comboTimer = 1.6;
+    final bonus = (comboCount - 1) * 25;
+    score += points + bonus;
     stats.enemiesKilled++;
+    if (comboCount >= 2) {
+      juice.scorePopup(
+        player.absoluteCenter + Vector2(0, -40),
+        'COMBO x$comboCount${bonus > 0 ? ' +$bonus' : ''}',
+      );
+      juice.ring(player.absoluteCenter, color: AppColors.yellow, count: 10 + comboCount);
+    }
   }
 
   void onPowerUpCollected() {
@@ -325,7 +339,10 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
 
   void onPlayerDied() {
     lives--;
+    comboCount = 0;
+    comboTimer = 0;
     juice.shake(intensity: 12, duration: 0.4);
+    juice.flashDamage(0.4);
     if (lives <= 0) {
       phase = PlayPhase.gameOver;
       _handleGameOver();
@@ -395,6 +412,11 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     _applyInputs();
 
     super.update(scaled);
+
+    if (comboTimer > 0) {
+      comboTimer -= dt;
+      if (comboTimer <= 0) comboCount = 0;
+    }
 
     levelTimer += dt;
     stats.totalPlayTime += dt;
