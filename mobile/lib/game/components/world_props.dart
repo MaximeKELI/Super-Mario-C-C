@@ -32,6 +32,16 @@ class SpikeComponent extends PositionComponent
 
   @override
   void render(Canvas canvas) {
+    Pseudo3d.dropShadow(
+      canvas,
+      Rect.fromCenter(
+        center: Offset(size.x / 2, size.y + 2),
+        width: size.x * 0.9,
+        height: 8,
+      ),
+      blur: 4,
+      alpha: 0.25,
+    );
     final path = Path();
     const spikes = 5;
     final step = size.x / spikes;
@@ -41,13 +51,35 @@ class SpikeComponent extends PositionComponent
       path.lineTo((i + 1) * step, size.y);
     }
     path.close();
-    canvas.drawPath(path, Paint()..color = const Color(0xFF555555));
     canvas.drawPath(
       path,
       Paint()
-        ..color = Colors.white24
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF9A9A9A),
+            const Color(0xFF555555),
+            const Color(0xFF2E2E2E),
+          ],
+        ).createShader(size.toRect()),
+    );
+    // Metallic rim highlights
+    for (var i = 0; i < spikes; i++) {
+      canvas.drawLine(
+        Offset(i * step + step / 2, 2),
+        Offset(i * step + 2, size.y - 2),
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.35)
+          ..strokeWidth = 1.5,
+      );
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = Colors.black38
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1,
+        ..strokeWidth = 1.2,
     );
   }
 }
@@ -156,9 +188,15 @@ class PipeComponent extends PositionComponent
     final overlapping = player.toRect().overlaps(toRect().inflate(8));
     if (!overlapping) return;
     cooldown = 1.2;
+    game.juice.ring(absoluteCenter, color: AppColors.pipe, count: 16);
+    game.juice.burst(absoluteCenter, color: AppColors.pipe, count: 14);
+    game.juice.leaves(absoluteCenter, count: 6);
+    player.squashY = 0.55;
+    player.stretchX = 1.25;
     player.position = Vector2(destX, destY);
     game.juice.burst(player.absoluteCenter, color: AppColors.pipe, count: 12);
-    game.juice.shake(intensity: 3, duration: 0.2);
+    game.juice.shake(intensity: 5, duration: 0.25);
+    game.juice.triggerHitStop(0.06);
   }
 
   @override

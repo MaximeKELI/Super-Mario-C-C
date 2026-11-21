@@ -19,6 +19,8 @@ class PlatformBlock extends PositionComponent
   int hitCount = 0;
   bool destroyed = false;
   double squash = 1;
+  double sink = 0;
+  double _animT = 0;
 
   PlatformBlock(PlatformDef def)
       : kind = def.kind,
@@ -35,13 +37,26 @@ class PlatformBlock extends PositionComponent
     add(RectangleHitbox());
   }
 
+  void landImpact({double strength = 1}) {
+    squash = (0.78 - 0.06 * strength).clamp(0.55, 0.9);
+    sink = (4 + strength * 3).clamp(2, 10);
+    if (strength > 0.5) {
+      game.juice.dust(
+        Vector2(absoluteCenter.x, position.y),
+        count: (4 + strength * 4).round(),
+      );
+    }
+  }
+
   @override
   void update(double dt) {
     if (destroyed) {
       removeFromParent();
       return;
     }
+    _animT += dt;
     squash += (1 - squash) * 12 * dt;
+    sink += (0 - sink) * 10 * dt;
     if (kind == PlatformKind.movingH) {
       position.x += moveDir * moveSpeed * dt;
       traveled += moveSpeed * dt;
@@ -62,15 +77,20 @@ class PlatformBlock extends PositionComponent
   void hit() {
     if (kind != PlatformKind.destructible) return;
     hitCount++;
-    squash = 0.7;
+    squash = 0.65;
+    game.juice.sparks(absoluteCenter, count: 6);
+    game.juice.shake(intensity: 3 + hitCount * 2, duration: 0.15);
     if (hitCount >= 3) {
       destroyed = true;
-      game.juice.burst(absoluteCenter, color: AppColors.brown, count: 10);
+      game.juice.burst(absoluteCenter, color: AppColors.brown, count: 18);
+      game.juice.shockwave(absoluteCenter);
     }
   }
 
   @override
   void render(Canvas canvas) {
+    canvas.save();
+    canvas.translate(0, sink);
     final rect = Rect.fromLTWH(0, size.y * (1 - squash) / 2, size.x, size.y * squash);
     final face = switch (kind) {
       PlatformKind.destructible => const Color(0xFF8B5A2B),
@@ -91,9 +111,11 @@ class PlatformBlock extends PositionComponent
       side: Color.lerp(face, Colors.black, 0.32)!,
       d: 9,
       radius: 5,
+      glow: kind == PlatformKind.movingH || kind == PlatformKind.movingV,
+      glowColor: AppColors.blue,
+      animT: _animT,
     );
 
-    // Grass / metal strip on top front
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(2, rect.top + 1, size.x - 4, 7 * squash),
@@ -101,5 +123,10 @@ class PlatformBlock extends PositionComponent
       ),
       Paint()..color = top,
     );
+
+    if (kind == PlatformKind.destructible) {
+      Pseudo3d.crackLines(canvas, rect, hitCount);
+    }
+    canvas.restore();
   }
 }

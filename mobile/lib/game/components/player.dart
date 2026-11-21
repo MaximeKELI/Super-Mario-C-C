@@ -36,6 +36,9 @@ class PlayerComponent extends PositionComponent
   double stretchX = 1;
   double animT = 0;
   double _dustTimer = 0;
+  double skidTilt = 0;
+  double _prevVelX = 0;
+  double _fallSpeed = 0;
   bool wantLeft = false;
   bool wantRight = false;
   bool wantJump = false;

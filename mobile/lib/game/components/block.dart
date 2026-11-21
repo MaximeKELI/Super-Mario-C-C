@@ -16,6 +16,8 @@ class BlockComponent extends PositionComponent
   bool used = false;
   double bump = 0;
   double bumpVel = 0;
+  double flash = 0;
+  double _animT = 0;
 
   BlockComponent(BlockDef def)
       : kind = def.kind,
@@ -29,17 +31,22 @@ class BlockComponent extends PositionComponent
   void hitFromBelow(PlayerComponent player) {
     if (used && kind == BlockKind.question) return;
     bumpVel = -120;
-    game.juice.triggerHitStop(0.04);
+    flash = 0.2;
+    game.juice.triggerHitStop(0.05);
+    game.juice.shake(intensity: 4, duration: 0.12);
+    game.juice.sparks(absoluteCenter + Vector2(0, -8), count: 6);
     if (kind == BlockKind.question && !used) {
       used = true;
       final pu = PowerUpComponent(
         PowerUpDef(position.x, position.y - 36, PowerUpKind.mushroom),
       );
       game.world.add(pu);
-      game.juice.burst(absoluteCenter, color: AppColors.yellow, count: 10);
+      game.juice.burst(absoluteCenter, color: AppColors.yellow, count: 14);
+      game.juice.scorePopup(absoluteCenter + Vector2(0, -20), '★');
       game.score += 50;
     } else if (kind == BlockKind.brick && player.isBig) {
-      game.juice.burst(absoluteCenter, color: AppColors.brown, count: 12);
+      game.juice.burst(absoluteCenter, color: AppColors.brown, count: 16);
+      game.juice.dust(absoluteCenter, count: 8);
       game.score += 25;
       removeFromParent();
     }
@@ -47,6 +54,8 @@ class BlockComponent extends PositionComponent
 
   @override
   void update(double dt) {
+    _animT += dt;
+    flash = (flash - dt).clamp(0, 1);
     bumpVel += 800 * dt;
     bump += bumpVel * dt;
     if (bump > 0) {
@@ -86,11 +95,14 @@ class BlockComponent extends PositionComponent
     Pseudo3d.extrudedBox(
       canvas,
       size.toRect(),
-      face: color,
+      face: flash > 0 ? Colors.white : color,
       top: Color.lerp(color, Colors.white, 0.3)!,
       side: Color.lerp(color, Colors.black, 0.3)!,
       d: 8,
       radius: 4,
+      glow: kind == BlockKind.question && !used,
+      glowColor: AppColors.yellow,
+      animT: _animT,
     );
     if (kind == BlockKind.question && !used) {
       final tp = TextPainter(

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../pipeleap_game.dart';
 
-/// Multi-layer parallax sky + hills for a 2.5D depth feel.
+/// Multi-layer parallax sky + hills + sun/fog for a rich 2.5D diorama.
 class DepthBackdrop extends PositionComponent with HasGameReference<PipeLeapGame> {
   DepthBackdrop()
       : super(
@@ -37,16 +37,45 @@ class DepthBackdrop extends PositionComponent with HasGameReference<PipeLeapGame
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF2E9DE0),
-            Color(0xFF6EC8F5),
+            Color(0xFF1E78C8),
+            Color(0xFF5EC8F8),
             Color(0xFFB8ECFF),
             Color(0xFF9FE07A),
           ],
-          stops: [0, 0.35, 0.68, 1],
+          stops: [0, 0.32, 0.66, 1],
         ).createShader(Rect.fromLTWH(0, 0, w, h)),
     );
 
-    // Far mountains (slow parallax)
+    // Sun with soft bloom (parallax slow)
+    final sunX = 620 - cam * 0.04 + sin(_t * 0.15) * 8;
+    final sunY = 90 + cos(_t * 0.12) * 4;
+    canvas.drawCircle(
+      Offset(sunX, sunY),
+      55,
+      Paint()
+        ..color = const Color(0xFFFFF3A0).withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28),
+    );
+    canvas.drawCircle(
+      Offset(sunX, sunY),
+      28,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xFFFFFFF0), Color(0xFFFFE066), Color(0x00FFC107)],
+        ).createShader(Rect.fromCircle(center: Offset(sunX, sunY), radius: 28)),
+    );
+
+    // Distant mountain silhouettes
+    _drawHills(
+      canvas,
+      cam * 0.08,
+      baseY: h * 0.48,
+      amp: 90,
+      color: const Color(0xFF3A6EA5).withValues(alpha: 0.4),
+      seed: 0,
+    );
+
+    // Far mountains
     _drawHills(
       canvas,
       cam * 0.15,
@@ -76,12 +105,37 @@ class DepthBackdrop extends PositionComponent with HasGameReference<PipeLeapGame
       seed: 3,
     );
 
-    // Floating depth clouds (very slow)
+    // Atmospheric fog band
+    canvas.drawRect(
+      Rect.fromLTWH(0, h * 0.58, w, h * 0.18),
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withValues(alpha: 0.0),
+            Colors.white.withValues(alpha: 0.14),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromLTWH(0, h * 0.58, w, h * 0.18)),
+    );
+
+    // Floating depth clouds
     final cloudPaint = Paint()..color = Colors.white.withValues(alpha: 0.55);
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 12; i++) {
       final x = ((i * 420.0) - cam * (0.08 + (i % 3) * 0.04) + _t * (4 + i % 3)) % 2200;
       final y = 40.0 + (i * 37 % 120) + sin(_t * 0.6 + i) * 6;
       _cloud(canvas, Offset(x - 100, y), 0.7 + (i % 3) * 0.25, cloudPaint);
+    }
+
+    // Wind streaks (subtle)
+    final windPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.08)
+      ..strokeWidth = 1.5;
+    for (var i = 0; i < 8; i++) {
+      final wx = (i * 280.0 - (_t * 40) + cam * 0.2) % 1600;
+      final wy = 160.0 + i * 28;
+      canvas.drawLine(Offset(wx, wy), Offset(wx + 50, wy - 4), windPaint);
     }
 
     // Ground plane strip with perspective lines
@@ -100,7 +154,6 @@ class DepthBackdrop extends PositionComponent with HasGameReference<PipeLeapGame
         ).createShader(Rect.fromLTWH(0, groundTop, w, h - groundTop)),
     );
 
-    // Perspective dashes on ground
     final dashPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.12)
       ..strokeWidth = 2;
