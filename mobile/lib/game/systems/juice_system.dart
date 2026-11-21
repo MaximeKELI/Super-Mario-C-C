@@ -210,49 +210,47 @@ class JuiceSystem extends Component with HasGameReference<PipeLeapGame> {
       canvas.translate(p.pos.x, p.pos.y);
       canvas.rotate(p.angle);
 
-      switch (p.kind) {
-        case ParticleKind.shockwave:
-          canvas.drawCircle(
-            Offset.zero,
-            p.size,
-            Paint()
-              ..color = p.color.withValues(alpha: alpha * 0.35)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = 3,
-          );
-        case ParticleKind.dust:
-          canvas.drawOval(
-            Rect.fromCenter(center: Offset.zero, width: p.size * 2.2 * alpha, height: p.size * alpha),
-            Paint()..color = p.color.withValues(alpha: alpha * 0.55),
-          );
-        case ParticleKind.spark:
-          canvas.drawLine(
-            Offset(-p.size, 0),
-            Offset(p.size * 2, 0),
-            Paint()
-              ..color = p.color.withValues(alpha: alpha)
-              ..strokeWidth = 2
-              ..strokeCap = StrokeCap.round,
-          );
-        case ParticleKind.leaf:
-          canvas.drawOval(
-            Rect.fromCenter(center: Offset.zero, width: p.size * 2, height: p.size),
-            Paint()..color = p.color.withValues(alpha: alpha),
-          );
-        case ParticleKind.ring:
-        case ParticleKind.chunk:
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromCenter(center: Offset.zero, width: p.size * 2 * alpha, height: p.size * alpha),
-              const Radius.circular(2),
-            ),
-            Paint()..color = p.color.withValues(alpha: alpha),
-          );
-          canvas.drawCircle(
-            Offset.zero,
-            p.size * 0.55 * alpha,
-            Paint()..color = Colors.white.withValues(alpha: alpha * 0.55),
-          );
+      if (p.kind == ParticleKind.shockwave) {
+        canvas.drawCircle(
+          Offset.zero,
+          p.size,
+          Paint()
+            ..color = p.color.withValues(alpha: alpha * 0.35)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3,
+        );
+      } else if (p.kind == ParticleKind.dust) {
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: p.size * 2.2 * alpha, height: p.size * alpha),
+          Paint()..color = p.color.withValues(alpha: alpha * 0.55),
+        );
+      } else if (p.kind == ParticleKind.spark) {
+        canvas.drawLine(
+          Offset(-p.size, 0),
+          Offset(p.size * 2, 0),
+          Paint()
+            ..color = p.color.withValues(alpha: alpha)
+            ..strokeWidth = 2
+            ..strokeCap = StrokeCap.round,
+        );
+      } else if (p.kind == ParticleKind.leaf) {
+        canvas.drawOval(
+          Rect.fromCenter(center: Offset.zero, width: p.size * 2, height: p.size),
+          Paint()..color = p.color.withValues(alpha: alpha),
+        );
+      } else {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset.zero, width: p.size * 2 * alpha, height: p.size * alpha),
+            const Radius.circular(2),
+          ),
+          Paint()..color = p.color.withValues(alpha: alpha),
+        );
+        canvas.drawCircle(
+          Offset.zero,
+          p.size * 0.55 * alpha,
+          Paint()..color = Colors.white.withValues(alpha: alpha * 0.55),
+        );
       }
       canvas.restore();
     }

@@ -84,6 +84,7 @@ class _GameScreenState extends State<GameScreen> {
                 },
               ),
           'controls': (context, PipeLeapGame g) => _VirtualControls(game: g),
+          'fx': (context, PipeLeapGame g) => _DamageVignette(game: g),
           'pause': (context, PipeLeapGame g) => PauseOverlay(
                 game: g,
                 onResume: () {
@@ -98,7 +99,62 @@ class _GameScreenState extends State<GameScreen> {
                 onMenu: widget.onExit,
               ),
         },
-        initialActiveOverlays: const ['hud', 'controls'],
+        initialActiveOverlays: const ['hud', 'controls', 'fx'],
+      ),
+    );
+  }
+}
+
+class _DamageVignette extends StatefulWidget {
+  const _DamageVignette({required this.game});
+  final PipeLeapGame game;
+
+  @override
+  State<_DamageVignette> createState() => _DamageVignetteState();
+}
+
+class _DamageVignetteState extends State<_DamageVignette>
+    with SingleTickerProviderStateMixin {
+  late final Ticker _ticker;
+  bool _showing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker((_) {
+      if (!mounted) return;
+      final active = widget.game.juice.damageFlash > 0;
+      if (active || _showing) {
+        _showing = active;
+        setState(() {});
+      }
+    })..start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final flash = widget.game.juice.damageFlash;
+    if (flash <= 0) return const SizedBox.shrink();
+    final a = (flash / 0.35).clamp(0.0, 1.0) * 0.45;
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            colors: [
+              Colors.transparent,
+              AppColors.red.withValues(alpha: a * 0.35),
+              AppColors.red.withValues(alpha: a),
+            ],
+            stops: const [0.45, 0.75, 1],
+          ),
+        ),
+        child: const SizedBox.expand(),
       ),
     );
   }

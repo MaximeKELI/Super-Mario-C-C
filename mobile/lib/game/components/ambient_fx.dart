@@ -18,46 +18,52 @@ class AmbientFx extends PositionComponent with HasGameReference<PipeLeapGame> {
   final double levelEndX;
   double _t = 0;
   final Random _rng = Random(7);
-  late final List<_Bush> _bushes;
-  late final List<_Pollen> _pollen;
-  late final List<_Sparkle> _sparkles;
-  late final List<_GrassBlade> _grass;
+  final List<_Bush> _bushes = [];
+  final List<_Pollen> _pollen = [];
+  final List<_Sparkle> _sparkles = [];
+  final List<_GrassBlade> _grass = [];
+  bool _ready = false;
 
   @override
   Future<void> onLoad() async {
-    _bushes = List.generate(18, (i) {
+    _bushes.addAll(List.generate(18, (i) {
       final x = 80.0 + i * ((levelEndX + 200) / 18) + _rng.nextDouble() * 40;
       return _Bush(x, 520 + _rng.nextDouble() * 30, 28 + _rng.nextDouble() * 18);
-    });
-    _pollen = List.generate(28, (_) {
+    }));
+    _pollen.addAll(List.generate(28, (_) {
       return _Pollen(
         _rng.nextDouble() * (levelEndX + 400),
         80 + _rng.nextDouble() * 420,
         8 + _rng.nextDouble() * 18,
         0.4 + _rng.nextDouble() * 0.8,
       );
-    });
-    _sparkles = List.generate(20, (_) {
+    }));
+    _sparkles.addAll(List.generate(20, (_) {
       return _Sparkle(
         _rng.nextDouble() * (levelEndX + 200),
         540 + _rng.nextDouble() * 40,
         _rng.nextDouble() * pi * 2,
       );
-    });
-    _grass = List.generate(60, (i) {
+    }));
+    _grass.addAll(List.generate(60, (i) {
       final x = i * ((levelEndX + 300) / 60) + _rng.nextDouble() * 12;
       return _GrassBlade(x, 10 + _rng.nextDouble() * 14, _rng.nextDouble() * pi);
-    });
+    }));
+    _ready = true;
   }
 
   @override
   void update(double dt) {
+    if (!_ready) return;
     _t += dt;
     final player = game.player;
     for (final b in _bushes) {
       final near = (player.absoluteCenter.x - b.x).abs() < 70 &&
           (player.position.y + player.size.y - b.y).abs() < 60;
       b.rustle += ((near ? 1.0 : 0.0) - b.rustle) * 8 * dt;
+      if (near && b.rustle > 0.85 && _rng.nextDouble() < 0.08) {
+        game.juice.leaves(Vector2(b.x, b.y - b.r), count: 2);
+      }
     }
     for (final p in _pollen) {
       p.x += p.drift * dt * 12 + sin(_t * p.speed + p.x * 0.01) * 6 * dt;
@@ -69,15 +75,14 @@ class AmbientFx extends PositionComponent with HasGameReference<PipeLeapGame> {
 
   @override
   void render(Canvas canvas) {
+    if (!_ready) return;
     final cam = game.cameraX;
-    // Cull-ish: only draw near camera window
     final left = cam - 40;
     final right = cam + 920;
 
-    // Ground sparkles
     for (final s in _sparkles) {
       if (s.x < left || s.x > right) continue;
-      final a = (0.15 + 0.35 * ((sin(_t * 3 + s.phase) + 1) / 2));
+      final a = 0.15 + 0.35 * ((sin(_t * 3 + s.phase) + 1) / 2);
       canvas.drawCircle(
         Offset(s.x, s.y),
         1.8 + sin(_t * 4 + s.phase),
@@ -85,13 +90,11 @@ class AmbientFx extends PositionComponent with HasGameReference<PipeLeapGame> {
       );
     }
 
-    // Mid bushes (behind player visually via soft alpha)
     for (final b in _bushes) {
       if (b.x < left - 40 || b.x > right + 40) continue;
       _drawBush(canvas, b);
     }
 
-    // Pollen / dust motes
     for (final p in _pollen) {
       if (p.x < left || p.x > right) continue;
       canvas.drawCircle(
@@ -101,7 +104,6 @@ class AmbientFx extends PositionComponent with HasGameReference<PipeLeapGame> {
       );
     }
 
-    // Foreground grass (drawn on top due to priority)
     final wind = sin(_t * 2.2) * 0.35;
     for (final g in _grass) {
       if (g.x < left || g.x > right) continue;
