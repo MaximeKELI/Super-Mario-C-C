@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:super_mario_mobile/data/levels/levels.dart';
-import 'package:super_mario_mobile/data/models.dart';
+import 'package:pipeleap/data/levels/levels.dart';
+import 'package:pipeleap/data/models.dart';
 
 void main() {
   test('all 10 levels load with platforms', () {

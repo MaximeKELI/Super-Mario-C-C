@@ -5,12 +5,12 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 import 'player.dart';
 
 class PowerUpComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   final PowerUpKind kind;
   double bob = 0;
   double baseY;
@@ -49,7 +49,7 @@ class PowerUpComponent extends PositionComponent
       case PowerUpKind.comet:
         other.collectComet();
     }
-    game.juice.burst(absoluteCenter, color: MarioColors.red, count: 20);
+    game.juice.burst(absoluteCenter, color: AppColors.red, count: 20);
     game.juice.scorePopup(absoluteCenter, 'POWER!');
     game.onPowerUpCollected();
     removeFromParent();
@@ -58,12 +58,12 @@ class PowerUpComponent extends PositionComponent
   @override
   void render(Canvas canvas) {
     final color = switch (kind) {
-      PowerUpKind.mushroom => MarioColors.red,
+      PowerUpKind.mushroom => AppColors.red,
       PowerUpKind.fireFlower => const Color(0xFFFF6A00),
       PowerUpKind.feather => Colors.white,
-      PowerUpKind.star => MarioColors.yellow,
-      PowerUpKind.oneUp => MarioColors.green,
-      PowerUpKind.comet => MarioColors.blue,
+      PowerUpKind.star => AppColors.yellow,
+      PowerUpKind.oneUp => AppColors.green,
+      PowerUpKind.comet => AppColors.blue,
     };
     canvas.drawCircle(Offset(size.x / 2, size.y / 2), size.x / 2, Paint()..color = color);
     canvas.drawCircle(

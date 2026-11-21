@@ -4,11 +4,11 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 
 /// Multi-layer parallax sky + hills for a 2.5D depth feel.
-class DepthBackdrop extends PositionComponent with HasGameReference<MarioGame> {
+class DepthBackdrop extends PositionComponent with HasGameReference<PipeLeapGame> {
   DepthBackdrop()
       : super(
           position: Vector2.zero(),
@@ -94,7 +94,7 @@ class DepthBackdrop extends PositionComponent with HasGameReference<MarioGame> {
           end: Alignment.bottomCenter,
           colors: [
             const Color(0xFF6DD66D),
-            Color.lerp(MarioColors.green, MarioColors.brown, 0.35)!,
+            Color.lerp(AppColors.green, AppColors.brown, 0.35)!,
             const Color(0xFF8B5A2B),
           ],
         ).createShader(Rect.fromLTWH(0, groundTop, w, h - groundTop)),

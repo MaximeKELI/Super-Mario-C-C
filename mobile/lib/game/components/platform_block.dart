@@ -3,12 +3,12 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 import '../render/pseudo3d.dart';
 
 class PlatformBlock extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   final PlatformKind kind;
   final double startX;
   final double startY;
@@ -65,7 +65,7 @@ class PlatformBlock extends PositionComponent
     squash = 0.7;
     if (hitCount >= 3) {
       destroyed = true;
-      game.juice.burst(absoluteCenter, color: MarioColors.brown, count: 10);
+      game.juice.burst(absoluteCenter, color: AppColors.brown, count: 10);
     }
   }
 
@@ -74,7 +74,7 @@ class PlatformBlock extends PositionComponent
     final rect = Rect.fromLTWH(0, size.y * (1 - squash) / 2, size.x, size.y * squash);
     final face = switch (kind) {
       PlatformKind.destructible => const Color(0xFF8B5A2B),
-      PlatformKind.movingH || PlatformKind.movingV => MarioColors.blue,
+      PlatformKind.movingH || PlatformKind.movingV => AppColors.blue,
       _ => const Color(0xFFC84C0C),
     };
     final top = switch (kind) {

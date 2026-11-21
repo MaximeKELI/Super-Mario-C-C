@@ -1,11 +1,11 @@
 {
-    "name": "Super Mario Mobile",
-    "short_name": "Mario",
+    "name": "PipeLeap",
+    "short_name": "PipeLeap",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#049CD8",
     "theme_color": "#E52521",
-    "description": "Super Mario mobile — Flutter premium platformer",
+    "description": "PipeLeap — original side-scrolling platformer",
     "orientation": "landscape-primary",
     "prefer_related_applications": false,
     "icons": [

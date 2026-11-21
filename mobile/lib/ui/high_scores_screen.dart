@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../data/models.dart';
 import '../data/save_service.dart';
-import '../theme/mario_theme.dart';
+import '../theme/app_theme.dart';
 import 'widgets/parallax_sky.dart';
 
 class HighScoresScreen extends StatefulWidget {
@@ -53,14 +53,14 @@ class _HighScoresScreenState extends State<HighScoresScreen> {
                                 color: Colors.white.withValues(alpha: 0.88),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: i == 0 ? MarioColors.yellow : Colors.white70,
+                                  color: i == 0 ? AppColors.yellow : Colors.white70,
                                   width: 2,
                                 ),
                               ),
                               child: Row(
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: i == 0 ? MarioColors.yellow : MarioColors.blue,
+                                    backgroundColor: i == 0 ? AppColors.yellow : AppColors.blue,
                                     child: Text('${i + 1}',
                                         style: const TextStyle(fontWeight: FontWeight.w900)),
                                   ),
@@ -73,7 +73,7 @@ class _HighScoresScreenState extends State<HighScoresScreen> {
                                   Text('${s.score}',
                                       style: const TextStyle(
                                           fontWeight: FontWeight.w900,
-                                          color: MarioColors.red,
+                                          color: AppColors.red,
                                           fontSize: 18)),
                                   const SizedBox(width: 8),
                                   Text('L${s.level}',
@@ -85,7 +85,7 @@ class _HighScoresScreenState extends State<HighScoresScreen> {
                         ),
                 ),
                 const SizedBox(height: 8),
-                PremiumButton(label: 'BACK', color: MarioColors.green, onPressed: widget.onBack),
+                PremiumButton(label: 'BACK', color: AppColors.green, onPressed: widget.onBack),
               ],
             ),
           ),

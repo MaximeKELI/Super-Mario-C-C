@@ -4,13 +4,13 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 import 'enemy.dart';
 import 'platform_block.dart';
 
 class FireballComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   Vector2 velocity;
   double life = 2.5;
 
@@ -41,7 +41,7 @@ class FireballComponent extends PositionComponent
     if (other is EnemyComponent && !other.dead) {
       other.damage();
       game.onEnemyKilled(other.kind == EnemyKind.boss ? 500 : 100);
-      game.juice.burst(absoluteCenter, color: MarioColors.red, count: 12);
+      game.juice.burst(absoluteCenter, color: AppColors.red, count: 12);
       removeFromParent();
     } else if (other is PlatformBlock) {
       if (velocity.y > 0) {
@@ -63,7 +63,7 @@ class FireballComponent extends PositionComponent
     canvas.drawCircle(
       Offset(size.x / 2, size.y / 2),
       size.x / 3,
-      Paint()..color = MarioColors.yellow,
+      Paint()..color = AppColors.yellow,
     );
   }
 }

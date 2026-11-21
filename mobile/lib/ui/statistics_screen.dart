@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../data/models.dart';
 import '../data/save_service.dart';
-import '../theme/mario_theme.dart';
+import '../theme/app_theme.dart';
 import 'widgets/parallax_sky.dart';
 
 class StatisticsScreen extends StatefulWidget {
@@ -67,7 +67,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                 rows[i].$2,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w900,
-                                  color: MarioColors.blue,
+                                  color: AppColors.blue,
                                   fontSize: 18,
                                 ),
                               ),
@@ -78,7 +78,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                PremiumButton(label: 'BACK', color: MarioColors.green, onPressed: widget.onBack),
+                PremiumButton(label: 'BACK', color: AppColors.green, onPressed: widget.onBack),
               ],
             ),
           ),

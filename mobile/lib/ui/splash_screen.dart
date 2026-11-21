@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../game/gif_loader.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import 'responsive.dart';
 import 'widgets/parallax_sky.dart';
 
@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _bootstrap() async {
-    await GifLoader.preloadMario();
+    await GifLoader.preloadHero();
     if (!mounted) return;
     setState(() => _assetsReady = true);
     _tryFinish();
@@ -92,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   angle: _orbit.value * pi * 2 + i,
                                   child: Icon(
                                     Icons.star_rounded,
-                                    color: MarioColors.yellow.withValues(alpha: 0.9),
+                                    color: AppColors.yellow.withValues(alpha: 0.9),
                                     size: (14.0 + (i % 4) * 4) * r.scale.clamp(0.8, 1.1),
                                   ),
                                 ),
@@ -120,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   SizedBox(height: r.sp(12)),
                   Text(
-                    'SUPER MARIO',
+                    'PIPELEAP',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
                           fontSize: r.sp(r.isCompact ? 36 : 52),
                         ),
@@ -133,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     _assetsReady ? 'MOBILE PREMIUM' : 'CHARGEMENT...',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: MarioColors.yellow,
+                          color: AppColors.yellow,
                           letterSpacing: 3,
                           fontWeight: FontWeight.w900,
                           fontSize: r.sp(16),

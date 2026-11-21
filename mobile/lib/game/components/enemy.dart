@@ -5,14 +5,14 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 import '../render/pseudo3d.dart';
 import 'platform_block.dart';
 import 'player.dart';
 
 class EnemyComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   final EnemyKind kind;
   Vector2 velocity = Vector2(-50, 0);
   double speedMult = 1;
@@ -50,11 +50,11 @@ class EnemyComponent extends PositionComponent
     flash = 0.25;
     game.juice.triggerHitStop(0.08);
     game.juice.shake(intensity: kind == EnemyKind.boss ? 14 : 7, duration: 0.28);
-    game.juice.ring(absoluteCenter, color: MarioColors.red, count: 12);
+    game.juice.ring(absoluteCenter, color: AppColors.red, count: 12);
     if (health <= 0) {
       dead = true;
       deathT = 0.7;
-      game.juice.burst(absoluteCenter, color: MarioColors.brown, count: 28);
+      game.juice.burst(absoluteCenter, color: AppColors.brown, count: 28);
       game.juice.scorePopup(absoluteCenter, kind == EnemyKind.boss ? '+500' : '+100');
     }
   }
@@ -113,10 +113,10 @@ class EnemyComponent extends PositionComponent
   @override
   void render(Canvas canvas) {
     final color = switch (kind) {
-      EnemyKind.goomba => MarioColors.brown,
-      EnemyKind.koopa => MarioColors.green,
+      EnemyKind.goomba => AppColors.brown,
+      EnemyKind.koopa => AppColors.green,
       EnemyKind.flying => const Color(0xFF7B5EA7),
-      EnemyKind.boss => MarioColors.red,
+      EnemyKind.boss => AppColors.red,
     };
 
     // Contact shadow

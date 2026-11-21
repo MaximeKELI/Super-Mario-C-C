@@ -5,13 +5,13 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 import '../render/pseudo3d.dart';
 import 'player.dart';
 
 class SpikeComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   SpikeComponent(SpikeDef def)
       : super(position: Vector2(def.x, def.y), size: Vector2(def.w, def.h));
 
@@ -82,7 +82,7 @@ class CloudComponent extends PositionComponent {
 }
 
 class CheckpointComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   bool activated = false;
   double wave = 0;
 
@@ -103,15 +103,15 @@ class CheckpointComponent extends PositionComponent
     if (other is PlayerComponent && !activated) {
       activated = true;
       game.setCheckpoint(position.x, position.y);
-      game.juice.burst(absoluteCenter, color: MarioColors.green, count: 16);
+      game.juice.burst(absoluteCenter, color: AppColors.green, count: 16);
       game.juice.scorePopup(absoluteCenter, 'SAVE!');
     }
   }
 
   @override
   void render(Canvas canvas) {
-    canvas.drawRect(const Rect.fromLTWH(8, 0, 4, 60), Paint()..color = MarioColors.brown);
-    final flagColor = activated ? MarioColors.green : MarioColors.red;
+    canvas.drawRect(const Rect.fromLTWH(8, 0, 4, 60), Paint()..color = AppColors.brown);
+    final flagColor = activated ? AppColors.green : AppColors.red;
     final path = Path()
       ..moveTo(12, 4 + sin(wave) * 2)
       ..lineTo(36, 16)
@@ -122,7 +122,7 @@ class CheckpointComponent extends PositionComponent
 }
 
 class PipeComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   final double destX, destY;
   double cooldown = 0;
 
@@ -157,7 +157,7 @@ class PipeComponent extends PositionComponent
     if (!overlapping) return;
     cooldown = 1.2;
     player.position = Vector2(destX, destY);
-    game.juice.burst(player.absoluteCenter, color: MarioColors.pipe, count: 12);
+    game.juice.burst(player.absoluteCenter, color: AppColors.pipe, count: 12);
     game.juice.shake(intensity: 3, duration: 0.2);
   }
 
@@ -187,7 +187,7 @@ class PipeComponent extends PositionComponent
         Rect.fromLTWH(0, 12, size.x, size.y - 12),
         const Radius.circular(4),
       ),
-      Paint()..color = MarioColors.pipe,
+      Paint()..color = AppColors.pipe,
     );
     // Rim (lip)
     canvas.drawRRect(

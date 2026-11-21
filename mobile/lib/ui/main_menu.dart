@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../data/models.dart';
 import '../../data/save_service.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import 'responsive.dart';
 import 'widgets/parallax_sky.dart';
 
@@ -60,7 +60,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Widget _brandBlock(Responsive r, {required bool compact}) {
     final logoH = compact ? r.sp(72) : r.sp(120);
-    final marioH = compact ? r.sp(48) : r.sp(64);
+    final heroH = compact ? r.sp(48) : r.sp(64);
     final titleSize = compact ? r.sp(34) : r.sp(48);
 
     return Column(
@@ -88,13 +88,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             ),
         SizedBox(height: r.sp(4)),
         Image.asset(
-          'assets/images/Mario_clean.webp',
-          height: marioH,
+          'assets/images/hero.png',
+          height: heroH,
           filterQuality: FilterQuality.none,
         ).animate().fadeIn(delay: 200.ms),
         SizedBox(height: r.sp(4)),
         Text(
-          compact ? 'SUPER MARIO' : 'SUPER\nMARIO',
+          compact ? 'PIPELEAP' : 'PIPE\nLEAP',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayLarge?.copyWith(
                 height: 0.95,
@@ -107,10 +107,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         if (!compact) ...[
           SizedBox(height: r.sp(6)),
           Text(
-            'Classic juice · 10 worlds · premium feel',
+            'Original platformer · 10 worlds · premium feel',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: MarioColors.dark.withValues(alpha: 0.75),
+                  color: AppColors.dark.withValues(alpha: 0.75),
                   fontSize: r.sp(14),
                 ),
           ).animate().fadeIn(delay: 200.ms),
@@ -139,7 +139,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           PremiumButton(
             label: 'CONTINUE',
             icon: Icons.save_rounded,
-            color: MarioColors.blue,
+            color: AppColors.blue,
             onPressed: widget.onLoadGame,
           ).animate().fadeIn(delay: 320.ms),
         if (_hasSave) SizedBox(height: r.sp(8)),
@@ -149,7 +149,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: PremiumButton(
                 label: 'SCORES',
                 icon: Icons.emoji_events_rounded,
-                color: MarioColors.yellow,
+                color: AppColors.yellow,
                 onPressed: widget.onHighScores,
               ),
             ),
@@ -158,7 +158,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               child: PremiumButton(
                 label: 'STATS',
                 icon: Icons.bar_chart_rounded,
-                color: MarioColors.green,
+                color: AppColors.green,
                 onPressed: widget.onStats,
               ),
             ),
@@ -224,15 +224,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             padding: EdgeInsets.symmetric(vertical: r.sp(r.isCompact ? 8 : 12)),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              color: selected ? MarioColors.yellow : Colors.white.withValues(alpha: 0.55),
+              color: selected ? AppColors.yellow : Colors.white.withValues(alpha: 0.55),
               border: Border.all(
-                color: selected ? MarioColors.red : Colors.white70,
+                color: selected ? AppColors.red : Colors.white70,
                 width: 2,
               ),
               boxShadow: selected
                   ? [
                       BoxShadow(
-                        color: MarioColors.yellow.withValues(alpha: 0.5),
+                        color: AppColors.yellow.withValues(alpha: 0.5),
                         blurRadius: 12,
                       ),
                     ]
@@ -243,7 +243,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.w800,
-                color: MarioColors.dark,
+                color: AppColors.dark,
                 fontSize: selected ? r.sp(14) : r.sp(12),
               ),
             ),

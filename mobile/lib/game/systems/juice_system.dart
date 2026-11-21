@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 
-class JuiceSystem extends Component with HasGameReference<MarioGame> {
+class JuiceSystem extends Component with HasGameReference<PipeLeapGame> {
   double hitStop = 0;
   double shakeTime = 0;
   double shakeIntensity = 0;
@@ -24,7 +24,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
     shakeTime = max(shakeTime, duration);
   }
 
-  void burst(Vector2 at, {Color color = MarioColors.yellow, int count = 22}) {
+  void burst(Vector2 at, {Color color = AppColors.yellow, int count = 22}) {
     for (var i = 0; i < count; i++) {
       final angle = _rng.nextDouble() * pi * 2;
       final speed = 120 + _rng.nextDouble() * 280;
@@ -39,7 +39,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
     }
   }
 
-  void ring(Vector2 at, {Color color = MarioColors.yellow, int count = 20}) {
+  void ring(Vector2 at, {Color color = AppColors.yellow, int count = 20}) {
     for (var i = 0; i < count; i++) {
       final angle = (i / count) * pi * 2;
       particles.add(JuiceParticle(
@@ -58,7 +58,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
       pos: at.clone(),
       vel: Vector2(0, -110),
       life: 1.15,
-      color: MarioColors.cream,
+      color: AppColors.cream,
       size: 0,
       label: text,
       spin: 0,
@@ -109,7 +109,7 @@ class JuiceSystem extends Component with HasGameReference<MarioGame> {
               fontWeight: FontWeight.w900,
               shadows: const [
                 Shadow(color: Colors.black87, blurRadius: 6, offset: Offset(2, 2)),
-                Shadow(color: MarioColors.yellow, blurRadius: 10),
+                Shadow(color: AppColors.yellow, blurRadius: 10),
               ],
             ),
           ),

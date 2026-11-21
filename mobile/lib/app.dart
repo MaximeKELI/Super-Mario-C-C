@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'audio/audio_service.dart';
 import 'data/models.dart';
 import 'data/save_service.dart';
-import 'theme/mario_theme.dart';
+import 'theme/app_theme.dart';
 import 'ui/game_screen.dart';
 import 'ui/high_scores_screen.dart';
 import 'ui/main_menu.dart';
@@ -12,14 +12,14 @@ import 'ui/statistics_screen.dart';
 
 enum AppRoute { splash, menu, game, scores, stats }
 
-class MarioApp extends StatefulWidget {
-  const MarioApp({super.key});
+class PipeLeapApp extends StatefulWidget {
+  const PipeLeapApp({super.key});
 
   @override
-  State<MarioApp> createState() => _MarioAppState();
+  State<PipeLeapApp> createState() => _PipeLeapAppState();
 }
 
-class _MarioAppState extends State<MarioApp> {
+class _PipeLeapAppState extends State<PipeLeapApp> {
   AppRoute route = AppRoute.splash;
   Difficulty difficulty = Difficulty.normal;
   SaveData? save;
@@ -33,9 +33,9 @@ class _MarioAppState extends State<MarioApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Super Mario Mobile',
+      title: 'PipeLeap',
       debugShowCheckedModeBanner: false,
-      theme: MarioTheme.light,
+      theme: AppTheme.light,
       home: AnimatedSwitcher(
         duration: const Duration(milliseconds: 450),
         switchInCurve: Curves.easeOutCubic,

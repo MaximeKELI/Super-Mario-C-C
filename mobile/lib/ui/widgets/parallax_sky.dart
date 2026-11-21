@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../responsive.dart';
 
 class ParallaxSky extends StatefulWidget {
@@ -75,7 +75,7 @@ class _SkyPainter extends CustomPainter {
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
-    canvas.drawPath(hill, Paint()..color = MarioColors.green.withValues(alpha: 0.85));
+    canvas.drawPath(hill, Paint()..color = AppColors.green.withValues(alpha: 0.85));
 
     void cloud(double x, double y, double s) {
       final paint = Paint()..color = Colors.white.withValues(alpha: 0.9);
@@ -90,7 +90,7 @@ class _SkyPainter extends CustomPainter {
     }
 
     // floating coins sparkles
-    final spark = Paint()..color = MarioColors.yellow.withValues(alpha: 0.55);
+    final spark = Paint()..color = AppColors.yellow.withValues(alpha: 0.55);
     for (var i = 0; i < 12; i++) {
       final x = (sin(t * pi * 2 + i) * 0.5 + 0.5) * size.width;
       final y = 40 + (i * 37 % size.height * 0.45);
@@ -107,7 +107,7 @@ class PremiumButton extends StatefulWidget {
     super.key,
     required this.label,
     required this.onPressed,
-    this.color = MarioColors.red,
+    this.color = AppColors.red,
     this.icon,
   });
 
@@ -164,7 +164,7 @@ class _PremiumButtonState extends State<PremiumButton> {
                 offset: Offset(0, _down ? 1 : (compact ? 4 : 10)),
               ),
               BoxShadow(
-                color: MarioColors.yellow.withValues(alpha: _down ? 0.2 : 0.5),
+                color: AppColors.yellow.withValues(alpha: _down ? 0.2 : 0.5),
                 blurRadius: compact ? 16 : 30,
                 spreadRadius: -2,
               ),
@@ -175,14 +175,14 @@ class _PremiumButtonState extends State<PremiumButton> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.icon != null) ...[
-                Icon(widget.icon, color: MarioColors.cream, size: compact ? r.sp(18) : 22),
+                Icon(widget.icon, color: AppColors.cream, size: compact ? r.sp(18) : 22),
                 SizedBox(width: compact ? 6 : 10),
               ],
               Text(
                 widget.label,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: MarioColors.cream,
+                      color: AppColors.cream,
                       letterSpacing: 0.6,
                       fontSize: compact ? r.sp(16) : null,
                       shadows: const [

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../audio/audio_service.dart';
-import '../../game/mario_game.dart';
-import '../../theme/mario_theme.dart';
+import '../../game/pipeleap_game.dart';
+import '../../theme/app_theme.dart';
 import 'responsive.dart';
 import 'widgets/parallax_sky.dart';
 
@@ -15,7 +15,7 @@ class PauseOverlay extends StatefulWidget {
     required this.onExit,
   });
 
-  final MarioGame game;
+  final PipeLeapGame game;
   final VoidCallback onResume;
   final VoidCallback onExit;
 
@@ -48,10 +48,10 @@ class _PauseOverlayState extends State<PauseOverlay> {
                   end: Alignment.bottomRight,
                   colors: [Color(0xFFFFF8E7), Color(0xFFFFE08A)],
                 ),
-                border: Border.all(color: MarioColors.red, width: 3),
+                border: Border.all(color: AppColors.red, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: MarioColors.red.withValues(alpha: 0.35),
+                    color: AppColors.red.withValues(alpha: 0.35),
                     blurRadius: 24,
                   ),
                 ],
@@ -68,19 +68,19 @@ class _PauseOverlayState extends State<PauseOverlay> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('PAUSE', style: Theme.of(context).textTheme.displayMedium?.copyWith(color: MarioColors.red)),
+        Text('PAUSE', style: Theme.of(context).textTheme.displayMedium?.copyWith(color: AppColors.red)),
         const SizedBox(height: 20),
-        PremiumButton(label: 'RESUME', color: MarioColors.green, onPressed: widget.onResume),
+        PremiumButton(label: 'RESUME', color: AppColors.green, onPressed: widget.onResume),
         const SizedBox(height: 10),
         PremiumButton(
           label: 'OPTIONS',
-          color: MarioColors.blue,
+          color: AppColors.blue,
           onPressed: () => setState(() => options = true),
         ),
         const SizedBox(height: 10),
         PremiumButton(
           label: 'SAVE',
-          color: MarioColors.yellow,
+          color: AppColors.yellow,
           onPressed: () async {
             await widget.game.saveGame();
             if (mounted) {
@@ -106,7 +106,7 @@ class _PauseOverlayState extends State<PauseOverlay> {
         Text('Music', style: Theme.of(context).textTheme.titleLarge),
         Slider(
           value: audio.musicVolume,
-          activeColor: MarioColors.red,
+          activeColor: AppColors.red,
           onChanged: (v) async {
             await audio.setMusicVolume(v);
             setState(() {});
@@ -115,7 +115,7 @@ class _PauseOverlayState extends State<PauseOverlay> {
         Text('Sound', style: Theme.of(context).textTheme.titleLarge),
         Slider(
           value: audio.soundVolume,
-          activeColor: MarioColors.blue,
+          activeColor: AppColors.blue,
           onChanged: (v) async {
             await audio.setSoundVolume(v);
             setState(() {});
@@ -124,7 +124,7 @@ class _PauseOverlayState extends State<PauseOverlay> {
         const SizedBox(height: 8),
         PremiumButton(
           label: 'BACK',
-          color: MarioColors.green,
+          color: AppColors.green,
           onPressed: () => setState(() => options = false),
         ),
       ],

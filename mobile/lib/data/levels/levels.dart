@@ -61,7 +61,7 @@ class Levels {
 
   static const level2 = LevelData(
     number: 2,
-    name: 'Koopa Arrives',
+    name: 'Shell Squad',
     endX: 2100,
     platforms: [
       PlatformDef(0, 550, 150, 50),

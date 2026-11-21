@@ -10,13 +10,13 @@ class GifFrameData {
   const GifFrameData(this.image, this.delaySeconds);
 }
 
-/// Loads Mario animation from pre-baked small PNGs (fast) with GIF fallback.
+/// Loads hero animation from pre-baked small PNGs (fast) with image fallback.
 class GifLoader {
   static final Map<String, Future<List<GifFrameData>>> _cache = {};
-  static List<GifFrameData>? marioFrames;
+  static List<GifFrameData>? heroFrames;
 
   static const _frameCount = 12;
-  static const _framesDir = 'assets/images/mario_frames';
+  static const _framesDir = 'assets/images/hero_frames';
 
   static Future<List<GifFrameData>> load(
     String assetPath, {
@@ -27,8 +27,8 @@ class GifLoader {
   }
 
   /// Call during splash so the first level starts instantly.
-  static Future<void> preloadMario() async {
-    marioFrames = await _loadPngFrames();
+  static Future<void> preloadHero() async {
+    heroFrames = await _loadPngFrames();
   }
 
   static Future<List<GifFrameData>> _loadPngFrames() async {

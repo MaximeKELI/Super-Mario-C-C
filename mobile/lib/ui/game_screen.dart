@@ -7,8 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../data/models.dart';
-import '../../theme/mario_theme.dart';
-import '../../game/mario_game.dart';
+import '../../theme/app_theme.dart';
+import '../../game/pipeleap_game.dart';
 import 'enter_name_sheet.dart';
 import 'pause_overlay.dart';
 import 'responsive.dart';
@@ -31,7 +31,7 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late MarioGame game;
+  late PipeLeapGame game;
   Timer? _hudTick;
   final FocusNode _gameFocus = FocusNode();
 
@@ -42,7 +42,7 @@ class _GameScreenState extends State<GameScreen> {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    game = MarioGame(
+    game = PipeLeapGame(
       difficulty: widget.difficulty,
       initialSave: widget.save,
       onExitToMenu: widget.onExit,
@@ -70,21 +70,21 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MarioColors.skyTop,
+      backgroundColor: AppColors.skyTop,
       body: GameWidget(
         game: game,
         autofocus: true,
         focusNode: _gameFocus,
         overlayBuilderMap: {
-          'hud': (context, MarioGame g) => _GameHud(
+          'hud': (context, PipeLeapGame g) => _GameHud(
                 game: g,
                 onPause: () {
                   g.togglePause();
                   setState(() {});
                 },
               ),
-          'controls': (context, MarioGame g) => _VirtualControls(game: g),
-          'pause': (context, MarioGame g) => PauseOverlay(
+          'controls': (context, PipeLeapGame g) => _VirtualControls(game: g),
+          'pause': (context, PipeLeapGame g) => PauseOverlay(
                 game: g,
                 onResume: () {
                   g.togglePause();
@@ -92,8 +92,8 @@ class _GameScreenState extends State<GameScreen> {
                 },
                 onExit: widget.onExit,
               ),
-          'levelClear': (context, MarioGame g) => const _LevelClearBanner(),
-          'gameOver': (context, MarioGame g) => _GameOverOverlay(
+          'levelClear': (context, PipeLeapGame g) => const _LevelClearBanner(),
+          'gameOver': (context, PipeLeapGame g) => _GameOverOverlay(
                 score: g.score,
                 onMenu: widget.onExit,
               ),
@@ -109,7 +109,7 @@ class _GameHud extends StatelessWidget {
     required this.game,
     required this.onPause,
   });
-  final MarioGame game;
+  final PipeLeapGame game;
   final VoidCallback onPause;
 
   @override
@@ -154,14 +154,14 @@ class _GameHud extends StatelessWidget {
                         _HudPill(
                           icon: Icons.favorite,
                           label: 'x${game.lives}',
-                          color: MarioColors.red,
+                          color: AppColors.red,
                           scale: r.scale,
                         ),
                         SizedBox(width: r.sp(6)),
                         _HudPill(
                           icon: Icons.monetization_on,
                           label: '${game.coins}',
-                          color: MarioColors.yellow,
+                          color: AppColors.yellow,
                           scale: r.scale,
                         ).animate(key: ValueKey(game.coins)).scale(
                               begin: const Offset(1.25, 1.25),
@@ -173,14 +173,14 @@ class _GameHud extends StatelessWidget {
                         _HudPill(
                           icon: Icons.star,
                           label: '${game.score}',
-                          color: MarioColors.blue,
+                          color: AppColors.blue,
                           scale: r.scale,
                         ),
                         SizedBox(width: r.sp(8)),
                         _HudPill(
                           icon: Icons.flag,
                           label: r.isNarrow ? 'W${game.currentLevel}' : 'WORLD ${game.currentLevel}',
-                          color: MarioColors.green,
+                          color: AppColors.green,
                           scale: r.scale,
                         ),
                         if (!r.isCompact) ...[
@@ -200,7 +200,7 @@ class _GameHud extends StatelessWidget {
                     minimumSize: Size(r.sp(40), r.sp(40)),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  icon: Icon(Icons.pause_rounded, color: MarioColors.dark, size: r.sp(22)),
+                  icon: Icon(Icons.pause_rounded, color: AppColors.dark, size: r.sp(22)),
                 ),
               ],
             ),
@@ -270,7 +270,7 @@ class _HudPill extends StatelessWidget {
             label,
             style: TextStyle(
               fontWeight: FontWeight.w900,
-              color: MarioColors.dark,
+              color: AppColors.dark,
               fontSize: 12 * scale,
             ),
           ),
@@ -282,7 +282,7 @@ class _HudPill extends StatelessWidget {
 
 class _MiniMap extends StatelessWidget {
   const _MiniMap({required this.game, this.scale = 1});
-  final MarioGame game;
+  final PipeLeapGame game;
   final double scale;
 
   @override
@@ -296,7 +296,7 @@ class _MiniMap extends StatelessWidget {
 
 class _MiniMapPainter extends CustomPainter {
   _MiniMapPainter(this.game);
-  final MarioGame game;
+  final PipeLeapGame game;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -313,12 +313,12 @@ class _MiniMapPainter extends CustomPainter {
     canvas.drawCircle(
       Offset(8 + progress * (size.width - 16), size.height / 2),
       5,
-      Paint()..color = MarioColors.red,
+      Paint()..color = AppColors.red,
     );
     canvas.drawCircle(
       Offset(size.width - 8, size.height / 2),
       4,
-      Paint()..color = MarioColors.yellow,
+      Paint()..color = AppColors.yellow,
     );
   }
 
@@ -328,7 +328,7 @@ class _MiniMapPainter extends CustomPainter {
 
 class _VirtualControls extends StatelessWidget {
   const _VirtualControls({required this.game});
-  final MarioGame game;
+  final PipeLeapGame game;
 
   @override
   Widget build(BuildContext context) {
@@ -365,7 +365,7 @@ class _VirtualControls extends StatelessWidget {
                 _CtrlBtn(
                   icon: Icons.arrow_downward_rounded,
                   label: r.isCompact ? null : 'PIPE',
-                  color: MarioColors.pipe,
+                  color: AppColors.pipe,
                   scale: r.scale,
                   onDown: () => game.ctrlPipe = true,
                   onUp: () => game.ctrlPipe = false,
@@ -381,7 +381,7 @@ class _VirtualControls extends StatelessWidget {
                 SizedBox(width: gap),
                 _CtrlBtn(
                   icon: Icons.keyboard_arrow_up_rounded,
-                  color: MarioColors.yellow,
+                  color: AppColors.yellow,
                   big: true,
                   scale: r.scale,
                   onDown: () => game.ctrlJump = true,
@@ -401,7 +401,7 @@ class _CtrlBtn extends StatelessWidget {
     required this.icon,
     required this.onDown,
     required this.onUp,
-    this.color = MarioColors.blue,
+    this.color = AppColors.blue,
     this.big = false,
     this.label,
     this.scale = 1,
@@ -473,12 +473,12 @@ class _LevelClearBanner extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             gradient: const LinearGradient(
-              colors: [MarioColors.yellow, MarioColors.red],
+              colors: [AppColors.yellow, AppColors.red],
             ),
             border: Border.all(color: Colors.white, width: 3),
             boxShadow: [
               BoxShadow(
-                color: MarioColors.yellow.withValues(alpha: 0.55),
+                color: AppColors.yellow.withValues(alpha: 0.55),
                 blurRadius: 28,
               ),
             ],
@@ -490,7 +490,7 @@ class _LevelClearBanner extends StatelessWidget {
                   fontSize: r.sp(36),
                   shadows: const [
                     Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(2, 2)),
-                    Shadow(color: MarioColors.yellow, blurRadius: 18),
+                    Shadow(color: AppColors.yellow, blurRadius: 18),
                   ],
                 ),
           ),
@@ -530,7 +530,7 @@ class _GameOverOverlay extends StatelessWidget {
               Text(
                 'Score $score',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: MarioColors.cream,
+                      color: AppColors.cream,
                       fontSize: r.sp(18),
                     ),
               ),

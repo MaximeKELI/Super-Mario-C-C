@@ -4,14 +4,14 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../gif_loader.dart';
 import '../mario_game.dart';
 import '../render/pseudo3d.dart';
 import 'platform_block.dart';
 
 class PlayerComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   static const gravity = 1400.0;
   static const jumpForce = -560.0;
   static const moveSpeed = 240.0;
@@ -58,13 +58,13 @@ class PlayerComponent extends PositionComponent
   Future<void> onLoad() async {
     add(RectangleHitbox());
     // Use splash preload when available — avoids 30s decode stall
-    if (GifLoader.marioFrames != null && GifLoader.marioFrames!.isNotEmpty) {
-      _gifFrames = GifLoader.marioFrames!;
+    if (GifLoader.heroFrames != null && GifLoader.heroFrames!.isNotEmpty) {
+      _gifFrames = GifLoader.heroFrames!;
       return;
     }
     try {
-      _gifFrames = await GifLoader.load('assets/images/Mario.gif', targetWidth: 96);
-      GifLoader.marioFrames = _gifFrames;
+      _gifFrames = await GifLoader.load('assets/images/hero.png', targetWidth: 96);
+      GifLoader.heroFrames = _gifFrames;
     } catch (_) {
       _gifFrames = const [];
     }
@@ -83,7 +83,7 @@ class PlayerComponent extends PositionComponent
       size = Vector2(baseW * 1.28, baseH * 1.38);
       squashY = 1.12;
       stretchX = 0.92;
-      game.juice.burst(absoluteCenter, color: MarioColors.red, count: 20);
+      game.juice.burst(absoluteCenter, color: AppColors.red, count: 20);
       game.juice.shake(intensity: 5, duration: 0.2);
     }
   }
@@ -102,14 +102,14 @@ class PlayerComponent extends PositionComponent
   void collectStar() {
     invincible = true;
     invincibleTime = 12;
-    game.juice.burst(absoluteCenter, color: MarioColors.yellow, count: 36);
+    game.juice.burst(absoluteCenter, color: AppColors.yellow, count: 36);
     game.juice.shake(intensity: 10, duration: 0.35);
   }
 
   void collectComet() {
     hasComet = true;
     cometTime = 10;
-    game.juice.burst(absoluteCenter, color: MarioColors.blue, count: 30);
+    game.juice.burst(absoluteCenter, color: AppColors.blue, count: 30);
   }
 
   void shrink() {
@@ -318,7 +318,7 @@ class PlayerComponent extends PositionComponent
           Offset(size.x / 2, size.y * 0.7),
           size.x * 0.45,
           Paint()
-            ..color = (hasComet ? MarioColors.blue : MarioColors.yellow)
+            ..color = (hasComet ? AppColors.blue : AppColors.yellow)
                 .withValues(alpha: 0.18)
             ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
         );
@@ -334,7 +334,7 @@ class PlayerComponent extends PositionComponent
       if (hasFire) {
         canvas.drawRect(dst, Paint()..color = const Color(0x33FF6A00));
       } else if (invincible) {
-        canvas.drawRect(dst, Paint()..color = MarioColors.yellow.withValues(alpha: 0.2));
+        canvas.drawRect(dst, Paint()..color = AppColors.yellow.withValues(alpha: 0.2));
       }
     } else {
       canvas.drawRRect(
@@ -342,7 +342,7 @@ class PlayerComponent extends PositionComponent
           Rect.fromLTWH(4, 10, size.x - 8, size.y - 14),
           const Radius.circular(8),
         ),
-        Paint()..color = MarioColors.red,
+        Paint()..color = AppColors.red,
       );
     }
 

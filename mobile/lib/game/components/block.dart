@@ -4,14 +4,14 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/models.dart';
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 import '../render/pseudo3d.dart';
 import 'player.dart';
 import 'power_up.dart';
 
 class BlockComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   final BlockKind kind;
   bool used = false;
   double bump = 0;
@@ -36,10 +36,10 @@ class BlockComponent extends PositionComponent
         PowerUpDef(position.x, position.y - 36, PowerUpKind.mushroom),
       );
       game.world.add(pu);
-      game.juice.burst(absoluteCenter, color: MarioColors.yellow, count: 10);
+      game.juice.burst(absoluteCenter, color: AppColors.yellow, count: 10);
       game.score += 50;
     } else if (kind == BlockKind.brick && player.isBig) {
-      game.juice.burst(absoluteCenter, color: MarioColors.brown, count: 12);
+      game.juice.burst(absoluteCenter, color: AppColors.brown, count: 12);
       game.score += 25;
       removeFromParent();
     }
@@ -79,8 +79,8 @@ class BlockComponent extends PositionComponent
     canvas.save();
     canvas.translate(0, bump);
     final color = switch (kind) {
-      BlockKind.question => used ? MarioColors.brown : MarioColors.yellow,
-      BlockKind.brick => MarioColors.brick,
+      BlockKind.question => used ? AppColors.brown : AppColors.yellow,
+      BlockKind.brick => AppColors.brick,
       BlockKind.hard => const Color(0xFF888888),
     };
     Pseudo3d.extrudedBox(
@@ -97,7 +97,7 @@ class BlockComponent extends PositionComponent
         text: const TextSpan(
           text: '?',
           style: TextStyle(
-            color: MarioColors.red,
+            color: AppColors.red,
             fontSize: 26,
             fontWeight: FontWeight.w900,
             shadows: [Shadow(color: Colors.black26, blurRadius: 2, offset: Offset(1, 1))],

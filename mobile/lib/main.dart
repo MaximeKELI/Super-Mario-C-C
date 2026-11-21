@@ -10,5 +10,5 @@ Future<void> main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  runApp(const MarioApp());
+  runApp(const PipeLeapApp());
 }

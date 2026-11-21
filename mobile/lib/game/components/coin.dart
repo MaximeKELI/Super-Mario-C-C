@@ -4,13 +4,13 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-import '../../theme/mario_theme.dart';
+import '../../theme/app_theme.dart';
 import '../mario_game.dart';
 import '../render/pseudo3d.dart';
 import 'player.dart';
 
 class CoinComponent extends PositionComponent
-    with CollisionCallbacks, HasGameReference<MarioGame> {
+    with CollisionCallbacks, HasGameReference<PipeLeapGame> {
   double t = Random().nextDouble() * pi * 2;
   double baseY;
 
@@ -33,8 +33,8 @@ class CoinComponent extends PositionComponent
   void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
     super.onCollisionStart(intersectionPoints, other);
     if (other is PlayerComponent) {
-      game.juice.burst(absoluteCenter, color: MarioColors.yellow, count: 32);
-      game.juice.ring(absoluteCenter, color: MarioColors.yellow, count: 14);
+      game.juice.burst(absoluteCenter, color: AppColors.yellow, count: 32);
+      game.juice.ring(absoluteCenter, color: AppColors.yellow, count: 14);
       game.juice.scorePopup(absoluteCenter, '+50');
       game.juice.triggerHitStop(0.04);
       game.juice.shake(intensity: 4, duration: 0.12);
