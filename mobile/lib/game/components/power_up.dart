@@ -45,7 +45,7 @@ class PowerUpComponent extends PositionComponent
       case PowerUpKind.star:
         other.collectStar();
       case PowerUpKind.oneUp:
-        game.lives++;
+        game.awardLife();
       case PowerUpKind.comet:
         other.collectComet();
     }

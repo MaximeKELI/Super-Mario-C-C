@@ -14,6 +14,7 @@ import '../data/character.dart';
 import '../data/levels/levels.dart';
 import '../data/models.dart';
 import '../data/save_service.dart';
+import '../data/secure_store.dart';
 import '../theme/app_theme.dart';
 import 'components/ambient_fx.dart';
 import 'components/block.dart';
@@ -91,6 +92,10 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   bool worldReady = false;
   bool _sessionEnded = false;
 
+  /// Runtime anti-tamper: mirrors score/lives/coins so memory edits trip a check.
+  int _economyGuard = 0;
+  static const _guardSalt = 0x50495045; // 'PIPE'
+
   @override
   Color backgroundColor() => AppColors.skyTop;
 
@@ -103,25 +108,76 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     _padSub = Gamepads.normalizedEvents.listen(_onGamepad);
 
     if (initialSave != null) {
-      currentLevel = initialSave!.currentLevel;
-      score = initialSave!.score;
-      lives = initialSave!.lives;
-      coins = initialSave!.coinsCollected;
+      currentLevel = initialSave!.currentLevel.clamp(1, 10);
+      score = initialSave!.score.clamp(0, SecureStore.maxScore);
+      lives = initialSave!.lives.clamp(0, _maxLivesForDifficulty());
+      coins = initialSave!.coinsCollected.clamp(0, 99);
       checkpointX = initialSave!.checkpointX;
       checkpointY = initialSave!.checkpointY;
       hasCheckpoint = initialSave!.hasCheckpoint;
       stats = initialSave!.stats;
     } else {
       currentLevel = startLevel;
-      lives = switch (difficulty) {
+      lives = _maxLivesForDifficulty();
+    }
+    _sealEconomy();
+
+    await loadLevel(currentLevel);
+    AudioService.instance.playBgm();
+  }
+
+  int _maxLivesForDifficulty() => switch (difficulty) {
         Difficulty.easy => 5,
         Difficulty.normal => 3,
         Difficulty.hard => 2,
       };
-    }
 
-    await loadLevel(currentLevel);
-    AudioService.instance.playBgm();
+  void _sealEconomy() {
+    _economyGuard = Object.hash(
+      score,
+      lives,
+      coins,
+      currentLevel,
+      _guardSalt ^ (score * 131) ^ (lives * 17) ^ (coins * 13),
+    );
+  }
+
+  bool _economyIntact() =>
+      _economyGuard ==
+      Object.hash(
+        score,
+        lives,
+        coins,
+        currentLevel,
+        _guardSalt ^ (score * 131) ^ (lives * 17) ^ (coins * 13),
+      );
+
+  void _onEconomyTamper() {
+    debugPrint('PipeLeap: economy tamper detected — clamping');
+    score = score.clamp(0, SecureStore.maxScore);
+    lives = lives.clamp(0, _maxLivesForDifficulty());
+    coins = coins.clamp(0, 99);
+    currentLevel = currentLevel.clamp(1, 10);
+    _sealEconomy();
+  }
+
+  void awardScore(int points) {
+    if (!_economyIntact()) _onEconomyTamper();
+    final p = points.clamp(0, 5000);
+    score = (score + p).clamp(0, SecureStore.maxScore);
+    _sealEconomy();
+  }
+
+  void awardLife([int n = 1]) {
+    if (!_economyIntact()) _onEconomyTamper();
+    lives = (lives + n).clamp(0, SecureStore.maxLives);
+    _sealEconomy();
+  }
+
+  void loseLife() {
+    if (!_economyIntact()) _onEconomyTamper();
+    lives = (lives - 1).clamp(0, SecureStore.maxLives);
+    _sealEconomy();
   }
 
   @override
@@ -320,13 +376,15 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   }
 
   void onCoinCollected() {
-    coins++;
-    score += 50;
+    if (!_economyIntact()) _onEconomyTamper();
+    coins += 1;
     stats.totalCoinsCollected++;
+    score = (score + 50).clamp(0, SecureStore.maxScore);
     if (coins >= 100) {
       coins = 0;
-      lives++;
+      lives = (lives + 1).clamp(0, SecureStore.maxLives);
     }
+    _sealEconomy();
   }
 
   void onEnemyKilled(int points) {
@@ -337,7 +395,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     }
     comboTimer = 1.6;
     final bonus = (comboCount - 1) * 25;
-    score += points + bonus;
+    awardScore(points.clamp(0, 500) + bonus);
     stats.enemiesKilled++;
     if (comboCount >= 2) {
       juice.scorePopup(
@@ -350,11 +408,11 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
 
   void onPowerUpCollected() {
     stats.powerUpsCollected++;
-    score += 200;
+    awardScore(200);
   }
 
   void onPlayerDied() {
-    lives--;
+    loseLife();
     comboCount = 0;
     comboTimer = 0;
     juice.shake(intensity: 12, duration: 0.4);
@@ -450,6 +508,9 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
 
   @override
   void update(double dt) {
+    if (worldReady && !_economyIntact()) {
+      _onEconomyTamper();
+    }
     final scaled = dt * (juice.isFrozen ? 0.15 : 1.0);
     if (phase == PlayPhase.levelClear) {
       levelClearTimer += dt;
@@ -506,7 +567,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     phase = PlayPhase.levelClear;
     levelClearTimer = 0;
     stats.levelsCompleted++;
-    score += 1000;
+    awardScore(1000);
     juice.burst(player.absoluteCenter, color: AppColors.yellow, count: 40);
     juice.shake(intensity: 5, duration: 0.4);
     await AudioService.instance.playLevelClear();

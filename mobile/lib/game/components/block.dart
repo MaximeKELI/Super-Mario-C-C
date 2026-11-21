@@ -43,11 +43,11 @@ class BlockComponent extends PositionComponent
       game.world.add(pu);
       game.juice.burst(absoluteCenter, color: AppColors.yellow, count: 14);
       game.juice.scorePopup(absoluteCenter + Vector2(0, -20), '★');
-      game.score += 50;
+      game.awardScore(50);
     } else if (kind == BlockKind.brick && player.isBig) {
       game.juice.burst(absoluteCenter, color: AppColors.brown, count: 16);
       game.juice.dust(absoluteCenter, count: 8);
-      game.score += 25;
+      game.awardScore(25);
       removeFromParent();
     }
   }

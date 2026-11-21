@@ -1,7 +1,22 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pipeleap/data/models.dart';
+import 'package:pipeleap/data/save_service.dart';
 import 'package:pipeleap/data/secure_store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    SecureStore.debugResetKeyCache();
+    SecureStore.debugSetDeviceKey(
+      Uint8List.fromList(List.generate(32, (i) => i + 1)),
+    );
+  });
+
   test('sanitizeName strips injection / control chars', () {
     final cleaned = SecureStore.sanitizeName("Bob<script>alert(1)</script>");
     expect(cleaned.contains('<'), isFalse);
@@ -12,28 +27,155 @@ void main() {
     expect(SecureStore.sanitizeName("OK_Name-1"), 'OK_Name-1');
   });
 
-  test('seal/open roundtrip and reject tampering', () {
-    final sealed = SecureStore.seal({'score': 100, 'name': 'Pip'});
-    final opened = SecureStore.open(sealed);
+  test('seal/open roundtrip with device key', () async {
+    final sealed = await SecureStore.seal({'score': 100, 'name': 'Pip'});
+    final opened = await SecureStore.open(sealed);
     expect(opened?['score'], 100);
+  });
 
+  test('ATTACK: payload edit with stale sig is rejected', () async {
+    final sealed = await SecureStore.seal({'score': 100, 'name': 'Pip'});
     final tampered = Map<String, dynamic>.from(sealed);
     tampered['payload'] = {'score': 999999, 'name': 'Hax'};
-    expect(SecureStore.open(tampered), isNull);
-
-    final badSig = Map<String, dynamic>.from(sealed);
-    badSig['sig'] = '0' * 64;
-    expect(SecureStore.open(badSig), isNull);
+    expect(await SecureStore.open(tampered), isNull);
   });
 
-  test('legacy unsealed map still opens', () {
-    final legacy = {'currentLevel': 2, 'score': 50};
-    expect(SecureStore.open(legacy)?['currentLevel'], 2);
+  test('ATTACK: unsealed cleartext save is rejected (former critical)', () async {
+    final legacy = {
+      'currentLevel': 10,
+      'score': 999999,
+      'lives': 99,
+      'coinsCollected': 99,
+      'checkpointX': 100,
+      'checkpointY': 100,
+      'hasCheckpoint': false,
+      'difficulty': 2,
+      'stats': <String, dynamic>{},
+    };
+    expect(await SecureStore.open(legacy), isNull);
+
+    SharedPreferences.setMockInitialValues({
+      'pipeleap_save': jsonEncode(legacy),
+    });
+    SecureStore.debugResetKeyCache();
+    SecureStore.debugSetDeviceKey(
+      Uint8List.fromList(List.generate(32, (i) => i + 1)),
+    );
+    expect(await SaveService().load(), isNull);
   });
 
-  test('clamps reject absurd values', () {
-    expect(SecureStore.clampScore(1e12), SecureStore.maxScore);
-    expect(SecureStore.clampLevel(-3), 1);
-    expect(SecureStore.clampLives(500), SecureStore.maxLives);
+  test('ATTACK: raw high-score JSON array is rejected', () async {
+    final rawList = [
+      {'name': 'HAXOR', 'score': 999999, 'level': 10, 'difficulty': 2},
+    ];
+    expect(await SecureStore.open(rawList), isNull);
+
+    SharedPreferences.setMockInitialValues({
+      'pipeleap_high_scores': jsonEncode(rawList),
+    });
+    SecureStore.debugResetKeyCache();
+    SecureStore.debugSetDeviceKey(
+      Uint8List.fromList(List.generate(32, (i) => i + 1)),
+    );
+    expect(await HighScoreService().load(), isEmpty);
+  });
+
+  test('ATTACK: static pepper / foreign key forge is rejected', () async {
+    final payload = {
+      'currentLevel': 10,
+      'score': 999999,
+      'lives': 5,
+      'coinsCollected': 0,
+      'checkpointX': 100.0,
+      'checkpointY': 100.0,
+      'hasCheckpoint': false,
+      'difficulty': 2,
+      'stats': GameStats().toJson(),
+    };
+    // Old v1 pepper from previous source (must no longer work).
+    const oldPepper = 'PipeLeap.v1.integrity.2026!#';
+    final body = SecureStore.canonicalJson(payload);
+    final sig = Hmac(sha256, utf8.encode(oldPepper))
+        .convert(utf8.encode(body))
+        .toString();
+    final forged = {'v': 1, 'payload': payload, 'sig': sig};
+    expect(await SecureStore.open(forged), isNull);
+
+    // Wrong device key.
+    final otherKey = Uint8List.fromList(List.generate(32, (i) => 255 - i));
+    final foreignSig =
+        Hmac(sha256, otherKey).convert(utf8.encode(body)).toString();
+    expect(
+      await SecureStore.open({'v': 2, 'payload': payload, 'sig': foreignSig}),
+      isNull,
+    );
+  });
+
+  test('ATTACK: mario_save cleartext ignored and wiped', () async {
+    SharedPreferences.setMockInitialValues({
+      'mario_save': jsonEncode({
+        'currentLevel': 10,
+        'score': 999999,
+        'lives': 99,
+        'stats': <String, dynamic>{},
+      }),
+    });
+    SecureStore.debugResetKeyCache();
+    SecureStore.debugSetDeviceKey(
+      Uint8List.fromList(List.generate(32, (i) => i + 1)),
+    );
+    final svc = SaveService();
+    expect(await svc.load(), isNull);
+    expect(await svc.hasSave(), isFalse);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.containsKey('mario_save'), isFalse);
+  });
+
+  test('legitimate save roundtrip survives', () async {
+    final data = SaveData(
+      currentLevel: 3,
+      score: 1200,
+      lives: 4,
+      difficulty: Difficulty.hard,
+      stats: GameStats(enemiesKilled: 5),
+    );
+    final svc = SaveService();
+    await svc.save(data);
+    final back = await svc.load();
+    expect(back?.currentLevel, 3);
+    expect(back?.score, 1200);
+    expect(back?.lives, 4);
+  });
+
+  test('lives clamp rejects absurd save fields', () {
+    final data = SaveData.fromJson({
+      'currentLevel': 99,
+      'score': 1e12,
+      'lives': 99,
+      'coinsCollected': 500,
+      'stats': {'enemiesKilled': -5},
+    });
+    expect(data.currentLevel, 10);
+    expect(data.score, SecureStore.maxScore);
+    expect(data.lives, SecureStore.maxLives);
+    expect(data.coinsCollected, 99);
+    expect(data.stats.enemiesKilled, 0);
+  });
+
+  test('high score tryAdd rejects absurd then accepts sealed board', () async {
+    final hs = HighScoreService();
+    expect(
+      await hs.tryAdd(const HighScore(
+        name: '<script>',
+        score: 999999999,
+        level: 99,
+        difficulty: Difficulty.easy,
+      )),
+      isTrue,
+    );
+    final board = await hs.load();
+    expect(board, isNotEmpty);
+    expect(board.first.name.contains('<'), isFalse);
+    expect(board.first.score, lessThanOrEqualTo(SecureStore.maxScore));
   });
 }
