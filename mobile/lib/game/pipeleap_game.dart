@@ -374,6 +374,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   Future<void> _handleSessionEnd({required bool victory}) async {
     if (_sessionEnded) return;
     _sessionEnded = true;
+    await AudioService.instance.stopBgm();
     // Merge session into lifetime totals — never overwrite.
     await _statsSvc.mergeSession(stats);
     await _saves.clear();
@@ -427,6 +428,8 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     if (phase == PlayPhase.playing) {
       phase = PlayPhase.paused;
       pauseEngine();
+    } else if (phase == PlayPhase.levelClear || phase == PlayPhase.advancing) {
+      pauseEngine();
     }
   }
 
@@ -435,7 +438,12 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
       // Stay paused — player must resume explicitly (overlay already up).
       return;
     }
+    if (phase == PlayPhase.levelClear || phase == PlayPhase.advancing) {
+      resumeEngine();
+      return;
+    }
     if (phase == PlayPhase.playing) {
+      resumeEngine();
       unawaited(AudioService.instance.resumeBgm());
     }
   }
@@ -508,7 +516,6 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     try {
       hasCheckpoint = false;
       if (currentLevel >= 10) {
-        await AudioService.instance.stopBgm();
         phase = PlayPhase.victory;
         await _handleSessionEnd(victory: true);
         return;
