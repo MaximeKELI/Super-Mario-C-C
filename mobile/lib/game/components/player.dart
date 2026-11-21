@@ -125,8 +125,10 @@ class PlayerComponent extends PositionComponent
       squashY = 0.45;
       stretchX = 1.4;
       game.juice.shake(intensity: 14, duration: 0.4);
+      game.juice.flashDamage();
     } else {
       dead = true;
+      game.juice.flashDamage(0.35);
     }
   }
 
@@ -163,15 +165,44 @@ class PlayerComponent extends PositionComponent
     }
 
     final speed = moveSpeed * (hasComet ? 1.85 : 1.0);
+    final wasFacingRight = facingRight;
     if (wantLeft) {
+      // Skid when reversing at speed
+      if (onGround && velocity.x > 80) {
+        skidTilt = 0.18;
+        game.juice.sparks(
+          Vector2(absoluteCenter.x, position.y + size.y - 2),
+          count: 3,
+          color: const Color(0xFFFFE8A0),
+        );
+        game.juice.dust(Vector2(absoluteCenter.x, position.y + size.y), count: 2);
+      }
       velocity.x = -speed;
       facingRight = false;
     } else if (wantRight) {
+      if (onGround && velocity.x < -80) {
+        skidTilt = -0.18;
+        game.juice.sparks(
+          Vector2(absoluteCenter.x, position.y + size.y - 2),
+          count: 3,
+          color: const Color(0xFFFFE8A0),
+        );
+        game.juice.dust(Vector2(absoluteCenter.x, position.y + size.y), count: 2);
+      }
       velocity.x = speed;
       facingRight = true;
     } else {
+      if (onGround && velocity.x.abs() > 120) {
+        game.juice.dust(
+          Vector2(absoluteCenter.x, position.y + size.y),
+          count: 1,
+        );
+      }
       velocity.x *= 0.82;
       if (velocity.x.abs() < 8) velocity.x = 0;
+    }
+    if (wasFacingRight != facingRight && onGround && _prevVelX.abs() > 100) {
+      skidTilt = facingRight ? -0.22 : 0.22;
     }
 
     if (wantJump) {
@@ -179,13 +210,16 @@ class PlayerComponent extends PositionComponent
         velocity.y = jumpForce;
         onGround = false;
         jumpConsumed = true;
-        // Mild squash only — keep GIF proportions readable
         stretchX = 0.88;
         squashY = 1.12;
+        game.juice.dust(
+          absoluteCenter + Vector2(0, size.y / 2),
+          count: 5,
+        );
         game.juice.burst(
           absoluteCenter + Vector2(0, size.y / 2),
           color: Colors.white70,
-          count: 8,
+          count: 6,
         );
       } else if (hasFly) {
         velocity.y = min(velocity.y, -200);
@@ -201,31 +235,34 @@ class PlayerComponent extends PositionComponent
         facingRight,
       );
       game.juice.burst(absoluteCenter, color: const Color(0xFFFF6A00), count: 8);
+      game.juice.sparks(absoluteCenter, count: 5, color: const Color(0xFFFF6A00));
     }
 
     velocity.y += gravity * dt;
     if (velocity.y > maxFall) velocity.y = maxFall;
+    if (!onGround && velocity.y > 0) {
+      _fallSpeed = velocity.y;
+    }
 
     onGround = false;
     position += velocity * dt;
+    _prevVelX = velocity.x;
+    skidTilt += (0 - skidTilt) * 10 * dt;
 
     if (position.y > 700) {
       dead = true;
     }
 
-    // Recover squash gently; never warp GIF while running
     squashY += (1 - squashY) * 16 * dt;
     stretchX += (1 - stretchX) * 16 * dt;
 
     if (_isRunning) {
-      // Barely-visible dust
       _dustTimer += dt;
-      if (_dustTimer > 0.45) {
+      if (_dustTimer > 0.12) {
         _dustTimer = 0;
-        game.juice.burst(
-          Vector2(absoluteCenter.x - (facingRight ? 12 : -12), position.y + size.y - 2),
-          color: const Color(0x22A89070),
-          count: 1,
+        game.juice.dust(
+          Vector2(absoluteCenter.x - (facingRight ? 14 : -14), position.y + size.y - 2),
+          count: 2,
         );
       }
     }
@@ -257,14 +294,15 @@ class PlayerComponent extends PositionComponent
       position.y = platTop - size.y;
       velocity.y = 0;
       if (!onGround) {
-        squashY = 0.82;
-        stretchX = 1.12;
-        // Landing puff — almost invisible
-        game.juice.burst(
-          Vector2(absoluteCenter.x, platTop),
-          color: const Color(0x18A8C878),
-          count: 1,
-        );
+        final impact = (_fallSpeed / maxFall).clamp(0.2, 1.5);
+        squashY = (0.72 - impact * 0.08).clamp(0.55, 0.9);
+        stretchX = (1.1 + impact * 0.12).clamp(1.05, 1.35);
+        platform.landImpact(strength: impact);
+        game.juice.dust(Vector2(absoluteCenter.x, platTop), count: (3 + impact * 5).round());
+        if (impact > 0.7) {
+          game.juice.shake(intensity: 3 + impact * 4, duration: 0.15);
+        }
+        _fallSpeed = 0;
       }
       onGround = true;
       return;
@@ -276,6 +314,7 @@ class PlayerComponent extends PositionComponent
       platform.hit();
       squashY = 1.1;
       stretchX = 0.92;
+      game.juice.sparks(Vector2(absoluteCenter.x, platBottom), count: 4);
       return;
     }
 
@@ -309,6 +348,7 @@ class PlayerComponent extends PositionComponent
     final cx = size.x / 2;
     final cy = size.y / 2;
     canvas.translate(cx, cy);
+    canvas.rotate(skidTilt);
     canvas.scale(facingRight ? 1.0 : -1.0, 1.0);
     canvas.scale(stretchX.clamp(0.85, 1.15), squashY.clamp(0.85, 1.15));
     canvas.translate(-cx, -cy);
