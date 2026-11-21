@@ -8,28 +8,37 @@ import 'secure_store.dart';
 
 class SaveService {
   static const _key = 'pipeleap_save';
+  static const _legacyKeys = ['mario_save'];
 
   Future<void> save(SaveData data) async {
     final prefs = await SharedPreferences.getInstance();
-    final sealed = SecureStore.seal(data.toJson());
+    final sealed = await SecureStore.seal(data.toJson());
     await prefs.setString(_key, jsonEncode(sealed));
+    for (final k in _legacyKeys) {
+      await prefs.remove(k);
+    }
   }
 
   Future<SaveData?> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key) ?? prefs.getString('mario_save');
+    // Do not read legacy cleartext keys — they were a forge vector.
+    for (final k in _legacyKeys) {
+      if (prefs.containsKey(k)) await prefs.remove(k);
+    }
+    final raw = prefs.getString(_key);
     if (raw == null) return null;
+    if (raw.length > SecureStore.maxPayloadBytes) {
+      await clear();
+      return null;
+    }
     try {
       final decoded = jsonDecode(raw);
-      final payload = SecureStore.open(decoded);
+      final payload = await SecureStore.open(decoded);
       if (payload == null) {
-        // Tampered or corrupt — wipe so Continue can't softlock.
         await clear();
         return null;
       }
-      final data = SaveData.fromJson(payload);
-      // Re-seal legacy unsealed saves on next write path via caller.
-      return data;
+      return SaveData.fromJson(payload);
     } catch (e, st) {
       debugPrint('SaveService.load failed: $e\n$st');
       await clear();
@@ -38,14 +47,16 @@ class SaveService {
   }
 
   Future<bool> hasSave() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(_key) || prefs.containsKey('mario_save');
+    final data = await load();
+    return data != null;
   }
 
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
-    await prefs.remove('mario_save');
+    for (final k in _legacyKeys) {
+      await prefs.remove(k);
+    }
   }
 }
 
@@ -56,26 +67,31 @@ class HighScoreService {
 
   Future<List<HighScore>> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key) ?? prefs.getString(_legacyKey);
+    // Purge forgeable legacy list format.
+    if (prefs.containsKey(_legacyKey)) {
+      await prefs.remove(_legacyKey);
+    }
+    final raw = prefs.getString(_key);
     if (raw == null) return [];
+    if (raw.length > SecureStore.maxPayloadBytes) {
+      await prefs.remove(_key);
+      return [];
+    }
     try {
       final decoded = jsonDecode(raw);
-      List<dynamic> list;
+      // Raw JSON arrays were forgeable — never accept.
       if (decoded is List) {
-        // Legacy unsealed array.
-        list = decoded;
-      } else {
-        final payload = SecureStore.open(decoded);
-        if (payload == null) {
-          await prefs.remove(_key);
-          await prefs.remove(_legacyKey);
-          return [];
-        }
-        final scoresRaw = payload['scores'];
-        if (scoresRaw is! List) return [];
-        list = scoresRaw;
+        await prefs.remove(_key);
+        return [];
       }
-      final scores = list
+      final payload = await SecureStore.open(decoded);
+      if (payload == null) {
+        await prefs.remove(_key);
+        return [];
+      }
+      final scoresRaw = payload['scores'];
+      if (scoresRaw is! List) return [];
+      final scores = scoresRaw
           .whereType<Map>()
           .map((e) => HighScore.fromJson(Map<String, dynamic>.from(e)))
           .where((s) => s.isPlausible)
@@ -90,8 +106,9 @@ class HighScoreService {
 
   Future<void> saveAll(List<HighScore> scores) async {
     final prefs = await SharedPreferences.getInstance();
-    final sealed = SecureStore.seal({
-      'scores': scores.map((s) => s.toJson()).toList(),
+    final plausible = scores.where((s) => s.isPlausible).take(maxScores).toList();
+    final sealed = await SecureStore.seal({
+      'scores': plausible.map((s) => s.toJson()).toList(),
     });
     await prefs.setString(_key, jsonEncode(sealed));
     await prefs.remove(_legacyKey);
@@ -128,14 +145,20 @@ class StatsService {
 
   Future<GameStats> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key) ?? prefs.getString(_legacyKey);
+    if (prefs.containsKey(_legacyKey)) {
+      await prefs.remove(_legacyKey);
+    }
+    final raw = prefs.getString(_key);
     if (raw == null) return GameStats();
+    if (raw.length > SecureStore.maxPayloadBytes) {
+      await prefs.remove(_key);
+      return GameStats();
+    }
     try {
       final decoded = jsonDecode(raw);
-      final payload = SecureStore.open(decoded);
+      final payload = await SecureStore.open(decoded);
       if (payload == null) {
         await prefs.remove(_key);
-        await prefs.remove(_legacyKey);
         return GameStats();
       }
       return GameStats.fromJson(payload);
@@ -147,12 +170,11 @@ class StatsService {
 
   Future<void> save(GameStats stats) async {
     final prefs = await SharedPreferences.getInstance();
-    final sealed = SecureStore.seal(stats.toJson());
+    final sealed = await SecureStore.seal(stats.toJson());
     await prefs.setString(_key, jsonEncode(sealed));
     await prefs.remove(_legacyKey);
   }
 
-  /// Permanently add a finished session onto lifetime totals (never overwrite).
   Future<void> mergeSession(GameStats session) async {
     final lifetime = await load();
     await save(lifetime.mergedWith(session));
