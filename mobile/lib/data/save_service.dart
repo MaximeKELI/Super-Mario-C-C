@@ -3,29 +3,23 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'anti_cheat.dart';
 import 'models.dart';
 import 'secure_store.dart';
 
 class SaveService {
   static const _key = 'pipeleap_save';
-  static const _genKey = 'pipeleap_save_gen';
   static const _legacyKeys = ['mario_save'];
 
-  Future<int> lastGeneration() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_genKey) ?? 0;
-  }
-
-  Future<int> _bumpGeneration() async {
-    final prefs = await SharedPreferences.getInstance();
-    final next = (prefs.getInt(_genKey) ?? 0) + 1;
-    await prefs.setInt(_genKey, next);
-    return next;
-  }
+  Future<int> lastGeneration() => SecureStore.readGeneration();
 
   Future<void> save(SaveData data) async {
+    if (!AntiCheat.plausibleSave(data)) {
+      if (!kReleaseMode) debugPrint('SaveService: refused implausible save');
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
-    final gen = await _bumpGeneration();
+    final gen = await SecureStore.bumpGeneration();
     final stamped = SaveData(
       currentLevel: data.currentLevel,
       score: data.score,
@@ -64,17 +58,23 @@ class SaveService {
         return null;
       }
       final data = SaveData.fromJson(payload);
-      final lastGen = prefs.getInt(_genKey) ?? 0;
-      // Rollback attack: older sealed snapshot after a newer save.
-      if (data.generation < lastGen) {
+      final storeGen = await SecureStore.readGeneration();
+
+      // Exact watermark match in Keystore — prefs-only rewind cannot rollback.
+      if (data.generation != storeGen) {
         if (!kReleaseMode) {
-          debugPrint('SaveService: rejected rollback gen=${data.generation} < $lastGen');
+          debugPrint(
+            'SaveService: gen mismatch payload=${data.generation} store=$storeGen',
+          );
         }
         await clear();
         return null;
       }
-      if (data.generation > lastGen) {
-        await prefs.setInt(_genKey, data.generation);
+
+      if (!AntiCheat.plausibleSave(data)) {
+        if (!kReleaseMode) debugPrint('SaveService: implausible save wiped');
+        await clear();
+        return null;
       }
       return data;
     } catch (e, st) {
@@ -92,7 +92,7 @@ class SaveService {
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
-    // Keep _genKey so cleared→forged old saves still fail rollback checks.
+    // Keep Keystore gen watermark so forged/old blobs stay invalid.
     for (final k in _legacyKeys) {
       await prefs.remove(k);
     }
@@ -131,7 +131,7 @@ class HighScoreService {
       final scores = scoresRaw
           .whereType<Map>()
           .map((e) => HighScore.fromJson(Map<String, dynamic>.from(e)))
-          .where((s) => s.isPlausible)
+          .where((s) => AntiCheat.plausibleHighScore(s))
           .toList()
         ..sort((a, b) => b.score.compareTo(a.score));
       return scores.take(maxScores).toList();
@@ -143,7 +143,8 @@ class HighScoreService {
 
   Future<void> saveAll(List<HighScore> scores) async {
     final prefs = await SharedPreferences.getInstance();
-    final plausible = scores.where((s) => s.isPlausible).take(maxScores).toList();
+    final plausible =
+        scores.where((s) => AntiCheat.plausibleHighScore(s)).take(maxScores).toList();
     final sealed = await SecureStore.seal({
       'scores': plausible.map((s) => s.toJson()).toList(),
     });
@@ -151,14 +152,16 @@ class HighScoreService {
     await prefs.remove(_legacyKey);
   }
 
-  Future<bool> tryAdd(HighScore score) async {
+  Future<bool> tryAdd(HighScore score, {double? sessionPlayTime}) async {
     final sanitized = HighScore(
       name: SecureStore.sanitizeName(score.name),
       score: SecureStore.clampScore(score.score),
       level: SecureStore.clampLevel(score.level),
       difficulty: score.difficulty,
     );
-    if (!sanitized.isPlausible) return false;
+    if (!AntiCheat.plausibleHighScore(sanitized, sessionPlayTime: sessionPlayTime)) {
+      return false;
+    }
 
     final scores = await load();
     scores.sort((a, b) => b.score.compareTo(a.score));

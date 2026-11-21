@@ -8,7 +8,8 @@ enum PlayableCharacter {
   pip;
 
   String get displayName => switch (this) {
-        PlayableCharacter.mario => 'Mario',
+        // Store-safe label (no Nintendo trademark in UI / listings).
+        PlayableCharacter.mario => 'Retro',
         PlayableCharacter.pip => 'Pip',
       };
 

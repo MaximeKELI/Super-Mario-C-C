@@ -19,7 +19,7 @@ void main() {
       score: 1200,
       lives: 4,
       difficulty: Difficulty.hard,
-      stats: GameStats(enemiesKilled: 5),
+      stats: GameStats(enemiesKilled: 5, totalPlayTime: 40, totalCoinsCollected: 3),
     );
     final json = data.toJson();
     final back = SaveData.fromJson(json);

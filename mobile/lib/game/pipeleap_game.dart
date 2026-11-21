@@ -55,10 +55,12 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   late JuiceSystem juice;
   final List<PipeComponent> pipes = [];
 
-  int score = 0;
-  int lives = 3;
-  int coins = 0;
-  int currentLevel = 1;
+  /// Plain fields removed — economy is XOR-only behind [RuntimeGuard].
+  int get score => _guard.score;
+  int get lives => _guard.lives;
+  int get coins => _guard.coins;
+  int get currentLevel => _guard.level;
+
   double levelEndX = 1800;
   double cameraX = 0;
   double checkpointX = 80;
@@ -107,25 +109,25 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     _padSub = Gamepads.normalizedEvents.listen(_onGamepad);
 
     if (initialSave != null) {
-      currentLevel = initialSave!.currentLevel.clamp(1, 10);
-      score = initialSave!.score.clamp(0, SecureStore.maxScore);
-      lives = initialSave!.lives.clamp(0, _maxLivesForDifficulty());
-      coins = initialSave!.coinsCollected.clamp(0, 99);
       checkpointX = initialSave!.checkpointX;
       checkpointY = initialSave!.checkpointY;
       hasCheckpoint = initialSave!.hasCheckpoint;
       stats = initialSave!.stats;
       _saveGeneration = initialSave!.generation;
+      _guard.bootstrap(
+        score: initialSave!.score.clamp(0, SecureStore.maxScore),
+        lives: initialSave!.lives.clamp(0, _maxLivesForDifficulty()),
+        coins: initialSave!.coinsCollected.clamp(0, 99),
+        level: initialSave!.currentLevel.clamp(1, 10),
+      );
     } else {
-      currentLevel = startLevel;
-      lives = _maxLivesForDifficulty();
+      _guard.bootstrap(
+        score: 0,
+        lives: _maxLivesForDifficulty(),
+        coins: 0,
+        level: startLevel,
+      );
     }
-    _guard.bootstrap(
-      score: score,
-      lives: lives,
-      coins: coins,
-      level: currentLevel,
-    );
 
     await loadLevel(currentLevel);
     AudioService.instance.playBgm();
@@ -137,27 +139,11 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
         Difficulty.hard => 2,
       };
 
-  void _pullGuard() {
-    score = _guard.score;
-    lives = _guard.lives;
-    coins = _guard.coins;
-    currentLevel = _guard.level;
-  }
+  void awardScore(int points) => _guard.addScore(points);
 
-  void awardScore(int points) {
-    _guard.addScore(points);
-    _pullGuard();
-  }
+  void awardLife([int n = 1]) => _guard.addLife(n);
 
-  void awardLife([int n = 1]) {
-    _guard.addLife(n);
-    _pullGuard();
-  }
-
-  void loseLife() {
-    _guard.loseLife();
-    _pullGuard();
-  }
+  void loseLife() => _guard.loseLife();
 
   @override
   void onRemove() {
@@ -242,9 +228,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
         await child.removed;
       }
       pipes.clear();
-      currentLevel = n.clamp(1, 10);
-      _guard.setLevel(currentLevel);
-      _pullGuard();
+      _guard.setLevel(n.clamp(1, 10));
       cameraX = 0;
       camera.viewfinder.position = Vector2.zero();
       final data = Levels.get(currentLevel);
@@ -360,7 +344,6 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     stats.totalCoinsCollected++;
     _guard.addCoin();
     _guard.addScore(50);
-    _pullGuard();
   }
 
   void onEnemyKilled(int points) {
@@ -414,12 +397,15 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     await _saves.clear();
     final name = await onNeedName?.call(score);
     if (name != null && name.isNotEmpty) {
-      await _scores.tryAdd(HighScore(
-        name: name,
-        score: score,
-        level: currentLevel,
-        difficulty: difficulty,
-      ));
+      await _scores.tryAdd(
+        HighScore(
+          name: name,
+          score: score,
+          level: currentLevel,
+          difficulty: difficulty,
+        ),
+        sessionPlayTime: stats.totalPlayTime,
+      );
     }
     if (victory) {
       phase = PlayPhase.victory;
@@ -431,7 +417,6 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
       return;
     }
     _guard.ensure();
-    _pullGuard();
     // Persist mid-run progress only. Lifetime stats update on session end.
     await _saves.save(SaveData(
       currentLevel: currentLevel,
@@ -488,14 +473,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
 
   @override
   void update(double dt) {
-    if (worldReady) {
-      _guard.ensure();
-      _pullGuard();
-      if (_guard.level != currentLevel) {
-        _guard.setLevel(currentLevel);
-        _pullGuard();
-      }
-    }
+    if (worldReady) _guard.ensure();
     final safeDt = _guard.sanitizeDt(dt);
     final scaled = safeDt * (juice.isFrozen ? 0.15 : 1.0);
     if (phase == PlayPhase.levelClear) {

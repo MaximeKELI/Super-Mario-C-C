@@ -14,6 +14,7 @@ class SecureStore {
   SecureStore._();
 
   static const _secureKeyName = 'pl_ik_v3';
+  static const _secureGenName = 'pl_gen_v3';
   static const _legacyPrefsKey = 'pl_ik';
   static const _appBind = 'com.pipeleap.mobile|PipeLeap|v3';
   static const _schema = 3;
@@ -38,6 +39,7 @@ class SecureStore {
   static Uint8List? _signingKey;
   static Future<Uint8List>? _keyFuture;
   static bool _testMode = false;
+  static int _testGen = 0;
 
   static void _log(String msg) {
     if (!kReleaseMode) debugPrint(msg);
@@ -127,6 +129,7 @@ class SecureStore {
   @visibleForTesting
   static void debugSetDeviceKey(Uint8List key) {
     _testMode = true;
+    _testGen = 0;
     _deviceKey = Uint8List.fromList(key);
     _signingKey = _deriveSigningKey(_deviceKey!);
     _keyFuture = Future.value(_deviceKey!);
@@ -138,6 +141,37 @@ class SecureStore {
     _signingKey = null;
     _keyFuture = null;
     _testMode = false;
+    _testGen = 0;
+  }
+
+  /// Keystore-backed generation watermark (not plain SharedPreferences).
+  static Future<int> readGeneration() async {
+    if (_testMode) return _testGen;
+    try {
+      final raw = await _storage.read(key: _secureGenName);
+      return int.tryParse(raw ?? '0')?.clamp(0, 1 << 30) ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  static Future<void> writeGeneration(int gen) async {
+    final g = gen.clamp(0, 1 << 30);
+    if (_testMode) {
+      _testGen = g;
+      return;
+    }
+    try {
+      await _storage.write(key: _secureGenName, value: '$g');
+    } catch (e) {
+      _log('SecureStore.writeGeneration failed: $e');
+    }
+  }
+
+  static Future<int> bumpGeneration() async {
+    final next = (await readGeneration()) + 1;
+    await writeGeneration(next);
+    return next;
   }
 
   static String sanitizeName(String? raw, {String fallback = 'Player'}) {

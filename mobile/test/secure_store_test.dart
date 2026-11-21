@@ -137,7 +137,12 @@ void main() {
       score: 1200,
       lives: 4,
       difficulty: Difficulty.hard,
-      stats: GameStats(enemiesKilled: 5),
+      stats: GameStats(
+        enemiesKilled: 5,
+        totalPlayTime: 60,
+        totalCoinsCollected: 10,
+        levelsCompleted: 2,
+      ),
     );
     final svc = SaveService();
     await svc.save(data);
@@ -154,7 +159,7 @@ void main() {
       currentLevel: 1,
       score: 10,
       lives: 3,
-      stats: GameStats(),
+      stats: GameStats(totalPlayTime: 20, enemiesKilled: 1, totalCoinsCollected: 2),
     ));
     final first = await svc.load();
     expect(first, isNotNull);
@@ -162,13 +167,12 @@ void main() {
 
     await svc.save(SaveData(
       currentLevel: 5,
-      score: 500,
+      score: 5000,
       lives: 3,
-      stats: GameStats(),
+      stats: GameStats(totalPlayTime: 200, enemiesKilled: 20, totalCoinsCollected: 30),
     ));
     expect((await svc.load())?.currentLevel, 5);
 
-    // Restore older sealed blob after a newer save (rollback).
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('pipeleap_save', jsonEncode(sealedOlder));
     expect(await svc.load(), isNull);
@@ -189,7 +193,7 @@ void main() {
     expect(data.stats.enemiesKilled, 0);
   });
 
-  test('high score tryAdd rejects absurd then accepts sealed board', () async {
+  test('high score tryAdd rejects absurd god scores', () async {
     final hs = HighScoreService();
     expect(
       await hs.tryAdd(const HighScore(
@@ -198,11 +202,22 @@ void main() {
         level: 99,
         difficulty: Difficulty.easy,
       )),
+      isFalse,
+    );
+    expect(
+      await hs.tryAdd(
+        const HighScore(
+          name: 'Pip',
+          score: 5000,
+          level: 3,
+          difficulty: Difficulty.normal,
+        ),
+        sessionPlayTime: 120,
+      ),
       isTrue,
     );
     final board = await hs.load();
     expect(board, isNotEmpty);
     expect(board.first.name.contains('<'), isFalse);
-    expect(board.first.score, lessThanOrEqualTo(SecureStore.maxScore));
   });
 }
