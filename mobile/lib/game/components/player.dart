@@ -4,6 +4,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
+import '../../data/character.dart';
 import '../../theme/app_theme.dart';
 import '../gif_loader.dart';
 import '../pipeleap_game.dart';
@@ -45,12 +46,15 @@ class PlayerComponent extends PositionComponent
   bool wantShoot = false;
   bool jumpConsumed = false;
 
+  final PlayableCharacter character;
   List<GifFrameData> _gifFrames = const [];
   int _frameIndex = 0;
   double _frameTimer = 0;
 
-  PlayerComponent({required Vector2 position})
-      : super(
+  PlayerComponent({
+    required Vector2 position,
+    this.character = PlayableCharacter.pip,
+  }) : super(
           position: position,
           size: Vector2(baseW, baseH),
           anchor: Anchor.topLeft,
@@ -60,14 +64,18 @@ class PlayerComponent extends PositionComponent
   @override
   Future<void> onLoad() async {
     add(RectangleHitbox());
-    // Use splash preload when available — avoids 30s decode stall
-    if (GifLoader.heroFrames != null && GifLoader.heroFrames!.isNotEmpty) {
-      _gifFrames = GifLoader.heroFrames!;
+    final preloaded = GifLoader.framesFor(character);
+    if (preloaded != null && preloaded.isNotEmpty) {
+      _gifFrames = preloaded;
       return;
     }
     try {
-      _gifFrames = await GifLoader.load('assets/images/hero.png', targetWidth: 96);
-      GifLoader.heroFrames = _gifFrames;
+      _gifFrames = await GifLoader.load(
+        character.fallbackAsset,
+        character: character,
+        targetWidth: 96,
+      );
+      GifLoader.framesByCharacter[character] = _gifFrames;
     } catch (_) {
       _gifFrames = const [];
     }

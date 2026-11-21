@@ -4,8 +4,12 @@ import '../theme/app_theme.dart';
 import 'widgets/parallax_sky.dart';
 
 class EnterNameSheet {
-  static Future<String?> show(BuildContext context, int score) async {
-    final controller = TextEditingController(text: 'HERO');
+  static Future<String?> show(
+    BuildContext context,
+    int score, {
+    String defaultName = 'PIP',
+  }) async {
+    final controller = TextEditingController(text: defaultName);
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,

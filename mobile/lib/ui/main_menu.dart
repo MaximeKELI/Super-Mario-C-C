@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../data/character.dart';
 import '../../data/models.dart';
 import '../../data/save_service.dart';
 import '../../theme/app_theme.dart';
@@ -10,12 +11,16 @@ import 'widgets/parallax_sky.dart';
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({
     super.key,
+    required this.character,
+    required this.onCharacterChanged,
     required this.onNewGame,
     required this.onLoadGame,
     required this.onHighScores,
     required this.onStats,
   });
 
+  final PlayableCharacter character;
+  final ValueChanged<PlayableCharacter> onCharacterChanged;
   final void Function(Difficulty d) onNewGame;
   final VoidCallback onLoadGame;
   final VoidCallback onHighScores;
@@ -44,14 +49,21 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     return Scaffold(
       body: ParallaxSky(
         child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: r.sp(r.isLandscape ? 24 : 28),
-              vertical: r.sp(r.isCompact ? 8 : 16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: r.menuMaxWidth),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: r.sp(r.isLandscape ? 24 : 28),
+                  vertical: r.sp(r.isCompact ? 8 : 16),
+                ),
+                child: r.isLandscape && r.isCompact
+                    ? _landscapeCompact(r)
+                    : r.isLandscape && r.isTablet
+                        ? _landscapeTablet(r)
+                        : _portraitOrTall(r),
+              ),
             ),
-            child: r.isLandscape && r.isCompact
-                ? _landscapeCompact(r)
-                : _portraitOrTall(r),
           ),
         ),
       ),
@@ -59,9 +71,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 
   Widget _brandBlock(Responsive r, {required bool compact}) {
-    final logoH = compact ? r.sp(72) : r.sp(120);
-    final heroH = compact ? r.sp(48) : r.sp(64);
-    final titleSize = compact ? r.sp(34) : r.sp(48);
+    final logoH = compact ? r.sp(64) : r.sp(r.isTablet ? 110 : 120);
+    final heroH = compact ? r.sp(52) : r.sp(r.isTablet ? 84 : 64);
+    final titleSize = compact ? r.sp(34) : r.sp(r.isTablet ? 52 : 48);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -87,10 +99,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               duration: 800.ms,
             ),
         SizedBox(height: r.sp(4)),
-        Image.asset(
-          'assets/images/hero.png',
-          height: heroH,
-          filterQuality: FilterQuality.none,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Image.asset(
+            widget.character.previewAsset,
+            key: ValueKey(widget.character),
+            height: heroH,
+            filterQuality: FilterQuality.none,
+          ),
         ).animate().fadeIn(delay: 200.ms),
         SizedBox(height: r.sp(4)),
         Text(
@@ -107,7 +123,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         if (!compact) ...[
           SizedBox(height: r.sp(6)),
           Text(
-            'Original platformer · 10 worlds · premium feel',
+            'Choose your hero · 10 worlds · premium feel',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: AppColors.dark.withValues(alpha: 0.75),
@@ -119,11 +135,97 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
+  Widget _characterPicker(Responsive r) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'CHARACTER',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: r.sp(12),
+            letterSpacing: 1.2,
+            color: AppColors.dark.withValues(alpha: 0.7),
+          ),
+        ),
+        SizedBox(height: r.sp(8)),
+        Row(
+          children: [
+            for (final c in PlayableCharacter.values) ...[
+              if (c != PlayableCharacter.values.first) SizedBox(width: r.sp(10)),
+              Expanded(child: _characterCard(r, c)),
+            ],
+          ],
+        ),
+      ],
+    ).animate().fadeIn(delay: 120.ms);
+  }
+
+  Widget _characterCard(Responsive r, PlayableCharacter c) {
+    final selected = widget.character == c;
+    return GestureDetector(
+      onTap: () => widget.onCharacterChanged(c),
+      child: AnimatedContainer(
+        duration: 200.ms,
+        padding: EdgeInsets.symmetric(
+          vertical: r.sp(r.isCompact ? 8 : 12),
+          horizontal: r.sp(8),
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: selected ? Colors.white.withValues(alpha: 0.92) : Colors.white.withValues(alpha: 0.45),
+          border: Border.all(
+            color: selected ? AppColors.red : Colors.white70,
+            width: selected ? 3 : 2,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.red.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Image.asset(
+              c.previewAsset,
+              height: r.sp(r.isCompact ? 36 : 48),
+              filterQuality: FilterQuality.none,
+            ),
+            SizedBox(height: r.sp(4)),
+            Text(
+              c.displayName.toUpperCase(),
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: r.sp(13),
+                color: AppColors.dark,
+              ),
+            ),
+            Text(
+              c.tagline,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: r.sp(10),
+                color: AppColors.dark.withValues(alpha: 0.65),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _actions(Responsive r, {required bool compact}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _characterPicker(r),
+        SizedBox(height: r.sp(compact ? 10 : 14)),
         _diffChipRow(r),
         SizedBox(height: r.sp(compact ? 10 : 16)),
         PremiumButton(
@@ -184,6 +286,23 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           child: SingleChildScrollView(
             child: _actions(r, compact: true),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _landscapeTablet(Responsive r) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 45,
+          child: SingleChildScrollView(child: _brandBlock(r, compact: false)),
+        ),
+        SizedBox(width: r.sp(28)),
+        Expanded(
+          flex: 55,
+          child: SingleChildScrollView(child: _actions(r, compact: false)),
         ),
       ],
     );

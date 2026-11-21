@@ -37,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _bootstrap() async {
-    await GifLoader.preloadHero();
+    await GifLoader.preloadAll();
     if (!mounted) return;
     setState(() => _assetsReady = true);
     _tryFinish();

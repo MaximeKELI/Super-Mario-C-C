@@ -30,6 +30,7 @@ flutter:
   assets:
     - assets/images/
     - assets/images/hero_frames/
+    - assets/images/mario_frames/
     - assets/audio/
 
   fonts:

@@ -49,3 +49,6 @@ app.*.map.json
 *.keystore
 android/key.properties
 android/upload-keystore.jks
+
+# Local Linux build deps (GStreamer headers extracted without sudo)
+.local-deps/

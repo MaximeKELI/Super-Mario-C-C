@@ -1,13 +1,26 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.13)
+# Snap Flutter ships a broken ninja path — prefer the system binary.
+if(NOT EXISTS "${CMAKE_MAKE_PROGRAM}")
+  set(CMAKE_MAKE_PROGRAM "/usr/bin/ninja" CACHE FILEPATH "Ninja build tool" FORCE)
+endif()
+# Local GStreamer headers/pkgconfig (dev packages extracted without sudo).
+set(_PIPELEAP_GST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.local-deps/usr")
+set(_PIPELEAP_GST_PC "${_PIPELEAP_GST_ROOT}/lib/x86_64-linux-gnu/pkgconfig")
+if(EXISTS "${_PIPELEAP_GST_PC}")
+  set(ENV{PKG_CONFIG_PATH} "${_PIPELEAP_GST_PC}:$ENV{PKG_CONFIG_PATH}")
+  set(ENV{PKG_CONFIG_ALLOW_SYSTEM_LIBS} "1")
+  set(ENV{LIBRARY_PATH} "${_PIPELEAP_GST_ROOT}/lib/x86_64-linux-gnu:$ENV{LIBRARY_PATH}")
+  link_directories("${_PIPELEAP_GST_ROOT}/lib/x86_64-linux-gnu")
+endif()
 project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "super_mario_mobile")
+set(BINARY_NAME "pipeleap")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.supermario.super_mario_mobile")
+set(APPLICATION_ID "com.pipeleap.mobile")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

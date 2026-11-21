@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../data/character.dart';
 import '../../data/models.dart';
 import '../../theme/app_theme.dart';
 import '../../game/pipeleap_game.dart';
@@ -19,11 +20,13 @@ class GameScreen extends StatefulWidget {
   const GameScreen({
     super.key,
     required this.difficulty,
+    this.character = PlayableCharacter.pip,
     this.save,
     required this.onExit,
   });
 
   final Difficulty difficulty;
+  final PlayableCharacter character;
   final SaveData? save;
   final VoidCallback onExit;
 
@@ -45,9 +48,14 @@ class _GameScreenState extends State<GameScreen> {
     ]);
     game = PipeLeapGame(
       difficulty: widget.difficulty,
+      character: widget.character,
       initialSave: widget.save,
       onExitToMenu: widget.onExit,
-      onNeedName: (score) => EnterNameSheet.show(context, score),
+      onNeedName: (score) => EnterNameSheet.show(
+        context,
+        score,
+        defaultName: widget.character.displayName.toUpperCase(),
+      ),
     );
     _hudTick = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (mounted) setState(() {});
@@ -390,8 +398,9 @@ class _VirtualControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = Responsive.of(context);
-    final gap = r.sp(8);
-    final pad = r.sp(r.isCompact ? 10 : 16);
+    final gap = r.sp(r.isTablet ? 12 : 8);
+    final pad = r.sp(r.isCompact ? 10 : (r.isTablet ? 22 : 16));
+    final ctrl = r.controlScale;
 
     return SafeArea(
       child: Padding(
@@ -403,14 +412,14 @@ class _VirtualControls extends StatelessWidget {
               children: [
                 _CtrlBtn(
                   icon: Icons.arrow_back_rounded,
-                  scale: r.scale,
+                  scale: ctrl,
                   onDown: () => game.ctrlLeft = true,
                   onUp: () => game.ctrlLeft = false,
                 ),
                 SizedBox(width: gap),
                 _CtrlBtn(
                   icon: Icons.arrow_forward_rounded,
-                  scale: r.scale,
+                  scale: ctrl,
                   onDown: () => game.ctrlRight = true,
                   onUp: () => game.ctrlRight = false,
                 ),
@@ -423,7 +432,7 @@ class _VirtualControls extends StatelessWidget {
                   icon: Icons.arrow_downward_rounded,
                   label: r.isCompact ? null : 'PIPE',
                   color: AppColors.pipe,
-                  scale: r.scale,
+                  scale: ctrl,
                   onDown: () => game.ctrlPipe = true,
                   onUp: () => game.ctrlPipe = false,
                 ),
@@ -431,7 +440,7 @@ class _VirtualControls extends StatelessWidget {
                 _CtrlBtn(
                   icon: Icons.local_fire_department_rounded,
                   color: const Color(0xFFFF6A00),
-                  scale: r.scale,
+                  scale: ctrl,
                   onDown: () => game.ctrlFire = true,
                   onUp: () => game.ctrlFire = false,
                 ),
@@ -440,7 +449,7 @@ class _VirtualControls extends StatelessWidget {
                   icon: Icons.keyboard_arrow_up_rounded,
                   color: AppColors.yellow,
                   big: true,
-                  scale: r.scale,
+                  scale: ctrl,
                   onDown: () => game.ctrlJump = true,
                   onUp: () => game.ctrlJump = false,
                 ),

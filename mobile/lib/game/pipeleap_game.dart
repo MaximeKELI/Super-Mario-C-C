@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:gamepads/gamepads.dart';
 
 import '../audio/audio_service.dart';
+import '../data/character.dart';
 import '../data/levels/levels.dart';
 import '../data/models.dart';
 import '../data/save_service.dart';
@@ -31,6 +32,7 @@ enum PlayPhase { playing, paused, levelClear, gameOver }
 class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents, TapCallbacks {
   PipeLeapGame({
     required this.difficulty,
+    this.character = PlayableCharacter.pip,
     this.startLevel = 1,
     this.initialSave,
     this.onExitToMenu,
@@ -41,6 +43,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   static final Vector2 designResolution = Vector2(800, 600);
 
   final Difficulty difficulty;
+  final PlayableCharacter character;
   final int startLevel;
   final SaveData? initialSave;
   final VoidCallback? onExitToMenu;
@@ -241,7 +244,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     final spawn = hasCheckpoint
         ? Vector2(checkpointX, checkpointY - 50)
         : Vector2(60, 400);
-    player = PlayerComponent(position: spawn);
+    player = PlayerComponent(position: spawn, character: character);
     world.add(player);
     world.add(AmbientFx(levelEndX: levelEndX));
     world.add(juice);

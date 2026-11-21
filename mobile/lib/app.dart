@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'audio/audio_service.dart';
+import 'data/character.dart';
 import 'data/models.dart';
 import 'data/save_service.dart';
 import 'theme/app_theme.dart';
@@ -22,12 +25,22 @@ class PipeLeapApp extends StatefulWidget {
 class _PipeLeapAppState extends State<PipeLeapApp> {
   AppRoute route = AppRoute.splash;
   Difficulty difficulty = Difficulty.normal;
+  PlayableCharacter character = PlayableCharacter.pip;
   SaveData? save;
+  final _charPrefs = CharacterPrefs();
 
   @override
   void initState() {
     super.initState();
-    AudioService.instance.init();
+    unawaited(AudioService.instance.init());
+    _charPrefs.load().then((c) {
+      if (mounted) setState(() => character = c);
+    });
+  }
+
+  Future<void> _selectCharacter(PlayableCharacter c) async {
+    setState(() => character = c);
+    await _charPrefs.save(c);
   }
 
   @override
@@ -59,6 +72,8 @@ class _PipeLeapAppState extends State<PipeLeapApp> {
                 onDone: () => setState(() => route = AppRoute.menu),
               ),
             AppRoute.menu => MainMenuScreen(
+                character: character,
+                onCharacterChanged: _selectCharacter,
                 onNewGame: (d) => setState(() {
                   difficulty = d;
                   save = null;
@@ -79,6 +94,7 @@ class _PipeLeapAppState extends State<PipeLeapApp> {
               ),
             AppRoute.game => GameScreen(
                 difficulty: difficulty,
+                character: character,
                 save: save,
                 onExit: () => setState(() {
                   save = null;
