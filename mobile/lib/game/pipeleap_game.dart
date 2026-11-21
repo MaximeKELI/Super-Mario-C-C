@@ -13,6 +13,7 @@ import '../audio/audio_service.dart';
 import '../data/character.dart';
 import '../data/levels/levels.dart';
 import '../data/models.dart';
+import '../data/runtime_guard.dart';
 import '../data/save_service.dart';
 import '../data/secure_store.dart';
 import '../theme/app_theme.dart';
@@ -89,12 +90,10 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   final SaveService _saves = SaveService();
   final HighScoreService _scores = HighScoreService();
   final StatsService _statsSvc = StatsService();
+  final RuntimeGuard _guard = RuntimeGuard();
   bool worldReady = false;
   bool _sessionEnded = false;
-
-  /// Runtime anti-tamper: mirrors score/lives/coins so memory edits trip a check.
-  int _economyGuard = 0;
-  static const _guardSalt = 0x50495045; // 'PIPE'
+  int _saveGeneration = 0;
 
   @override
   Color backgroundColor() => AppColors.skyTop;
@@ -116,11 +115,17 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
       checkpointY = initialSave!.checkpointY;
       hasCheckpoint = initialSave!.hasCheckpoint;
       stats = initialSave!.stats;
+      _saveGeneration = initialSave!.generation;
     } else {
       currentLevel = startLevel;
       lives = _maxLivesForDifficulty();
     }
-    _sealEconomy();
+    _guard.bootstrap(
+      score: score,
+      lives: lives,
+      coins: coins,
+      level: currentLevel,
+    );
 
     await loadLevel(currentLevel);
     AudioService.instance.playBgm();
@@ -132,52 +137,26 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
         Difficulty.hard => 2,
       };
 
-  void _sealEconomy() {
-    _economyGuard = Object.hash(
-      score,
-      lives,
-      coins,
-      currentLevel,
-      _guardSalt ^ (score * 131) ^ (lives * 17) ^ (coins * 13),
-    );
-  }
-
-  bool _economyIntact() =>
-      _economyGuard ==
-      Object.hash(
-        score,
-        lives,
-        coins,
-        currentLevel,
-        _guardSalt ^ (score * 131) ^ (lives * 17) ^ (coins * 13),
-      );
-
-  void _onEconomyTamper() {
-    debugPrint('PipeLeap: economy tamper detected — clamping');
-    score = score.clamp(0, SecureStore.maxScore);
-    lives = lives.clamp(0, _maxLivesForDifficulty());
-    coins = coins.clamp(0, 99);
-    currentLevel = currentLevel.clamp(1, 10);
-    _sealEconomy();
+  void _pullGuard() {
+    score = _guard.score;
+    lives = _guard.lives;
+    coins = _guard.coins;
+    currentLevel = _guard.level;
   }
 
   void awardScore(int points) {
-    if (!_economyIntact()) _onEconomyTamper();
-    final p = points.clamp(0, 5000);
-    score = (score + p).clamp(0, SecureStore.maxScore);
-    _sealEconomy();
+    _guard.addScore(points);
+    _pullGuard();
   }
 
   void awardLife([int n = 1]) {
-    if (!_economyIntact()) _onEconomyTamper();
-    lives = (lives + n).clamp(0, SecureStore.maxLives);
-    _sealEconomy();
+    _guard.addLife(n);
+    _pullGuard();
   }
 
   void loseLife() {
-    if (!_economyIntact()) _onEconomyTamper();
-    lives = (lives - 1).clamp(0, SecureStore.maxLives);
-    _sealEconomy();
+    _guard.loseLife();
+    _pullGuard();
   }
 
   @override
@@ -264,6 +243,8 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
       }
       pipes.clear();
       currentLevel = n.clamp(1, 10);
+      _guard.setLevel(currentLevel);
+      _pullGuard();
       cameraX = 0;
       camera.viewfinder.position = Vector2.zero();
       final data = Levels.get(currentLevel);
@@ -376,15 +357,10 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
   }
 
   void onCoinCollected() {
-    if (!_economyIntact()) _onEconomyTamper();
-    coins += 1;
     stats.totalCoinsCollected++;
-    score = (score + 50).clamp(0, SecureStore.maxScore);
-    if (coins >= 100) {
-      coins = 0;
-      lives = (lives + 1).clamp(0, SecureStore.maxLives);
-    }
-    _sealEconomy();
+    _guard.addCoin();
+    _guard.addScore(50);
+    _pullGuard();
   }
 
   void onEnemyKilled(int points) {
@@ -454,6 +430,8 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     if (_sessionEnded || phase == PlayPhase.gameOver || phase == PlayPhase.victory) {
       return;
     }
+    _guard.ensure();
+    _pullGuard();
     // Persist mid-run progress only. Lifetime stats update on session end.
     await _saves.save(SaveData(
       currentLevel: currentLevel,
@@ -465,7 +443,9 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
       hasCheckpoint: hasCheckpoint,
       difficulty: difficulty,
       stats: stats,
+      generation: _saveGeneration,
     ));
+    _saveGeneration = await _saves.lastGeneration();
   }
 
   void togglePause() {
@@ -508,12 +488,18 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
 
   @override
   void update(double dt) {
-    if (worldReady && !_economyIntact()) {
-      _onEconomyTamper();
+    if (worldReady) {
+      _guard.ensure();
+      _pullGuard();
+      if (_guard.level != currentLevel) {
+        _guard.setLevel(currentLevel);
+        _pullGuard();
+      }
     }
-    final scaled = dt * (juice.isFrozen ? 0.15 : 1.0);
+    final safeDt = _guard.sanitizeDt(dt);
+    final scaled = safeDt * (juice.isFrozen ? 0.15 : 1.0);
     if (phase == PlayPhase.levelClear) {
-      levelClearTimer += dt;
+      levelClearTimer += safeDt;
       if (levelClearTimer > 2.8) {
         // Guard: without this, every frame re-enters _advanceLevel and
         // spawns duplicate players while awaits are in flight.
@@ -537,18 +523,18 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
     super.update(scaled);
 
     if (comboTimer > 0) {
-      comboTimer -= dt;
+      comboTimer -= safeDt;
       if (comboTimer <= 0) comboCount = 0;
     }
 
-    levelTimer += dt;
-    stats.totalPlayTime += dt;
+    levelTimer += safeDt;
+    stats.totalPlayTime += safeDt;
     stats.distanceTraveled += (player.position.x - lastPlayerX).abs();
     lastPlayerX = player.position.x;
 
     // camera follow
     final target = (player.position.x - size.x * 0.35).clamp(0.0, levelEndX);
-    cameraX += (target - cameraX) * 6 * dt;
+    cameraX += (target - cameraX) * 6 * safeDt;
     final shake = juice.cameraOffset();
     // Slight vertical settle for a 2.5D stage feel
     final camY = -36 + (player.position.y - 400) * 0.04;

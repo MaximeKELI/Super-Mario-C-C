@@ -189,6 +189,8 @@ class SaveData {
   final bool hasCheckpoint;
   final Difficulty difficulty;
   final GameStats stats;
+  /// Monotonic generation — blocks rollback to older sealed saves.
+  final int generation;
 
   const SaveData({
     this.currentLevel = 1,
@@ -200,6 +202,7 @@ class SaveData {
     this.hasCheckpoint = false,
     this.difficulty = Difficulty.normal,
     required this.stats,
+    this.generation = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -212,6 +215,7 @@ class SaveData {
         'hasCheckpoint': hasCheckpoint,
         'difficulty': difficulty.index,
         'stats': stats.toJson(),
+        'generation': generation,
       };
 
   factory SaveData.fromJson(Map<String, dynamic> j) {
@@ -228,6 +232,7 @@ class SaveData {
       stats: GameStats.fromJson(
         Map<String, dynamic>.from(j['stats'] as Map? ?? {}),
       ),
+      generation: (j['generation'] as num?)?.round().clamp(0, 1 << 30) ?? 0,
     );
   }
 }

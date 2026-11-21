@@ -145,6 +145,33 @@ void main() {
     expect(back?.currentLevel, 3);
     expect(back?.score, 1200);
     expect(back?.lives, 4);
+    expect(back?.generation, greaterThan(0));
+  });
+
+  test('ATTACK: rollback to older sealed generation is rejected', () async {
+    final svc = SaveService();
+    await svc.save(SaveData(
+      currentLevel: 1,
+      score: 10,
+      lives: 3,
+      stats: GameStats(),
+    ));
+    final first = await svc.load();
+    expect(first, isNotNull);
+    final sealedOlder = await SecureStore.seal(first!.toJson());
+
+    await svc.save(SaveData(
+      currentLevel: 5,
+      score: 500,
+      lives: 3,
+      stats: GameStats(),
+    ));
+    expect((await svc.load())?.currentLevel, 5);
+
+    // Restore older sealed blob after a newer save (rollback).
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('pipeleap_save', jsonEncode(sealedOlder));
+    expect(await svc.load(), isNull);
   });
 
   test('lives clamp rejects absurd save fields', () {

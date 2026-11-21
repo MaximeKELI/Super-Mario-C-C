@@ -17,3 +17,11 @@
     public static *** v(...);
     public static *** i(...);
 }
+
+# flutter_secure_storage / Android Keystore
+-keep class com.it_nomads.fluttersecurestorage.** { *; }
+-keep class androidx.security.crypto.** { *; }
+-dontwarn androidx.security.crypto.**
+
+-keep class com.pipeleap.mobile.MainActivity { *; }
+-keep class com.pipeleap.mobile.BuildConfig { *; }

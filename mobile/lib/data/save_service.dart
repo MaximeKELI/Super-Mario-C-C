@@ -8,11 +8,37 @@ import 'secure_store.dart';
 
 class SaveService {
   static const _key = 'pipeleap_save';
+  static const _genKey = 'pipeleap_save_gen';
   static const _legacyKeys = ['mario_save'];
+
+  Future<int> lastGeneration() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_genKey) ?? 0;
+  }
+
+  Future<int> _bumpGeneration() async {
+    final prefs = await SharedPreferences.getInstance();
+    final next = (prefs.getInt(_genKey) ?? 0) + 1;
+    await prefs.setInt(_genKey, next);
+    return next;
+  }
 
   Future<void> save(SaveData data) async {
     final prefs = await SharedPreferences.getInstance();
-    final sealed = await SecureStore.seal(data.toJson());
+    final gen = await _bumpGeneration();
+    final stamped = SaveData(
+      currentLevel: data.currentLevel,
+      score: data.score,
+      lives: data.lives,
+      coinsCollected: data.coinsCollected,
+      checkpointX: data.checkpointX,
+      checkpointY: data.checkpointY,
+      hasCheckpoint: data.hasCheckpoint,
+      difficulty: data.difficulty,
+      stats: data.stats,
+      generation: gen,
+    );
+    final sealed = await SecureStore.seal(stamped.toJson());
     await prefs.setString(_key, jsonEncode(sealed));
     for (final k in _legacyKeys) {
       await prefs.remove(k);
@@ -21,7 +47,6 @@ class SaveService {
 
   Future<SaveData?> load() async {
     final prefs = await SharedPreferences.getInstance();
-    // Do not read legacy cleartext keys — they were a forge vector.
     for (final k in _legacyKeys) {
       if (prefs.containsKey(k)) await prefs.remove(k);
     }
@@ -38,7 +63,20 @@ class SaveService {
         await clear();
         return null;
       }
-      return SaveData.fromJson(payload);
+      final data = SaveData.fromJson(payload);
+      final lastGen = prefs.getInt(_genKey) ?? 0;
+      // Rollback attack: older sealed snapshot after a newer save.
+      if (data.generation < lastGen) {
+        if (!kReleaseMode) {
+          debugPrint('SaveService: rejected rollback gen=${data.generation} < $lastGen');
+        }
+        await clear();
+        return null;
+      }
+      if (data.generation > lastGen) {
+        await prefs.setInt(_genKey, data.generation);
+      }
+      return data;
     } catch (e, st) {
       debugPrint('SaveService.load failed: $e\n$st');
       await clear();
@@ -54,6 +92,7 @@ class SaveService {
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
+    // Keep _genKey so cleared→forged old saves still fail rollback checks.
     for (final k in _legacyKeys) {
       await prefs.remove(k);
     }
@@ -67,7 +106,6 @@ class HighScoreService {
 
   Future<List<HighScore>> load() async {
     final prefs = await SharedPreferences.getInstance();
-    // Purge forgeable legacy list format.
     if (prefs.containsKey(_legacyKey)) {
       await prefs.remove(_legacyKey);
     }
@@ -79,7 +117,6 @@ class HighScoreService {
     }
     try {
       final decoded = jsonDecode(raw);
-      // Raw JSON arrays were forgeable — never accept.
       if (decoded is List) {
         await prefs.remove(_key);
         return [];
