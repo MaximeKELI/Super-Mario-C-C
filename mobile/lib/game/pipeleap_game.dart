@@ -220,12 +220,7 @@ class PipeLeapGame extends FlameGame with HasCollisionDetection, KeyboardEvents,
       world.add(CoinComponent(c.x, c.y));
     }
     for (final e in data.enemies) {
-      final enemy = EnemyComponent(e);
-      enemy.speedMult = switch (difficulty) {
-        Difficulty.hard => 1.35,
-        Difficulty.easy => 0.75,
-        Difficulty.normal => 1.0,
-      };
+      final enemy = EnemyComponent(e)..speedMult = speedMultForDifficulty();
       world.add(enemy);
     }
     for (final s in data.spikes) {

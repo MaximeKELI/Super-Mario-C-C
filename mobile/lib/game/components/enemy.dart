@@ -163,7 +163,10 @@ class EnemyComponent extends PositionComponent
     }
 
     // Ground enemies: goomba / koopa
-    if (playerAlive && dist < senseRadius && state == EnemyState.patrol) {
+    if (playerAlive &&
+        dist < senseRadius &&
+        state == EnemyState.patrol &&
+        chargeCooldown <= 0) {
       state = EnemyState.alert;
       stateTimer = 0.35;
       game.alertNearby(absoluteCenter, senseRadius * 0.7);
